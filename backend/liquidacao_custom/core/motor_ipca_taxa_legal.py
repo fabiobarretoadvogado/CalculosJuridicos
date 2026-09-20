@@ -22,7 +22,9 @@ def criterios_ipca_taxa_legal():
     legal = json.loads(BASE_TAXA_LEGAL.read_text(encoding="utf-8"))
     ipca = json.loads(BASE_IPCA.read_text(encoding="utf-8"))
     competencia = min(max(legal["taxa_legal"]), max(ipca["ipca"]))
-    limite = proximo_mes(date.fromisoformat(competencia + "-01")) - timedelta(days=1)
+    # Civil 1 exclui a data-base. Assim, com a competência de agosto
+    # publicada, 01/09 é o primeiro limite que inclui agosto por inteiro.
+    limite = proximo_mes(date.fromisoformat(competencia + "-01"))
     return {"perfil": IPCA_TAXA_LEGAL, "perfis": PERFIS, "inicio": INICIO.isoformat(),
             "inicio_selic": "", "transicao": "", "data_base_maxima": limite.isoformat(),
             "atualizado_em": max(ipca["obtido_em"], legal["obtido_em"]),
@@ -37,7 +39,7 @@ def apurar_juros_taxa_legal(saldo_exato, inicio_juros, fim, numero=1, indice_cor
     if inicio_juros < INICIO:
         raise ValueError("Taxa Legal oficial: início dos juros a partir de 30/08/2024. Períodos anteriores exigem outro critério expresso.")
     dados = json.loads(BASE_TAXA_LEGAL.read_text(encoding="utf-8"))
-    limite = proximo_mes(date.fromisoformat(max(dados["taxa_legal"]) + "-01")) - timedelta(days=1)
+    limite = proximo_mes(date.fromisoformat(max(dados["taxa_legal"]) + "-01"))
     if fim > limite:
         raise ValueError(f"Taxa Legal oficial: data-base além da cobertura publicada ({limite}).")
     saldo, ultimo_dia = moeda(saldo_exato), fim - timedelta(days=1)

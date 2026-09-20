@@ -134,7 +134,20 @@ def test_ipca_futuro_nao_e_estimado():
     payload["dados_gerais"]["data_base"] = "2026-09-17"
     with pytest.raises(ValueError, match="último mês com IPCA"):
         calcular(payload)
-    assert criterios_publicos(perfil="ipca_taxa_legal_v1")["data_base_maxima"] == "2026-08-31"
+    assert criterios_publicos(perfil="ipca_taxa_legal_v1")["data_base_maxima"] == "2026-09-01"
+
+
+def test_primeiro_dia_do_mes_seguinte_inclui_ultima_competencia_ipca():
+    payload = entrada()
+    payload["dados_gerais"]["data_base"] = "2026-09-01"
+    payload["parcelas"][0]["data_vencimento"] = "2026-08-01"
+    payload["parcelas"][0]["valor_bruto"] = "10000"
+
+    parcela = calcular(payload).parcelas[0]
+
+    assert parcela.componentes["ipca"].data_final == date(2026, 8, 31)
+    assert parcela.componentes["ipca"].fator_acumulado == D("0.9968")
+    assert parcela.valor_corrigido == D("9968.00")
 
 
 def test_desconto_multa_honorarios_e_custas_usam_ordem_existente():

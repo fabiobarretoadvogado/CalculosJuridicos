@@ -16,7 +16,9 @@ from .perfis import CIVIL_2, PERFIS
 def criterios_civil_2():
     dados = json.loads(BASE_IPCA.read_text(encoding="utf-8"))
     competencia = max(dados["ipca"])
-    limite = proximo_mes(date.fromisoformat(competencia + "-01")) - timedelta(days=1)
+    # Civil 2 exclui a data-base. O primeiro dia do mês seguinte encerra
+    # integralmente a última competência mensal publicada.
+    limite = proximo_mes(date.fromisoformat(competencia + "-01"))
     return {
         "perfil": CIVIL_2,
         "perfis": PERFIS,

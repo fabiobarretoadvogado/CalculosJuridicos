@@ -1,3 +1,12 @@
+# Cálculos Jurídicos 1.07
+
+Fechamento integral do último mês publicado nos critérios civis.
+
+- Civil 1 e Civil 2 agora aceitam o primeiro dia do mês seguinte como data-base máxima quando o IPCA do mês anterior já está publicado.
+- Com o IPCA de agosto de 2026 disponível, a data-base máxima desses dois critérios passa a ser 01/09/2026.
+- Como a data-base é excluída nos critérios civis, essa alteração garante a inclusão de todos os dias de agosto, inclusive 31/08.
+- Valores negativos de IPCA continuam preservados e reduzem a correção monetária normalmente.
+
 # Cálculos Jurídicos 1.06
 
 Atualização acessível diretamente pelo programa.

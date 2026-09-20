@@ -181,3 +181,7 @@ JSON, tela e PDF devem identificar a modalidade correta, sem equação de dívid
 11. **Sem leitura automática de sentença** neste primeiro MVP.
 12. **Sem integração com eproc/SICAR**;
 13. **Sem módulo previdenciário ou cálculo trabalhista.**
+
+## Higiene obrigatória dos builds locais
+
+Depois que um novo executável e seu instalador forem gerados e verificados com sucesso, manter em `instaladores/` somente as duas pastas da edição atual: a versão técnica e a edição amigável. Excluir as pastas de versões anteriores e os pacotes antigos arquivados em `build/previous-packages`. Nunca apagar a versão vigente antes de o novo pacote passar no autoteste; se o build falhar, preservar o último pacote funcional para recuperação.

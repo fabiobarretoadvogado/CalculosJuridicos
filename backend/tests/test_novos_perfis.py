@@ -101,6 +101,18 @@ def test_civil_2_usa_ipca_e_juros_simples_com_datas_independentes():
     assert resultado.premissas["versao_metodologia"] == "civil_2_ipca_juros_simples_1am_datas_independentes_v1"
 
 
+def test_civil_2_aceita_primeiro_dia_seguinte_e_fecha_agosto_inteiro():
+    resultado = executar_calculo(
+        entrada("civil_2_v1", inicio="2026-08-01", fim="2026-09-01", inicio_juros="2026-08-01")
+    )
+    parcela = resultado.parcelas[0]
+
+    assert resultado.premissas["data_base_maxima"] == "2026-09-01"
+    assert parcela.componentes["ipca"].data_final == date(2026, 8, 31)
+    assert parcela.componentes["ipca"].fator_acumulado == D("0.9968")
+    assert parcela.valor_corrigido == D("996.80")
+
+
 def test_pdf_nao_deixa_titulo_da_tabela_orfao_apos_observacao_extensa():
     calculo = entrada("fazenda_publica_1_v1", inicio="2009-07-01", fim="2026-08-31")
     calculo.dados_gerais.observacoes = "Observação extensa para testar a paginação. " * 160

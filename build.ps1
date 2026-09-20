@@ -41,8 +41,8 @@ try {
 
     $taskDist = Join-Path $taskProject 'dist-installed'
     $taskPayload = Join-Path $taskDist 'CalculosJuridicos'
+    $taskArchiveRoot = Join-Path $taskProject 'build\previous-packages'
     if (Test-Path -LiteralPath $taskPayload) {
-        $taskArchiveRoot = Join-Path $taskProject 'build\previous-packages'
         New-Item -ItemType Directory -Path $taskArchiveRoot -Force | Out-Null
         $taskArchive = Join-Path $taskArchiveRoot ('CalculosJuridicos-' + [guid]::NewGuid().ToString('N'))
         Move-Item -LiteralPath $taskPayload -Destination $taskArchive
@@ -56,6 +56,13 @@ try {
     $taskExecutable = Join-Path $taskPayload 'CalculosJuridicos.exe'
     $taskCheck = Start-Process -FilePath $taskExecutable -ArgumentList '--self-check' -WindowStyle Hidden -PassThru -Wait
     if ($taskCheck.ExitCode -ne 0) { throw 'O aplicativo empacotado não passou na verificação interna.' }
+    if (Test-Path -LiteralPath $taskArchiveRoot) {
+        $taskArchiveResolved = [IO.Path]::GetFullPath($taskArchiveRoot)
+        if (-not ($taskArchiveResolved + '\').StartsWith($taskProjectPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+            throw 'Pasta de versões anteriores fora do projeto.'
+        }
+        Remove-Item -LiteralPath $taskArchiveResolved -Recurse -Force
+    }
     Write-Host 'Verificação interna do aplicativo: aprovada.'
     Write-Host ('Aplicativo criado: ' + $taskExecutable)
 }

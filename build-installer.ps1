@@ -66,6 +66,19 @@ try {
     $taskFriendly = Join-Path $taskFriendlyOutput ('CalculosJuridicos-Setup-' + $taskIdentity.display_version + '-x64.exe')
     Copy-Item -LiteralPath $taskInstaller -Destination $taskFriendly -Force
     ($taskHash + '  ' + (Split-Path -Leaf $taskFriendly)) | Set-Content -LiteralPath ($taskFriendly + '.sha256') -Encoding ASCII
+
+    # O instalador atual já foi compilado e conferido. Mantenha somente as duas
+    # pastas que representam esta edição: versão técnica e edição amigável.
+    $taskInstallerRoot = [IO.Path]::GetFullPath((Join-Path $taskProject 'instaladores'))
+    $taskKeepDirectories = @($taskIdentity.version, $taskIdentity.display_version)
+    foreach ($taskDirectory in @(Get-ChildItem -LiteralPath $taskInstallerRoot -Directory -Force)) {
+        if ($taskKeepDirectories -contains $taskDirectory.Name) { continue }
+        $taskOldResolved = [IO.Path]::GetFullPath($taskDirectory.FullName)
+        if (-not ($taskOldResolved + '\').StartsWith(($taskInstallerRoot.TrimEnd('\') + '\'), [StringComparison]::OrdinalIgnoreCase)) {
+            throw 'Pasta de instalador anterior fora da área de publicação.'
+        }
+        Remove-Item -LiteralPath $taskOldResolved -Recurse -Force
+    }
     Write-Host ('Instalador criado: ' + $taskFriendly)
 }
 finally {
