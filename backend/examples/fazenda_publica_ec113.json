@@ -1,0 +1,30 @@
+{
+  "dados_gerais": {
+    "data_base": "2025-06-01",
+    "processo": "5000999-11.2021.4.02.5101",
+    "requerente": "Servidor Público",
+    "requerido": "União Federal",
+    "tipo_devedor": "fazenda_publica",
+    "comarca": "Rio de Janeiro",
+    "vara": "1ª Vara Federal",
+    "observacoes": "Cálculo de Fazenda Pública com transição da SELIC única em 12/2021 (EC 113)."
+  },
+  "config_selic_taxa_unica": {
+    "aplicar": true,
+    "data_inicio": "2021-12-09",
+    "consolidar_saldo_ate": "2021-12-08"
+  },
+  "parcelas": [
+    {
+      "numero": 1,
+      "natureza": "Diferenças Salariais",
+      "data_vencimento": "2021-01-10",
+      "historico": "Diferença Jan/2021",
+      "valor_bruto": 1000.00,
+      "correcao_monetaria": "ipcae",
+      "data_inicial_correcao": "2021-01-10",
+      "juros_moratorios": "poupanca",
+      "data_inicial_juros": "2021-01-10"
+    }
+  ]
+}

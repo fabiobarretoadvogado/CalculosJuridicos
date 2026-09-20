@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.pytest_tmp/
+.pip-cache/
+.venv/
+.venv-codex/
+*.egg-info/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.npm-cache/
+
+# Empacotamento e publicações
+build/
+dist/
+dist-installed/
+instaladores/
+backend/liquidacao_custom/web/*
+!backend/liquidacao_custom/web/.gitkeep
+*.spec.bak
+
+# Resultados locais e arquivos temporários não pertencem ao código publicado
+output/
+exports/outputs/
+tmp/
+graphify-out/
+frontend/src/graphify-out/
+*-DESKTOP-*
+
+# Ferramentas portáteis usadas apenas na máquina de publicação
+.tools/
+
+# Logs
+*.log
+logs/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Chaves e credenciais nunca pertencem ao projeto
+*.pem
+update-signing-key.json

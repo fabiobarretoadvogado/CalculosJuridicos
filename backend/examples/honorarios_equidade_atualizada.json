@@ -1,0 +1,8 @@
+{
+  "categoria": "honorarios_sucumbenciais_isolados",
+  "dados_gerais": {"data_base": "2026-08-31", "observacoes": "EXEMPLO HIPOTÉTICO, sem vínculo com autos. Datas de fixação e início dos juros, valor e encargos apenas demonstrativos; não comprovam trânsito em julgado de processo algum."},
+  "base": "valor_certo",
+  "valor_certo": "1500.05",
+  "encargos_valor_certo": {"data_fixacao": "2026-01-15", "indice": "ipca", "juros": "taxa_legal", "data_inicio_juros": "2026-03-03", "percentual_mensal": null, "contagem_mes_cheio": false},
+  "custas_despesas": [{"numero": 1, "nome": "Custa demonstrativa", "data": "2026-01-15", "valor": "250"}]
+}

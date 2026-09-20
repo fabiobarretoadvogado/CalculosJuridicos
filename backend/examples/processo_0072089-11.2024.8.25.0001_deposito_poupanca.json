@@ -1,0 +1,37 @@
+{
+  "perfil": "selic_cjf_v1",
+  "dados_gerais": {
+    "data_base": "2026-09-01",
+    "processo": "0072089-11.2024.8.25.0001 / 202411802540",
+    "classe": "Cumprimento contra a Fazenda Pública - diferença além do depósito judicial",
+    "requerente": "FÁBIO AUGUSTO MENDONÇA BARRETO",
+    "requerido": "ESTADO DE SERGIPE",
+    "comarca": "Aracaju/SE",
+    "vara": "18ª Vara Cível de Aracaju",
+    "criterio_inicio_juros": "vencimento",
+    "observacoes": "O depósito ainda não foi liberado, conforme informação do usuário em 18/09/2026. Bruto R$ 5.845,82: R$ 5.313,93 destinados à conta, remunerados pela poupança; IR R$ 531,89 abatido nominalmente, conforme confirmação expressa. Comprovante bancário de 30/12/2025 (p. 61), com marco bruto informado em 31/12/2025 (p. 90); o rendimento começa em 01/01/2026 em ambos. Não se presume quitação no depósito. Adotada a premissa do Tema 677/STJ indicada pelo usuário: encargos do título mantidos até a efetiva entrega, deduzindo-se o saldo real da conta. A diferença é provisória e adicional ao depósito pendente; conciliar a remuneração estimada SGS 195 com o extrato. Não se duplica o resgate do mesmo depósito."
+  },
+  "parcelas": [{
+    "numero": 1,
+    "historico": "Honorários do inventariante dativo - crédito original fixado em 14/11/2024",
+    "data_vencimento": "2024-11-14",
+    "valor_bruto": "5800.00",
+    "valor_pago_na_data": "0.00",
+    "multa_percentual": "0.00"
+  }],
+  "descontos": {
+    "perfil": "poupanca_deposito_v1",
+    "criterio_inicio_juros": "vencimento",
+    "itens": [{
+      "numero": 1,
+      "aplicar": true,
+      "descricao": "Depósito não liberado: poupança sobre R$ 5.313,93; IR R$ 531,89 nominal",
+      "data": "2025-12-31",
+      "valor": "5845.82",
+      "encargos_sem_atualizacao": "531.89"
+    }]
+  },
+  "custas_despesas": [],
+  "honorarios_sucumbenciais": {"aplicar": false},
+  "cumprimento_sentenca": {"aplicar_multa": false, "aplicar_honorarios": false, "destacar_contratuais": false}
+}

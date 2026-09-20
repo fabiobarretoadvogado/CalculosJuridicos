@@ -1,0 +1,28 @@
+{
+  "dados_gerais": {
+    "data_base": "2024-12-31",
+    "processo": "5004321-88.2023.8.19.0002",
+    "requerente": "José de Souza",
+    "requerido": "Ana Maria Negócios",
+    "tipo_devedor": "privado",
+    "comarca": "Niterói",
+    "vara": "2ª Vara Cível",
+    "contrato": "Locação Comercial",
+    "observacoes": "Série de aluguéis vencidos em 2024."
+  },
+  "preenchimento_serie": {
+    "data_inicial": "2024-01-10",
+    "data_final": "2024-12-10",
+    "periodicidade": "mensal",
+    "dia_vencimento": 10,
+    "historico_padrao": "Aluguel Comercial",
+    "valor_fixo": 1200.00,
+    "natureza": "Aluguel",
+    "correcao_monetaria": "igpm",
+    "data_inicial_correcao": "2024-01-10",
+    "juros_moratorios": "percentual_mensal_simples",
+    "data_inicial_juros": "2024-01-10",
+    "percentual_juros": 1.00,
+    "multa_moratoria": 10.00
+  }
+}

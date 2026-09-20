@@ -1,0 +1,25 @@
+{
+  "dados_gerais": {
+    "data_base": "2025-06-01",
+    "processo": "0005678-12.2024.8.19.0003",
+    "requerente": "Menor Assistido",
+    "requerido": "Pai Alimentante",
+    "tipo_devedor": "privado",
+    "comarca": "Petrópolis",
+    "vara": "Vara de Família",
+    "observacoes": "Pensão alimentícia baseada em 30% do salário mínimo em 2024-2025."
+  },
+  "preenchimento_salario_minimo": {
+    "percentual": 30.00,
+    "data_inicial": "2024-01-10",
+    "data_final": "2025-06-10",
+    "periodicidade": "mensal",
+    "dia_vencimento": 10,
+    "historico": "Pensão alimentícia",
+    "natureza": "Alimentos",
+    "correcao_monetaria": "inpc",
+    "juros_moratorios": "percentual_mensal_simples",
+    "percentual_juros": 1.00,
+    "multa_moratoria": 2.00
+  }
+}

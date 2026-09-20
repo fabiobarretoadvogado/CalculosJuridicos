@@ -1,0 +1,26 @@
+{
+  "perfil": "selic_cjf_v1",
+  "dados_gerais": {
+    "data_base": "2026-09-01",
+    "processo": "0028405-02.2025.8.25.0001 / 202511800949",
+    "classe": "Cumprimento de Sentença contra a Fazenda Pública - honorários de inventariante dativo",
+    "requerente": "FÁBIO AUGUSTO MENDONÇA BARRETO",
+    "requerido": "ESTADO DE SERGIPE",
+    "comarca": "Aracaju/SE",
+    "vara": "18ª Vara Cível de Aracaju",
+    "criterio_inicio_juros": "vencimento",
+    "observacoes": "Atualização exclusivamente dos R$ 5.000,00 originais fixados em 31/03/2025 (PDF fornecido, p. 9-10), até a referência SELIC de 01/09/2026. Contas anteriores desconsideradas como base. SELIC mensal simples desde a competência 03/2025, com último índice 08/2026; sem capitalização, juros adicionais, nova verba sucumbencial, multa, custas ou destaque contratual. A referência é mensal, não atualização diária."
+  },
+  "parcelas": [{
+    "numero": 1,
+    "historico": "Honorários do inventariante dativo - valor original fixado em 31/03/2025",
+    "data_vencimento": "2025-03-31",
+    "valor_bruto": "5000.00",
+    "valor_pago_na_data": "0.00",
+    "multa_percentual": "0.00"
+  }],
+  "descontos": {"itens": []},
+  "custas_despesas": [],
+  "honorarios_sucumbenciais": {"aplicar": false},
+  "cumprimento_sentenca": {"aplicar_multa": false, "aplicar_honorarios": false, "destacar_contratuais": false}
+}

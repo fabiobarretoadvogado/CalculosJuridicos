@@ -1,0 +1,10 @@
+{
+  "categoria": "honorarios_sucumbenciais_isolados",
+  "dados_gerais": {
+    "data_base": "2026-08-31",
+    "observacoes": "EXEMPLO HIPOTÉTICO de honorários por equidade. Quantia informada já na data-base, sem novo arbitramento ou atualização automática. Sem vínculo com autos."
+  },
+  "base": "valor_certo",
+  "valor_certo": "1500.05",
+  "custas_despesas": [{"numero": 1, "nome": "Taxa demonstrativa", "data": "2025-09-01", "valor": "250"}]
+}

@@ -1,0 +1,46 @@
+# Cálculos Jurídicos 1.06
+
+Atualização acessível diretamente pelo programa.
+
+- O rodapé passa a manter o botão `Verificar atualização` visível mesmo quando a versão instalada já é a mais recente.
+- Quando houver uma edição nova no GitHub, o mesmo controle muda para `Atualizar para <versão>` e inicia o fluxo de download e instalação.
+- Falhas de conexão exibem `Tentar novamente`, em vez de ocultar silenciosamente a ação.
+- A área de atualização permanece visível também quando a janela está estreita.
+
+# Cálculos Jurídicos 1.05
+
+Identificação neutra e correta do IPCA-E.
+
+- Removida das tabelas, critérios, metodologia e relatórios a referência legada à “convenção da CDA”.
+- Os registros agora identificam claramente `IPCA-E anual (IBGE)` até 30/09/2022 e `IPCA-E mensal (IBGE)` a partir de 01/10/2022.
+- A alteração é somente descritiva: os percentuais oficiais, períodos, truncamento e valores calculados permanecem inalterados.
+
+# Cálculos Jurídicos 1.04
+
+Correção do salvamento de relatórios no programa instalado.
+
+- O botão `Baixar relatório PDF` agora abre o diálogo nativo do Windows para escolher onde salvar o arquivo.
+- A mesma correção vale para os demais downloads gerados dentro do aplicativo, como PDF, Excel, CSV, memória em texto e modelo de importação.
+- O arquivo temporário do navegador interno permanece disponível até o Windows iniciar efetivamente o salvamento.
+
+# Cálculos Jurídicos 1.03
+
+Extinção integral da dívida correta.
+
+- Na apuração de honorários por redução de dívida, a opção `Dívida integralmente extinta` registra saldo remanescente de R$ 0,00 sem exigir parcela, data ou valor fictício.
+- Itens já preenchidos ficam preservados na tela se a opção for desmarcada, mas não são enviados nem considerados enquanto a extinção estiver ativa.
+- Resultado, memória e PDF documentam a extinção integral sem aplicar índices, juros ou multa à dívida correta.
+- A dívida originalmente exigida continua exigindo ao menos um item positivo; a extinção integral só se aplica à dívida correta.
+
+# Cálculos Jurídicos 1.02
+
+Novos critérios da Fazenda Pública e civis.
+
+- A lista principal passa a oferecer Fazenda Pública 1, 2, 3 e 4, com as transições específicas de IPCA-E, poupança, SELIC e juros de 2% ao ano.
+- O antigo perfil IPCA-E + poupança passa a se chamar Fazenda Pública 3, sem perder a compatibilidade dos cálculos salvos.
+- O antigo perfil de 2% passa a se chamar Fazenda Pública 4 e agora também aplica IPCA-E e poupança até 08/12/2021.
+- IPCA + Taxa Legal passa a se chamar Civil 1.
+- O novo Civil 2 aplica IPCA e juros de mora simples de 1% ao mês, com datas independentes.
+- A série oficial da poupança foi completada de 09/12/2021 em diante para suportar a Fazenda Pública 1 sem lacunas.
+- SELIC continua disponível como critério próprio.
+- O instalador mantém a verificação automática de atualizações pelo GitHub e a validação de assinatura e integridade.

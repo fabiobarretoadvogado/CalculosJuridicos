@@ -1,0 +1,26 @@
+{
+  "perfil": "selic_cjf_v1",
+  "dados_gerais": {
+    "data_base": "2026-09-01",
+    "processo": "0072089-11.2024.8.25.0001 / 202411802540",
+    "classe": "Cumprimento contra a Fazenda Pública - atualização integral antes dos abatimentos",
+    "requerente": "FÁBIO AUGUSTO MENDONÇA BARRETO",
+    "requerido": "ESTADO DE SERGIPE",
+    "comarca": "Aracaju/SE",
+    "vara": "18ª Vara Cível de Aracaju",
+    "criterio_inicio_juros": "vencimento",
+    "observacoes": "VALOR INTEGRAL ANTES DOS ABATIMENTOS: atualização dos R$ 5.800,00 originais fixados em 14/11/2024 (PDF fornecido, p. 17-18), sem usar montantes de contas anteriores como base. SELIC mensal simples de 11/2024 a 08/2026, referência 01/09/2026, sem capitalização ou juros adicionais. ATENÇÃO: este total não representa o saldo ainda devido. Há depósito líquido de R$ 5.313,93 e retenção de IR de R$ 531,89; a manifestação de p. 90 reconhece pagamento bruto de R$ 5.845,82 em 31/12/2025. Pagamentos não abatidos neste demonstrativo de atualização integral. Sem custas, nova sucumbência, multa ou destaque contratual."
+  },
+  "parcelas": [{
+    "numero": 1,
+    "historico": "Honorários do inventariante dativo - R$ 5.800,00 originais de 14/11/2024; antes dos abatimentos",
+    "data_vencimento": "2024-11-14",
+    "valor_bruto": "5800.00",
+    "valor_pago_na_data": "0.00",
+    "multa_percentual": "0.00"
+  }],
+  "descontos": {"itens": []},
+  "custas_despesas": [],
+  "honorarios_sucumbenciais": {"aplicar": false},
+  "cumprimento_sentenca": {"aplicar_multa": false, "aplicar_honorarios": false, "destacar_contratuais": false}
+}

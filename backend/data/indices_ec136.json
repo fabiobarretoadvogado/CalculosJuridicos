@@ -1,0 +1,104 @@
+{
+  "ipca": [
+    {
+      "data": "01/09/2025",
+      "valor": "0.48"
+    },
+    {
+      "data": "01/10/2025",
+      "valor": "0.09"
+    },
+    {
+      "data": "01/11/2025",
+      "valor": "0.18"
+    },
+    {
+      "data": "01/12/2025",
+      "valor": "0.33"
+    },
+    {
+      "data": "01/01/2026",
+      "valor": "0.33"
+    },
+    {
+      "data": "01/02/2026",
+      "valor": "0.70"
+    },
+    {
+      "data": "01/03/2026",
+      "valor": "0.88"
+    },
+    {
+      "data": "01/04/2026",
+      "valor": "0.67"
+    },
+    {
+      "data": "01/05/2026",
+      "valor": "0.58"
+    },
+    {
+      "data": "01/06/2026",
+      "valor": "0.16"
+    },
+    {
+      "data": "01/07/2026",
+      "valor": "0.07"
+    }
+  ],
+  "obtido_em": "2026-09-06",
+  "selic": [
+    {
+      "data": "01/09/2025",
+      "valor": "1.22"
+    },
+    {
+      "data": "01/10/2025",
+      "valor": "1.28"
+    },
+    {
+      "data": "01/11/2025",
+      "valor": "1.05"
+    },
+    {
+      "data": "01/12/2025",
+      "valor": "1.22"
+    },
+    {
+      "data": "01/01/2026",
+      "valor": "1.16"
+    },
+    {
+      "data": "01/02/2026",
+      "valor": "1.00"
+    },
+    {
+      "data": "01/03/2026",
+      "valor": "1.21"
+    },
+    {
+      "data": "01/04/2026",
+      "valor": "1.09"
+    },
+    {
+      "data": "01/05/2026",
+      "valor": "1.07"
+    },
+    {
+      "data": "01/06/2026",
+      "valor": "1.12"
+    },
+    {
+      "data": "01/07/2026",
+      "valor": "1.22"
+    },
+    {
+      "data": "01/08/2026",
+      "valor": "1.09"
+    }
+  ],
+  "fontes": {
+    "ipca": "https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados?formato=json&dataInicial=01/09/2025&dataFinal=06/09/2026",
+    "selic": "https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados?formato=json&dataInicial=01/09/2025&dataFinal=31/08/2026"
+  },
+  "selic_obtido_em": "2026-09-18"
+}

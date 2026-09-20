@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "liquidacao-custom"
+version = "0.1.0"
+description = "Motor de cálculo judicial auditável, customizável e baseado em parcelas para liquidação de sentença e atualização de débitos judiciais."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = [
+    "pandas>=2.0",
+    "openpyxl>=3.1",
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.20.0",
+    "python-multipart>=0.0.6",
+    "reportlab>=4.4,<5",
+    "cryptography>=45,<50",
+    "pywebview>=5.4,<7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "httpx>=0.25",
+    "pypdf>=5,<7",
+    "pyinstaller>=6.10,<7",
+    "pillow>=11,<13",
+]
+
+[tool.setuptools.packages.find]
+include = ["liquidacao_custom*"]
+
+[tool.setuptools.package-data]
+liquidacao_custom = ["assets/*.png", "web/*", "web/assets/*", "updates/*.ps1"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

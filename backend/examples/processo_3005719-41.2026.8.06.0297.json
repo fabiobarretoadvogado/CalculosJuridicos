@@ -1,0 +1,27 @@
+{
+  "perfil": "ipca_taxa_legal_v1",
+  "dados_gerais": {
+    "data_base": "2026-08-31",
+    "processo": "3005719-41.2026.8.06.0297",
+    "classe": "Ação de indenização por danos morais e materiais",
+    "requerente": "LEONARA LIMA LIBANIO",
+    "requerido": "MOVIDA PARTICIPACOES S.A.",
+    "comarca": "",
+    "vara": "Núcleo de Justiça 4.0 - Juizados Especiais Adjuntos - CE",
+    "observacoes": "Sentença ID 237259149, assinada em 28/08/2026, extraída do PDF fornecido. Condenação pecuniária: R$ 5.000,00 por dano moral. Evento danoso: negativação de 02/02/2026, expressamente narrada na fundamentação. IPCA desde 28/08/2026; juros pela Taxa Legal oficial desde 02/02/2026. As faturas de R$ 3.394,13 e R$ 2.199,00 foram declaradas inexigíveis; não constituem condenação a restituir valores e não integram este principal. Sem custas ou honorários na sentença. Não incluídos art. 523, multa cominatória não arbitrada, pagamentos, descontos ou destaque contratual sem elementos específicos. Data-base 31/08/2026: último mês com IPCA publicado; setembro não estimado. Contagem proporcional: inclui os termos iniciais e exclui a data-base, conforme convenção da Calculadora do Cidadão. O documento fornecido não comprova trânsito em julgado ou término do prazo de pagamento voluntário.",
+    "criterio_inicio_juros": "data_fixa",
+    "data_inicial_juros": "2026-02-02"
+  },
+  "parcelas": [{
+    "numero": 1,
+    "historico": "Indenização por dano moral - sentença ID 237259149",
+    "data_vencimento": "2026-08-28",
+    "valor_bruto": "5000.00",
+    "valor_pago_na_data": "0",
+    "multa_percentual": "0",
+    "data_inicial_juros": null
+  }],
+  "custas_despesas": [],
+  "honorarios_sucumbenciais": {"aplicar": false},
+  "cumprimento_sentenca": {"aplicar_multa": false, "aplicar_honorarios": false, "destacar_contratuais": false}
+}

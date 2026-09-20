@@ -1,0 +1,73 @@
+{
+  "dados_gerais": {
+    "data_base": "2025-06-01",
+    "processo": "0001234-56.2024.8.19.0001",
+    "requerente": "Maria da Silva",
+    "requerido": "Banco XPTO S/A",
+    "tipo_devedor": "privado",
+    "comarca": "Rio de Janeiro",
+    "vara": "5ª Vara Cível",
+    "contrato": "Contrato de Empréstimo nº 987",
+    "observacoes": "Exemplo de cálculo de dano material e moral contra devedor privado."
+  },
+  "parcelas": [
+    {
+      "numero": 1,
+      "natureza": "Dano Material",
+      "data_vencimento": "2024-01-15",
+      "historico": "Reembolso de despesas médicas (desembolso)",
+      "valor_bruto": 1455.26,
+      "valor_pago_na_data": 0.00,
+      "correcao_monetaria": "ipca",
+      "data_inicial_correcao": "2024-01-15",
+      "juros_moratorios": "percentual_mensal_simples",
+      "data_inicial_juros": "2024-03-20",
+      "percentual_juros": 1.00,
+      "multa_moratoria": 0.00,
+      "observacao": "Juros desde a citação (20/03/2024)."
+    },
+    {
+      "numero": 2,
+      "natureza": "Dano Material",
+      "data_vencimento": "2024-02-10",
+      "historico": "Passagem de ônibus (desembolso)",
+      "valor_bruto": 442.00,
+      "valor_pago_na_data": 0.00,
+      "correcao_monetaria": "ipca",
+      "data_inicial_correcao": "2024-02-10",
+      "juros_moratorios": "percentual_mensal_simples",
+      "data_inicial_juros": "2024-03-20",
+      "percentual_juros": 1.00,
+      "multa_moratoria": 0.00,
+      "observacao": "Juros desde a citação."
+    },
+    {
+      "numero": 3,
+      "natureza": "Dano Moral",
+      "data_vencimento": "2024-10-05",
+      "historico": "Indenização por danos morais (arbitramento)",
+      "valor_bruto": 5000.00,
+      "valor_pago_na_data": 0.00,
+      "correcao_monetaria": "ipca",
+      "data_inicial_correcao": "2024-10-05",
+      "juros_moratorios": "percentual_mensal_simples",
+      "data_inicial_juros": "2024-03-20",
+      "percentual_juros": 1.00,
+      "multa_moratoria": 0.00,
+      "observacao": "Correção do arbitramento e juros da citação."
+    }
+  ],
+  "honorarios": [
+    {
+      "descricao": "Honorários sucumbenciais (10%)",
+      "percentual": 10.00,
+      "base_calculo": "subtotal_atualizado"
+    }
+  ],
+  "multa_cpc523": {
+    "aplicar": false,
+    "percentual_multa": 10.00,
+    "percentual_honorarios": 10.00,
+    "base_calculo": "subtotal_atualizado"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "categoria": "honorarios_sucumbenciais_isolados",
+  "dados_gerais": {
+    "data_base": "2026-08-31",
+    "observacoes": "EXEMPLO HIPOTÉTICO de honorários isolados sobre o valor da causa. Sem vínculo com autos; dados e percentual apenas demonstrativos."
+  },
+  "base": "valor_causa",
+  "valor_causa": "10000.00",
+  "data_protocolo": "2025-09-01",
+  "indice": "ipcae",
+  "percentual_sentenca": "20",
+  "custas_despesas": [{"numero": 1, "nome": "Taxa demonstrativa", "data": "2025-09-01", "valor": "250"}]
+}

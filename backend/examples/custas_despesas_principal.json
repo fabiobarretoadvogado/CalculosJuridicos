@@ -1,0 +1,39 @@
+{
+  "perfil": "selic_cjf_v1",
+  "dados_gerais": {
+    "data_base": "2025-10-31",
+    "processo": "EXEMPLO-CUSTAS-PRINCIPAL",
+    "classe": "Exemplo de demonstrativo",
+    "requerente": "Parte requerente",
+    "requerido": "Parte requerida",
+    "comarca": "Comarca de exemplo",
+    "vara": "Vara de exemplo",
+    "observacoes": "Valores meramente demonstrativos para validação visual.",
+    "criterio_inicio_juros": "vencimento",
+    "data_inicial_juros": null
+  },
+  "parcelas": [
+    {
+      "numero": 1,
+      "historico": "Obrigação principal de exemplo",
+      "data_vencimento": "2025-09-10",
+      "valor_bruto": "2000.00",
+      "valor_pago_na_data": "0",
+      "data_inicial_juros": null
+    }
+  ],
+  "custas_despesas": [
+    {
+      "numero": 1,
+      "nome": "Taxa judiciária",
+      "data": "2025-09-01",
+      "valor": "150.00"
+    },
+    {
+      "numero": 2,
+      "nome": "Honorários periciais",
+      "data": "2025-09-15",
+      "valor": "300.00"
+    }
+  ]
+}

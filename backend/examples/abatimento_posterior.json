@@ -1,0 +1,32 @@
+{
+  "dados_gerais": {
+    "data_base": "2025-06-01",
+    "processo": "0009999-99.2023.8.19.0001",
+    "requerente": "Pedro Cavalcanti",
+    "requerido": "Lojas do Sul S/A",
+    "tipo_devedor": "privado",
+    "observacoes": "Cálculo com abatimento posterior na data do pagamento."
+  },
+  "parcelas": [
+    {
+      "numero": 1,
+      "natureza": "Nota Promissória",
+      "data_vencimento": "2024-01-10",
+      "historico": "Título Principal",
+      "valor_bruto": 10000.00,
+      "correcao_monetaria": "ipca",
+      "data_inicial_correcao": "2024-01-10",
+      "juros_moratorios": "percentual_mensal_simples",
+      "data_inicial_juros": "2024-01-10",
+      "percentual_juros": 1.00
+    }
+  ],
+  "abatimentos": [
+    {
+      "data_pagamento": "2024-06-15",
+      "valor": 3000.00,
+      "historico": "Pagamento parcial voluntário",
+      "forma_imputacao": "abater_na_data_do_pagamento"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "categoria": "honorarios_sucumbenciais_proveito_economico",
+  "dados_gerais": {
+    "data_base": "2026-08-01",
+    "observacoes": "EXEMPLO HIPOTÉTICO para conferir as cinco faixas. Valores e salário mínimo de R$ 1.000,00 meramente demonstrativos; não correspondem a um processo ou salário mínimo oficial. Os percentuais mínimos foram escolhidos apenas para este exemplo."
+  },
+  "divida_original": {
+    "perfil": "selic_cjf_v1",
+    "parcelas": [{"numero": 1, "historico": "Valor originalmente exigido demonstrativo", "data_origem": "2026-08-01", "valor": "150001000.00"}]
+  },
+  "divida_correta": {
+    "perfil": "selic_cjf_v1",
+    "parcelas": [{"numero": 1, "historico": "Valor correto demonstrativo", "data_origem": "2026-08-01", "valor": "1000.00"}]
+  },
+  "percentual_sentenca": null,
+  "escalonamento_fazenda": {
+    "salario_minimo": "1000.00",
+    "marco": "sentenca_liquida",
+    "data_decisao": "2026-09-09",
+    "percentuais_faixas": ["10", "8", "5", "3", "1"]
+  },
+  "custas_despesas": [{"numero": 1, "nome": "Custa exclusivamente demonstrativa", "data": "2026-08-01", "valor": "250.00"}]
+}

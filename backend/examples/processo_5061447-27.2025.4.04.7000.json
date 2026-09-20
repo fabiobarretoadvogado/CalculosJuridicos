@@ -1,0 +1,40 @@
+{
+  "perfil": "selic_cjf_v1",
+  "dados_gerais": {
+    "data_base": "2026-08-01",
+    "processo": "5061447-27.2025.4.04.7000",
+    "classe": "Procedimento do Juizado Especial Cível — auxílio-moradia",
+    "requerente": "BRUNO HENRIQUE DA SILVA SANTOS",
+    "requerido": "UNIVERSIDADE FEDERAL DO PARANÁ — UFPR",
+    "comarca": "Curitiba/PR",
+    "vara": "Juízo Federal da 1ª Vara Federal de Curitiba",
+    "criterio_inicio_juros": "citacao",
+    "data_inicial_juros": "2025-11-15",
+    "observacoes": "CONTA PROVISÓRIA — critério expresso da sentença, evento 29 (09/09/2026). 19 competências: março/2024 a setembro/2025; R$ 1.231,83 por mês (30% da bolsa de R$ 4.106,09, conforme inicial e PLAN6). Dia 01 representa competência, não dia comprovado de pagamento. Citação: 15/11/2025, sem juros adicionais à SELIC. Sem custas, honorários, multas, descontos ou destaque contratual. REVISAR ANTES DO PROTOCOLO: divergência entre a SELIC da sentença e o Manual CJF de julho/2026 (IPCA-15 e taxa legal desde setembro/2025). Sem certidão de trânsito no anexo; prazo recursal do autor até 25/09/2026."
+  },
+  "parcelas": [
+    {"numero": 1, "historico": "Auxílio-moradia — 03/2024", "data_vencimento": "2024-03-01", "valor_bruto": "1231.83"},
+    {"numero": 2, "historico": "Auxílio-moradia — 04/2024", "data_vencimento": "2024-04-01", "valor_bruto": "1231.83"},
+    {"numero": 3, "historico": "Auxílio-moradia — 05/2024", "data_vencimento": "2024-05-01", "valor_bruto": "1231.83"},
+    {"numero": 4, "historico": "Auxílio-moradia — 06/2024", "data_vencimento": "2024-06-01", "valor_bruto": "1231.83"},
+    {"numero": 5, "historico": "Auxílio-moradia — 07/2024", "data_vencimento": "2024-07-01", "valor_bruto": "1231.83"},
+    {"numero": 6, "historico": "Auxílio-moradia — 08/2024", "data_vencimento": "2024-08-01", "valor_bruto": "1231.83"},
+    {"numero": 7, "historico": "Auxílio-moradia — 09/2024", "data_vencimento": "2024-09-01", "valor_bruto": "1231.83"},
+    {"numero": 8, "historico": "Auxílio-moradia — 10/2024", "data_vencimento": "2024-10-01", "valor_bruto": "1231.83"},
+    {"numero": 9, "historico": "Auxílio-moradia — 11/2024", "data_vencimento": "2024-11-01", "valor_bruto": "1231.83"},
+    {"numero": 10, "historico": "Auxílio-moradia — 12/2024", "data_vencimento": "2024-12-01", "valor_bruto": "1231.83"},
+    {"numero": 11, "historico": "Auxílio-moradia — 01/2025", "data_vencimento": "2025-01-01", "valor_bruto": "1231.83"},
+    {"numero": 12, "historico": "Auxílio-moradia — 02/2025", "data_vencimento": "2025-02-01", "valor_bruto": "1231.83"},
+    {"numero": 13, "historico": "Auxílio-moradia — 03/2025", "data_vencimento": "2025-03-01", "valor_bruto": "1231.83"},
+    {"numero": 14, "historico": "Auxílio-moradia — 04/2025", "data_vencimento": "2025-04-01", "valor_bruto": "1231.83"},
+    {"numero": 15, "historico": "Auxílio-moradia — 05/2025", "data_vencimento": "2025-05-01", "valor_bruto": "1231.83"},
+    {"numero": 16, "historico": "Auxílio-moradia — 06/2025", "data_vencimento": "2025-06-01", "valor_bruto": "1231.83"},
+    {"numero": 17, "historico": "Auxílio-moradia — 07/2025", "data_vencimento": "2025-07-01", "valor_bruto": "1231.83"},
+    {"numero": 18, "historico": "Auxílio-moradia — 08/2025", "data_vencimento": "2025-08-01", "valor_bruto": "1231.83"},
+    {"numero": 19, "historico": "Auxílio-moradia — 09/2025", "data_vencimento": "2025-09-01", "valor_bruto": "1231.83"}
+  ],
+  "descontos": {"itens": []},
+  "custas_despesas": [],
+  "honorarios_sucumbenciais": {"aplicar": false},
+  "cumprimento_sentenca": {"aplicar_multa": false, "aplicar_honorarios": false, "destacar_contratuais": false}
+}

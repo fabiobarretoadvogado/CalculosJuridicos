@@ -1,0 +1,56 @@
+{
+  "categoria": "honorarios_sucumbenciais_proveito_economico",
+  "dados_gerais": {
+    "data_base": "2025-10-31",
+    "processo": "EXEMPLO-CUSTAS-HONORARIOS",
+    "classe": "Exemplo de honorários sucumbenciais",
+    "requerente": "Parte requerente",
+    "requerido": "Parte requerida",
+    "comarca": "Comarca de exemplo",
+    "vara": "Vara de exemplo",
+    "observacoes": "Valores meramente demonstrativos para validação visual."
+  },
+  "divida_original": {
+    "perfil": "selic_cjf_v1",
+    "criterio_inicio_juros": "vencimento",
+    "data_inicial_juros": null,
+    "multa_moratoria_percentual": "0",
+    "parcelas": [
+      {
+        "numero": 1,
+        "historico": "Dívida originalmente exigida",
+        "data_origem": "2025-09-10",
+        "valor": "2000.00"
+      }
+    ]
+  },
+  "divida_correta": {
+    "perfil": "selic_cjf_v1",
+    "criterio_inicio_juros": "vencimento",
+    "data_inicial_juros": null,
+    "multa_moratoria_percentual": "0",
+    "parcelas": [
+      {
+        "numero": 1,
+        "historico": "Dívida correta",
+        "data_origem": "2025-09-10",
+        "valor": "1200.00"
+      }
+    ]
+  },
+  "custas_despesas": [
+    {
+      "numero": 1,
+      "nome": "Taxa judiciária",
+      "data": "2025-09-01",
+      "valor": "150.00"
+    },
+    {
+      "numero": 2,
+      "nome": "Honorários periciais",
+      "data": "2025-09-15",
+      "valor": "300.00"
+    }
+  ],
+  "percentual_sentenca": "20"
+}

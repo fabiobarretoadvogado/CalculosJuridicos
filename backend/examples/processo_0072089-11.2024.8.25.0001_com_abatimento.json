@@ -1,0 +1,36 @@
+{
+  "perfil": "selic_cjf_v1",
+  "dados_gerais": {
+    "data_base": "2026-09-01",
+    "processo": "0072089-11.2024.8.25.0001 / 202411802540",
+    "classe": "Cumprimento contra a Fazenda Pública - saldo após pagamento",
+    "requerente": "FÁBIO AUGUSTO MENDONÇA BARRETO",
+    "requerido": "ESTADO DE SERGIPE",
+    "comarca": "Aracaju/SE",
+    "vara": "18ª Vara Cível de Aracaju",
+    "criterio_inicio_juros": "vencimento",
+    "observacoes": "Recalculado desde os R$ 5.800,00 originais fixados em 14/11/2024 (PDF fornecido, p. 17-18), sem usar o saldo de conta anterior como principal. Abatido um único pagamento bruto de R$ 5.845,82 em 31/12/2025, conforme informação do usuário e reconhecimento de p. 90: depósito líquido R$ 5.313,93 mais IR retido R$ 531,89. Composição expressamente documentada em p. 92: principal pago R$ 5.800,00 e SELIC já apurada R$ 45,82. Esta parcela de encargos é abatida nominalmente, sem nova incidência; a base SELIC do pagamento é R$ 5.800,00. SELIC mensal simples, referência 01/09/2026, último índice 08/2026. O resgate posterior do mesmo depósito não é outro abatimento. Sem custas, multa, nova sucumbência ou destaque contratual."
+  },
+  "parcelas": [{
+    "numero": 1,
+    "historico": "Honorários do inventariante dativo - R$ 5.800,00 originais de 14/11/2024",
+    "data_vencimento": "2024-11-14",
+    "valor_bruto": "5800.00",
+    "valor_pago_na_data": "0.00",
+    "multa_percentual": "0.00"
+  }],
+  "descontos": {
+    "perfil": "selic_cjf_v1",
+    "itens": [{
+      "numero": 1,
+      "aplicar": true,
+      "descricao": "Pagamento bruto pela executada, incluindo IR retido; encargos já pagos segregados",
+      "data": "2025-12-31",
+      "valor": "5845.82",
+      "encargos_sem_atualizacao": "45.82"
+    }]
+  },
+  "custas_despesas": [],
+  "honorarios_sucumbenciais": {"aplicar": false},
+  "cumprimento_sentenca": {"aplicar_multa": false, "aplicar_honorarios": false, "destacar_contratuais": false}
+}

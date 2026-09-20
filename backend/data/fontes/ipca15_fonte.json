@@ -1,0 +1,12 @@
+{
+  "serie": 7478,
+  "nome": "IPCA-15 - variação mensal",
+  "produtor": "Instituto Brasileiro de Geografia e Estatística (IBGE)",
+  "distribuidor": "Banco Central do Brasil - SGS",
+  "obtido_em": "2026-09-20",
+  "primeira_competencia": "2009-07",
+  "ultima_competencia": "2026-08",
+  "url_dados": "https://api.bcb.gov.br/dados/serie/bcdata.sgs.7478/dados?formato=json&dataInicial=01/07/2009&dataFinal=31/08/2026",
+  "url_serie": "https://www3.bcb.gov.br/sgspub/consultarvalores/consultarValoresSeries.do?hdOidSeriesSelecionadas=7478&method=consultarGraficoPorId",
+  "url_produtor": "https://www.ibge.gov.br/estatisticas/economicas/precos-e-custos/9262-indice-nacional-de-precos-ao-consumidor-amplo-especial.html"
+}
