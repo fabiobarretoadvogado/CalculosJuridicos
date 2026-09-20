@@ -1,3 +1,13 @@
+# Cálculos Jurídicos 1.08
+
+Cobertura de índices corrigida e explicada conforme cada critério.
+
+- Fazenda Pública 2 passa a usar a SELIC mensal oficial até agosto de 2026 e aceita data-base até 31/08/2026.
+- Os avisos agora distinguem a data-base máxima do último dia ou competência efetivamente utilizados.
+- Civil 1 e Civil 2 mostram corretamente que a data-base de 01/09/2026 é excluída e que os índices são usados até 31/08/2026.
+- Combinações de honorários, custas e descontos informam qual parte do cálculo definiu o limite de data.
+- Os relatórios PDF usam a mesma explicação, sem a mensagem genérica de “índices disponíveis até”.
+
 # Cálculos Jurídicos 1.07
 
 Fechamento integral do último mês publicado nos critérios civis.

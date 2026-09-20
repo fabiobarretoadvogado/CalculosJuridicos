@@ -3,7 +3,7 @@ import { Plus, Trash2, ArrowRight, Rows3, FileSpreadsheet } from 'lucide-react';
 import { Button, Input, Textarea, Select } from '../components/ui';
 import { executarCalculo, obterCriterios, mensagemErro, type CriteriosPublicos, type CalculoSimplificado } from '../services/api';
 import { useCalculo } from '../contexts/useCalculo';
-import { formatarData, formatarMoeda, formatarCompetencia } from '../utils/formatters';
+import { formatarData, formatarMoeda } from '../utils/formatters';
 import { Importacao } from './Importacao';
 import { CustasDespesasForm } from '../components/CustasDespesasForm';
 import { ResultadoPrincipal } from '../components/ResultadoPrincipal';
@@ -11,6 +11,7 @@ import { DescontosForm } from '../components/DescontosForm';
 import { HonorariosPrincipaisForm, CumprimentoSentencaForm, DestaquesForm } from '../components/HonorariosPrincipaisForm';
 import { obterCoberturaHonorarios, type CoberturaHonorarios } from '../services/api';
 import { opcoesPerfisCalculo } from '../utils/perfisCalculo';
+import { mensagemCoberturaSelecionada } from '../utils/coberturaIndices';
 
 export function Processamento() {
   const { state, dispatch, buildCalculoJudicial } = useCalculo();
@@ -42,11 +43,14 @@ export function Processamento() {
   }, [perfilDescontos, descontosAtivos.length]);
   const coberturaDescontos = !descontosAtivos.length || criteriosDescontos?.perfil === perfilDescontos;
   const cobertura = criterios?.perfil === state.perfil ? criterios : null;
-  const limiteDataBase = criterios
-    ? [criterios.data_base_maxima, ...(state.custasDespesas.length ? [criterios.data_base_maxima_ipcae] : []),
-        ...(descontosAtivos.length && criteriosDescontos?.perfil === perfilDescontos ? [criteriosDescontos.data_base_maxima] : []),
-        ...(causaAtiva && coberturaHonorarios ? [coberturaHonorarios[state.honorariosSucumbenciais.indice].data_base_maxima] : [])].sort()[0]
-    : undefined;
+  const candidatosLimite = criterios ? [
+    { data: criterios.data_base_maxima, motivo: 'padrão do cálculo principal' },
+    ...(state.custasDespesas.length ? [{ data: criterios.data_base_maxima_ipcae, motivo: 'custas e despesas pelo IPCA-E' }] : []),
+    ...(descontosAtivos.length && criteriosDescontos?.perfil === perfilDescontos ? [{ data: criteriosDescontos.data_base_maxima, motivo: 'descontos informados' }] : []),
+    ...(causaAtiva && coberturaHonorarios ? [{ data: coberturaHonorarios[state.honorariosSucumbenciais.indice].data_base_maxima, motivo: 'correção do valor da causa' }] : []),
+  ] : [];
+  const limiteDataBase = candidatosLimite.map(item => item.data).sort()[0];
+  const motivosLimite = limiteDataBase ? candidatosLimite.filter(item => item.data === limiteDataBase).map(item => item.motivo) : [];
   const novo = state.perfil === 'selic_ipcae_2aa_v1';
   const fazenda1 = state.perfil === 'fazenda_publica_1_v1';
   const fazenda2 = state.perfil === 'fazenda_publica_2_v1';
@@ -109,7 +113,7 @@ export function Processamento() {
             </>}
           </div>
           <details className="quiet-details criteria-note"><summary>Ver os critérios aplicados</summary>
-            <p id="indices-disponiveis">{cjf && cobertura?.data_referencia_selic_maxima ? `SELIC disponível para a data-base de ${formatarData(cobertura.data_referencia_selic_maxima)}. Última competência disponível: ${formatarCompetencia(cobertura.ultima_competencia_selic_disponivel)}.` : limiteDataBase ? `Índices completos até ${formatarData(limiteDataBase)}.` : 'Consultando os índices…'}</p>
+            <p id="indices-disponiveis">{limiteDataBase ? mensagemCoberturaSelecionada(limiteDataBase, motivosLimite, cobertura) : 'Consultando os índices…'}</p>
             {cjf && state.dadosGerais.data_base && <p>Data-base SELIC: {formatarData(`${state.dadosGerais.data_base.slice(0, 7)}-01`)}. Referência mensal, sem atualização diária dentro do mês. Custas e demais operações usam a data final informada no campo acima.</p>}
             {datasIndependentes ? <p>Juros e correção têm datas independentes: os juros podem começar antes da correção. O campo da data de cada parcela indica o início da correção pelo IPCA.</p> : !cjf && <p>Início dos juros: aplica-se {novo ? 'à poupança até 08/12/2021 e aos juros de 2% ao ano a partir de 10/09/2025' : 'à poupança nos períodos em que ela incide'}, respeitado o vencimento da parcela. Não altera os períodos do IPCA-E ou da SELIC.</p>}
             {civil1 ? <p>IPCA: fatores mensais geométricos. Taxa Legal: taxas oficiais do Banco Central, acumuladas de forma simples, sobre o principal corrigido. Não há SELIC integral adicional nem subtração direta de percentuais.</p> : civil2 ? <p>IPCA: fatores mensais geométricos. Juros de mora: 1% ao mês, de forma simples e proporcional aos dias, sobre o principal corrigido.</p> : cjf ? <p>SELIC simples por competência: atualização e juros em todo o período. A taxa do mês é aplicada no mês seguinte (Manual de Cálculos da Justiça Federal).</p> : fazenda1 ? <ul className="criteria-list">

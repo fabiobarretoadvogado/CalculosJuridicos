@@ -1,7 +1,7 @@
 """Demonstrativo A4 com bases, índices e valores por parcela."""
 import io
 from pathlib import Path
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from xml.sax.saxutils import escape
 
@@ -465,9 +465,17 @@ def exportar_pdf(resultado: ResultadoCalculo) -> bytes:
     if resultado.alertas:
         partes.append(p("Observações do cálculo", "secao"))
         partes.extend(p(alerta) for alerta in resultado.alertas)
-    disponibilidade = (f"SELIC disponível para a data-base de {data_br(resultado.premissas['data_referencia_selic_maxima'])}. Última competência disponível: {date.fromisoformat(resultado.premissas['ultima_competencia_selic_disponivel'] + '-01'):%m/%Y}."
-                       if cjf and resultado.premissas.get("data_referencia_selic_maxima") else
-                       f"Índices disponíveis até {data_br(resultado.premissas.get('data_base_maxima'))}.")
+    data_limite = resultado.premissas.get("data_base_maxima")
+    if cjf and resultado.premissas.get("data_referencia_selic_maxima"):
+        disponibilidade = (f"Data-base máxima para o padrão principal: {data_br(data_limite)}. "
+            f"Última competência SELIC disponível: {date.fromisoformat(resultado.premissas['ultima_competencia_selic_disponivel'] + '-01'):%m/%Y}.")
+    elif datas_independentes and data_limite:
+        ultimo_dia = date.fromisoformat(data_limite) - timedelta(days=1)
+        disponibilidade = (f"Data-base máxima para o padrão principal: {data_br(data_limite)}. "
+            f"A data-base é excluída do cálculo; os índices são utilizados até {data_br(ultimo_dia)}.")
+    else:
+        disponibilidade = (f"Data-base máxima para o padrão principal: {data_br(data_limite)}. "
+            "Todos os índices necessários estão disponíveis até essa data.")
     bloco_fontes = [p("Fontes e conferência", "secao"), p(disponibilidade, "nota")]
     nomes = {"selic_limite": "Banco Central - SELIC para comparação (SGS 4390)", "ipcae": "IBGE - IPCA-15/IPCA-E (dados via BCB SGS 7478)", "ipcae_ibge": "IBGE - metodologia e divulgação do IPCA-E", "ipcae_serie_bcb": "Banco Central - série IPCA-15 (SGS 7478)", "selic": "Banco Central - SELIC mensal (SGS 4390)",
              "poupanca_total": "Banco Central - remuneração total da poupança (SGS 195)",

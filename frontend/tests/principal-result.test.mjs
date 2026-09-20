@@ -22,6 +22,8 @@ let escalonamentoInicial;
 let fixacaoHonorarios;
 let montarHonorariosIsolados;
 let limiteHonorariosAutonomos;
+let detalhesLimiteHonorariosAutonomos;
+let mensagemCoberturaSelecionada;
 let HonorariosValorCertoCampos;
 let HonorariosValorCertoResultado;
 let DescontosForm;
@@ -50,7 +52,8 @@ before(async () => {
   ({ prepararOperacaoDivida } = await server.ssrLoadModule('/src/utils/honorariosProveito.ts'));
   ({ EscalonamentoFazendaForm, EscalonamentoFazendaResultado } = await server.ssrLoadModule('/src/components/EscalonamentoFazendaHonorarios.tsx'));
   ({ escalonamentoInicial, fixacaoHonorarios } = await server.ssrLoadModule('/src/utils/honorariosFazenda.ts'));
-  ({ montarHonorariosIsolados, limiteHonorariosAutonomos } = await server.ssrLoadModule('/src/utils/honorariosIsolados.ts'));
+  ({ montarHonorariosIsolados, limiteHonorariosAutonomos, detalhesLimiteHonorariosAutonomos } = await server.ssrLoadModule('/src/utils/honorariosIsolados.ts'));
+  ({ mensagemCoberturaSelecionada } = await server.ssrLoadModule('/src/utils/coberturaIndices.ts'));
   ({ HonorariosValorCertoCampos, HonorariosValorCertoResultado } = await server.ssrLoadModule('/src/components/HonorariosValorCerto.tsx'));
   ({ DescontosForm } = await server.ssrLoadModule('/src/components/DescontosForm.tsx'));
   ({ UpdateStatusView } = await server.ssrLoadModule('/src/components/UpdateStatus.tsx'));
@@ -244,6 +247,24 @@ test('cobertura dos honorários isolados depende só do índice e das custas apl
   assert.equal(limiteHonorariosAutonomos('valor_certo', 'ipca', cobertura, original, correta, false), undefined);
   assert.equal(limiteHonorariosAutonomos('valor_certo', 'ipca', cobertura, original, correta, true), '2026-08-31');
   assert.equal(limiteHonorariosAutonomos('proveito_economico', 'ipcae', cobertura, original, correta, false), '2025-09-30');
+  assert.deepEqual(
+    detalhesLimiteHonorariosAutonomos('proveito_economico', 'ipcae', cobertura, original, correta, false),
+    { data: '2025-09-30', motivos: ['dívida correta'] },
+  );
+});
+
+test('mensagem de cobertura respeita datas inclusivas, exclusivas e referência mensal', () => {
+  const fazenda = mensagemCoberturaSelecionada('2026-08-31', ['dívida correta'], { perfil: 'fazenda_publica_2_v1', data_base_maxima: '2026-08-31' });
+  assert.match(fazenda, /31\/08\/2026/);
+  assert.match(fazenda, /Limite definido por dívida correta/);
+  assert.match(fazenda, /Todos os índices necessários estão disponíveis até essa data/);
+
+  const civil = mensagemCoberturaSelecionada('2026-09-01', ['padrão do cálculo principal'], { perfil: 'civil_2_v1', data_base_maxima: '2026-09-01' });
+  assert.match(civil, /Data-base máxima[^:]*: 01\/09\/2026/);
+  assert.match(civil, /data-base é excluída[^.]*31\/08\/2026/);
+
+  const selic = mensagemCoberturaSelecionada('2026-09-01', [], { perfil: 'selic_cjf_v1', data_base_maxima: '2026-09-01', ultima_competencia_selic_disponivel: '2026-08' });
+  assert.match(selic, /Última competência SELIC disponível: 08\/2026/);
 });
 
 test('honorários autônomos preservam percentual único como padrão e oferecem faixas', () => {
@@ -585,9 +606,11 @@ test('mover o aviso de índices não remove limites e erros do campo de data', a
   assert.match(campoData, /error=\{limiteDataBase/);
   assert.doesNotMatch(campoData, /hint=/);
   const aviso = fonte.match(/<p id="indices-disponiveis">[^\n]+/)[0];
-  assert.match(aviso, /limiteDataBase \? `Índices completos até \$\{formatarData\(limiteDataBase\)\}\.`/);
-  assert.match(aviso, /cjf && cobertura\?\.data_referencia_selic_maxima/);
-  assert.match(aviso, /Última competência disponível/);
+  assert.match(aviso, /mensagemCoberturaSelecionada\(limiteDataBase, motivosLimite, cobertura\)/);
+  const mensagens = await readFile(new URL('../src/utils/coberturaIndices.ts', import.meta.url), 'utf8');
+  assert.match(mensagens, /Data-base máxima para os critérios selecionados/);
+  assert.match(mensagens, /A data-base é excluída do cálculo/);
+  assert.match(mensagens, /Última competência SELIC disponível/);
 });
 
 test('resumo antes de calcular destaca valores sem contorno e preserva as rubricas separadas', async () => {

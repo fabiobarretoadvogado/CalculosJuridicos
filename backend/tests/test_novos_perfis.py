@@ -60,6 +60,17 @@ def test_fazenda_publica_2_troca_para_selic_e_nao_retorna_ao_ipcae():
     assert all("IPCA-E IBGE" not in item.indice_aplicado for item in parcela.memoria_correcao[1:])
 
 
+def test_fazenda_publica_2_usa_selic_oficial_ate_agosto_de_2026():
+    criterios = criterios_publicos(perfil="fazenda_publica_2_v1")
+    resultado = executar_calculo(entrada("fazenda_publica_2_v1", fim="2026-08-31"))
+    parcela = resultado.parcelas[0]
+
+    assert criterios["data_base_maxima"] == "2026-08-31"
+    assert parcela.componentes["selic"].data_final == date(2026, 8, 31)
+    assert any(item.competencia == "2026-08" and item.fator_aplicado == D("1.0109")
+               for item in parcela.memoria_correcao)
+
+
 def test_fazenda_publica_3_preserva_tres_faixas():
     parcela = executar_calculo(entrada("selic_ipcae_poupanca_v1")).parcelas[0]
     assert set(parcela.componentes) == {"ipcae_pre", "poupanca_pre", "selic", "ipcae_pos", "poupanca_pos"}

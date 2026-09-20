@@ -29,7 +29,8 @@ import { CustasDespesasForm } from '../components/CustasDespesasForm';
 import { CustasDespesasResultado } from '../components/CustasDespesasResultado';
 import { EscalonamentoFazendaForm, EscalonamentoFazendaResultado } from '../components/EscalonamentoFazendaHonorarios';
 import { escalonamentoInicial, fixacaoHonorarios } from '../utils/honorariosFazenda';
-import { limiteHonorariosAutonomos, montarHonorariosIsolados, encargosValorCertoIniciais } from '../utils/honorariosIsolados';
+import { detalhesLimiteHonorariosAutonomos, montarHonorariosIsolados, encargosValorCertoIniciais } from '../utils/honorariosIsolados';
+import { mensagemCoberturaSelecionada } from '../utils/coberturaIndices';
 import { HonorariosCausaCampos } from '../components/HonorariosPrincipaisForm';
 import { HonorariosPrincipaisResultado } from '../components/HonorariosPrincipaisResultado';
 import { HonorariosValorCertoCampos, HonorariosValorCertoResultado } from '../components/HonorariosValorCerto';
@@ -215,7 +216,11 @@ export function HonorariosSucumbenciais({ baseInicial = 'proveito_economico' }: 
   const catalogo = criteriosOriginal?.perfis || criteriosCorreta?.perfis;
   const perfis = opcoesPerfisCalculo(catalogo);
   const criteriosCorretaAplicaveis = correta.extincao_integral ? null : criteriosCorreta;
-  const dataBaseMaxima = limiteHonorariosAutonomos(base, camposBase.indice, cobertura, criteriosOriginal, criteriosCorretaAplicaveis, custasDespesas.length > 0, atualizarValorCerto ? encargosValorCerto : null);
+  const limiteHonorarios = detalhesLimiteHonorariosAutonomos(base, camposBase.indice, cobertura, criteriosOriginal, criteriosCorretaAplicaveis, custasDespesas.length > 0, atualizarValorCerto ? encargosValorCerto : null);
+  const dataBaseMaxima = limiteHonorarios.data;
+  const criterioLimite = base === 'proveito_economico'
+    ? [criteriosOriginal, criteriosCorretaAplicaveis].find(item => item?.data_base_maxima === dataBaseMaxima)
+    : null;
   const coberturaPronta = base === 'proveito_economico' ? Boolean(criteriosOriginal && (correta.extincao_integral || criteriosCorreta)) : base === 'valor_causa' || (base === 'valor_certo' && atualizarValorCerto) || custasDespesas.length > 0 ? Boolean(cobertura && (base !== 'valor_certo' || !atualizarValorCerto || encargosValorCerto.juros !== 'taxa_legal' || cobertura.taxa_legal)) : true;
 
   function atualizarDados(campo: keyof ReturnType<typeof dadosIniciais>, valor: string) {
@@ -347,7 +352,7 @@ export function HonorariosSucumbenciais({ baseInicial = 'proveito_economico' }: 
           </div>
           <div className="mt-4">
           <div className="field-grid honorarios-partes-grid">
-            <Input id="honorarios-data-base" label="Data-base" type="date" max={dataBaseMaxima} required value={dados.data_base} onChange={e => atualizarDados('data_base', e.target.value)} hint={dataBaseMaxima ? `Índices aplicáveis completos até ${formatarData(dataBaseMaxima)}.` : coberturaPronta ? undefined : 'Consultando a cobertura dos índices…'} />
+            <Input id="honorarios-data-base" label="Data-base" type="date" max={dataBaseMaxima} required value={dados.data_base} onChange={e => atualizarDados('data_base', e.target.value)} hint={dataBaseMaxima ? mensagemCoberturaSelecionada(dataBaseMaxima, limiteHonorarios.motivos, criterioLimite) : coberturaPronta ? undefined : 'Consultando a cobertura dos índices…'} />
             {base !== 'valor_certo' && <Select id="honorarios-fixacao" label="Forma de fixação" value={escalonarFazenda ? 'fazenda' : 'percentual'} options={[{ value: 'percentual', label: 'Percentual único' }, { value: 'fazenda', label: 'Faixas · Fazenda Pública (art. 85)' }]} onChange={e => { setEscalonarFazenda(e.target.value === 'fazenda'); setResultado(null); setErroRelatorio(''); }} />}
             {base !== 'valor_certo' && !escalonarFazenda && <Input id="honorarios-percentual" label="Percentual fixado na sentença (%)" type="number" min="0.0001" max="100" step="0.0001" required value={percentual} onChange={e => { setPercentual(e.target.value); setResultado(null); }} />}
             {base === 'valor_certo' && <Input id="honorarios-valor-certo" label={atualizarValorCerto ? 'Valor fixado dos honorários (R$)' : 'Valor certo na data-base (R$)'} type="number" min="0.01" step="0.01" required value={camposBase.valor_certo || ''} onChange={e => { setCamposBase(c => ({ ...c, valor_certo: e.target.value || null })); setResultado(null); }} />}

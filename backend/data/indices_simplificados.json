@@ -46,7 +46,18 @@
     "2025-06": "1.10",
     "2025-07": "1.28",
     "2025-08": "1.16",
-    "2025-09": "1.22"
+    "2025-09": "1.22",
+    "2025-10": "1.28",
+    "2025-11": "1.05",
+    "2025-12": "1.22",
+    "2026-01": "1.16",
+    "2026-02": "1.00",
+    "2026-03": "1.21",
+    "2026-04": "1.09",
+    "2026-05": "1.07",
+    "2026-06": "1.12",
+    "2026-07": "1.22",
+    "2026-08": "1.09"
   },
   "ipcae_taxas": {
     "2009-07": "0.22",
@@ -11831,7 +11842,7 @@
     "2026-09-17": "2026-10-17"
   },
   "fontes": {
-    "selic": "https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados?formato=json&dataInicial=01/12/2021&dataFinal=30/09/2025",
+    "selic": "https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados?formato=json&dataInicial=01/12/2021&dataFinal=31/08/2026",
     "ipcae": "https://api.bcb.gov.br/dados/serie/bcdata.sgs.7478/dados?formato=json&dataInicial=01/07/2009&dataFinal=31/08/2026",
     "ipcae_ibge": "https://www.ibge.gov.br/estatisticas/economicas/precos-e-custos/9262-indice-nacional-de-precos-ao-consumidor-amplo-especial.html",
     "ipcae_serie_bcb": "https://www3.bcb.gov.br/sgspub/consultarvalores/consultarValoresSeries.do?hdOidSeriesSelecionadas=7478&method=consultarGraficoPorId",
@@ -11845,7 +11856,7 @@
   "sha256_fontes": {
     "bcb_ipca15_2009_2026.json": "b45bc4c9144dc43588ab54f2654483c45b4d75eec8d1074758fd862fee5194e7",
     "ipca15_fonte.json": "6c675fcacc7333b189dece31df5fbe9e2db2a5a8384e3f006ca695d5c0bf0eb2",
-    "bcb_selic_mensal.json": "217056c41e3abc386f7c223eaf3671e395e1dd6e815b4a4ac519c2bcbade0996",
+    "bcb_selic_mensal.json": "e7abbfaaf131940f804cc8591d52118b3478be6c1dfa96ec37a99d53f32b040c",
     "bcb_poupanca_total_2009_2012.json": "02c1a342b989f86ca0312683cbdeed33614947f71ffa273a1ccf192c2da0c575",
     "bcb_poupanca_total_2012_2016.json": "e92f8799ef303c05c02da2fee6f56fdfbeb72e059fffae3537fcc38960487cd3",
     "bcb_poupanca_total_2017_2021.json": "6c8ac3d4b9750181e43eb4030b83a80790997e957c4281bae147394b25373683",

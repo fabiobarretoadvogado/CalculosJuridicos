@@ -18,7 +18,8 @@ assert taxas_ipcae["2025-09"] == "0.48"
 assert taxas_ipcae[fonte_ipca15["ultima_competencia"]] == "-0.40"
 selic = json.loads((ROOT / "bcb_selic_mensal.json").read_text(encoding="utf-8-sig"))
 poupanca_recente = json.loads((ROOT / "bcb_poupanca_depositos_2021_2026.json").read_text(encoding="utf-8-sig"))
-assert len(selic) == 46
+assert len(selic) == 57
+assert selic[-1] == {"data": "01/08/2026", "valor": "1.09"}
 assert poupanca_recente[0] == {"data": "09/12/2021", "dataFim": "09/01/2022", "valor": "0.5655"}
 poupanca = (
     json.loads((ROOT / "bcb_poupanca_total_2009_2012.json").read_text(encoding="utf-8-sig"))
@@ -36,7 +37,7 @@ snapshot = {
     "poupanca_total": {datetime.strptime(x["data"], "%d/%m/%Y").date().isoformat(): x["valor"] for x in poupanca},
     "poupanca_periodos": {datetime.strptime(x["data"], "%d/%m/%Y").date().isoformat(): datetime.strptime(x["dataFim"], "%d/%m/%Y").date().isoformat() for x in poupanca},
     "fontes": {
-        "selic": "https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados?formato=json&dataInicial=01/12/2021&dataFinal=30/09/2025",
+        "selic": "https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados?formato=json&dataInicial=01/12/2021&dataFinal=31/08/2026",
         "ipcae": fonte_ipca15["url_dados"],
         "ipcae_ibge": fonte_ipca15["url_produtor"],
         "ipcae_serie_bcb": fonte_ipca15["url_serie"],

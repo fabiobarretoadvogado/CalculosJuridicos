@@ -109,7 +109,7 @@ Ambos usam IPCA oficial **SGS 433**, distinto do IPCA-E. O **Civil 1** usa Taxa 
 
 Neste perfil, incluem-se os termos iniciais e exclui-se a data-base, conforme a [Calculadora do Cidadão](https://www3.bcb.gov.br/CALCIDADAO/publico/metodologiaCorrigirPelaTaxaLegal.do?method=metodologiaCorrigirPelaTaxaLegal). O IPCA usa fatores geométricos proporcionais aos dias corridos; os juros usam a soma simples de taxa mensal × dias / dias do mês. A taxa acumulada aplicada conserva seis casas decimais e incide sobre o principal corrigido final, com precisão integral até o arredondamento financeiro HALF_UP. Deflações são mantidas.
 
-Os termos iniciais devem ser a partir de **30/08/2024**; períodos anteriores exigem outro critério expresso. O snapshot consultado em **17/09/2026** contém Taxa Legal até setembro/2026 e IPCA até agosto/2026; a data-base máxima comum é **31/08/2026**. Índices ausentes não são estimados. O cálculo não depende de consulta à internet.
+Os termos iniciais devem ser a partir de **30/08/2024**; períodos anteriores exigem outro critério expresso. O snapshot consultado em **17/09/2026** contém Taxa Legal até setembro/2026 e IPCA até agosto/2026; como a data-base é excluída, a data-base máxima comum é **01/09/2026**, utilizando os índices até 31/08/2026. Índices ausentes não são estimados. O cálculo não depende de consulta à internet.
 
 Tela, PDF, Excel e CSV discriminam IPCA e Taxa Legal por coluna, com bases, datas efetivas e encargos. O PDF inclui a memória mensal da Taxa Legal; Excel e CSV têm memória própria das taxas oficiais, frações e juros. As premissas guardam as entradas e hashes dos dois snapshots. O caso fornecido, a metodologia e a validação estão em [IPCA e Taxa Legal](docs/qa_ipca_taxa_legal.md); a entrada reproduzível está em `backend/examples/processo_3005719-41.2026.8.06.0297.json`.
 
@@ -139,13 +139,15 @@ Essas convenções ficam visíveis na interface e são preservadas nos arquivos 
 
 Base consultada em **20/09/2026**, arquivada em `backend/data/indices_simplificados.json`, com fontes originais em `backend/data/fontes/`:
 
-- SELIC mensal: Banco Central, SGS 4390, com série histórica até dezembro/2020, série corrente de dezembro/2021 a setembro/2025 e série pós-EC 136 desde setembro/2025.
+- SELIC mensal: Banco Central, SGS 4390, com série histórica até dezembro/2020 e série corrente de dezembro/2021 a agosto/2026; a mesma fonte alimenta o período posterior à EC 136.
 - IPCA-15/IPCA-E produzido pelo IBGE e distribuído pelo Banco Central na série SGS 7478: variações mensais até agosto/2026.
 - Remuneração total da poupança: Banco Central, SGS 25 (01/07/2009 a 03/05/2012), SGS 195 (04/05/2012 a 08/12/2021, em dois arquivos) e SGS 195 (01/09/2025 a 06/09/2026). Os arquivos originais preservam taxa, data inicial e data final de cada período publicado. A antiga série de meta SELIC permanece apenas no arquivo histórico de fontes e não alimenta este cálculo.
 
-**Data-base máxima permitida: 31/08/2026.** O campo de data e o botão de cálculo bloqueiam datas posteriores; a API aplica o mesmo bloqueio ao cálculo e às exportações, inclusive em chamadas diretas. O limite é calculado a partir do último mês com as taxas IPCA-15 do IBGE e a série de juros completos e avança quando a base recebe todos os índices necessários. A consulta a esse limite precisa terminar antes de habilitar o cálculo.
+O limite é específico de cada padrão. Os quatro perfis da Fazenda Pública aceitam data-base até **31/08/2026**; Fazenda Pública 2 agora usa a SELIC oficial até agosto/2026. Os perfis SELIC, Civil 1 e Civil 2 aceitam **01/09/2026**, pois nesses critérios a data-base é uma referência mensal ou é excluída, de modo que o último índice efetivamente usado é o de agosto/2026. Operações combinadas, como honorários, custas e descontos, adotam o menor limite aplicável e informam na tela qual critério o definiu.
 
-A atualização de setembro/2026 requer o fator de outubro/2026, ainda ausente no snapshot. O aplicativo não projeta índices nem usa rateio para estender a cobertura de um mês incompleto. O rateio nos períodos cobertos, inclusive a divisão de setembro/2025 entre os dias 9 e 10, permanece preservado conforme orientação do usuário.
+O campo de data e o botão de cálculo bloqueiam datas posteriores; a API aplica o mesmo bloqueio ao cálculo e às exportações, inclusive em chamadas diretas. A interface e o PDF distinguem a data-base máxima do último dia ou competência efetivamente utilizados. O limite avança somente quando a base recebe todos os índices necessários, e essa consulta precisa terminar antes de habilitar o cálculo.
+
+Datas posteriores aos limites atuais exigem os índices oficiais das competências seguintes, ainda ausentes no snapshot. O aplicativo não projeta índices nem usa rateio para estender a cobertura de um mês incompleto. O rateio nos períodos cobertos, inclusive a divisão de setembro/2025 entre os dias 9 e 10, permanece preservado conforme orientação do usuário.
 
 A fonte numérica da SELIC é a série mensal 4390 do Banco Central. Não confundir taxa mensal, taxa acumulada e meta anual.
 
