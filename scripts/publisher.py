@@ -248,7 +248,8 @@ def upload_file(token: str, url: str, path: Path) -> None:
     from urllib.parse import urlsplit
 
     parsed = urlsplit(url)
-    connection = http.client.HTTPSConnection(parsed.hostname, timeout=120)
+    # Uploads de instaladores podem levar vários minutos em conexões mais lentas.
+    connection = http.client.HTTPSConnection(parsed.hostname, timeout=600)
     try:
         connection.putrequest("POST", parsed.path + "?" + parsed.query)
         connection.putheader("Authorization", "Bearer " + token)
