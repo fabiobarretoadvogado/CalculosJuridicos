@@ -44,7 +44,9 @@ try {
 
     Push-Location -LiteralPath (Join-Path $taskProject 'backend')
     try {
-        $taskPytestTemp = Join-Path $taskProject ('build\pytest-publicacao-' + [guid]::NewGuid().ToString('N'))
+        $taskBuildRoot = Join-Path $taskProject 'build'
+        New-Item -ItemType Directory -Path $taskBuildRoot -Force | Out-Null
+        $taskPytestTemp = Join-Path $taskBuildRoot ('pytest-publicacao-' + [guid]::NewGuid().ToString('N'))
         & $Python -B -m pytest -q --basetemp $taskPytestTemp
         if ($LASTEXITCODE -ne 0) { throw 'Os testes do cálculo falharam. Publicação interrompida.' }
     }
