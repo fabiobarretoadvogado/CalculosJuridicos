@@ -370,7 +370,11 @@ def publish(repository: str, directory: Path, notes_path: Path, access: str) -> 
         token,
         f"/repos/{transport_repository}/releases/{record['id']}",
         "PATCH",
-        {"draft": False, "make_latest": "true"},
+        {
+            "tag_name": "v" + APP_VERSION,
+            "draft": False,
+            "make_latest": "true",
+        },
     )
     (directory / "publicacao.json").write_text(
         json.dumps(
