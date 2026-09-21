@@ -39,6 +39,7 @@ export function ResultadoPrincipal() {
   ];
   return <section ref={section} className="principal-result" tabIndex={-1} aria-labelledby="principal-resultado-titulo">
     <div className="section-heading"><div><h2 id="principal-resultado-titulo">Resultado do cálculo</h2><p>{r.parcelas.length} parcela{r.parcelas.length !== 1 ? 's' : ''} · Data-base{referenciaSelic ? ' SELIC' : ''} {formatarData(referenciaSelic || r.dados_gerais.data_base)}{referenciaSelic ? ` · Último índice aplicado: ${formatarCompetencia(r.premissas.ultima_competencia_selic)}` : ''}{r.dados_gerais.processo ? ` · Processo ${r.dados_gerais.processo}` : ''}</p>{referenciaSelic && outrasOperacoes && referenciaSelic !== r.dados_gerais.data_base && <p>Data final das demais operações: {formatarData(r.dados_gerais.data_base)}.</p>}</div></div>
+    {r.chave_recuperacao && <p className="recovery-key"><span>Chave para reeditar este cálculo</span><strong>{r.chave_recuperacao}</strong></p>}
     <section aria-label="Resumo do cálculo">
       <div className="result-head"><div><h2>Total atualizado</h2><p className="result-total">{formatarMoeda(r.resumo.total_atualizado)}</p></div><div className="result-actions"><Button variant="outline" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); document.getElementById('processo')?.focus({ preventScroll: true }); }}>Editar dados</Button><Exportacao pdfOnly /></div></div>
       <div className="result-metrics">{[

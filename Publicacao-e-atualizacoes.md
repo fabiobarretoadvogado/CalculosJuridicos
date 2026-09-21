@@ -66,3 +66,11 @@ Em outra máquina de publicação, restaure a mesma chave:
 ```
 
 Não gere outra chave depois de distribuir a primeira versão: os programas instalados confiam permanentemente na chave pública original.
+
+Se a chave privada e o backup forem definitivamente perdidos, a rotação exige uma decisão explícita porque rompe a atualização automática das versões anteriores. Nesse caso, execute em um terminal interativo:
+
+```powershell
+.\backend\.venv\Scripts\python.exe .\scripts\publisher.py rotate-key --output D:\Backup\calculos-juridicos-chave-nova.pem
+```
+
+O comando exige a confirmação da chave anterior, solicita duas vezes uma senha de pelo menos 12 caracteres, cria o backup criptografado e substitui a chave pública de forma conjunta. Os usuários precisarão instalar manualmente a primeira versão assinada pela nova chave; as atualizações automáticas voltam a funcionar a partir dela.

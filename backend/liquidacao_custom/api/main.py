@@ -21,10 +21,11 @@ app = FastAPI(
     version=APP_VERSION,
 )
 
-# Adiciona suporte a CORS para permitir integração com qualquer frontend
+# O executável usa a mesma origem; no desenvolvimento, só aceitamos origens locais.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[],
+    allow_origin_regex=r"^https?://(127\.0\.0\.1|localhost)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -1,4 +1,5 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Calculator, Download, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { Button, Input, Select, Textarea } from '../components/ui';
 import {
@@ -11,6 +12,7 @@ import {
   obterCoberturaHonorarios,
   type BaseHonorariosAutonomos,
   type CalculoHonorariosIsolados,
+  type CalculoRecuperado,
   type CoberturaHonorarios,
   type HonorariosPrincipais,
   type ResultadoHonorariosIsolados,
@@ -176,6 +178,8 @@ function AuditoriaOperacao({ operacao }: { operacao: ResultadoOperacaoDivida }) 
 }
 
 export function HonorariosSucumbenciais({ baseInicial = 'proveito_economico' }: { baseInicial?: BaseHonorariosAutonomos } = {}) {
+  const location = useLocation();
+  const ultimaChaveCarregada = useRef('');
   const [base, setBase] = useState<BaseHonorariosAutonomos>(baseInicial);
   const [camposBase, setCamposBase] = useState<Pick<HonorariosPrincipais, 'valor_causa' | 'data_protocolo' | 'indice' | 'valor_certo'>>({ valor_causa: null, data_protocolo: null, indice: 'ipcae', valor_certo: null });
   const [cobertura, setCobertura] = useState<CoberturaHonorarios | null>(null);
@@ -195,6 +199,43 @@ export function HonorariosSucumbenciais({ baseInicial = 'proveito_economico' }: 
   const [carregando, setCarregando] = useState(false);
   const [gerandoRelatorio, setGerandoRelatorio] = useState(false);
   const [erroRelatorio, setErroRelatorio] = useState('');
+
+  useEffect(() => {
+    const recuperado = (location.state as { calculoRecuperado?: CalculoRecuperado } | null)?.calculoRecuperado;
+    if (!recuperado || recuperado.categoria === 'calculo_principal' || ultimaChaveCarregada.current === recuperado.chave_recuperacao) return;
+    ultimaChaveCarregada.current = recuperado.chave_recuperacao;
+    if (recuperado.categoria === 'honorarios_sucumbenciais_proveito_economico') {
+      const entrada = recuperado.entrada as CalculoHonorariosProveito;
+      setBase('proveito_economico');
+      setDados(entrada.dados_gerais);
+      setOriginal(entrada.divida_original);
+      setCorreta(entrada.divida_correta);
+      setCustasDespesas(entrada.custas_despesas);
+      setPercentual(entrada.percentual_sentenca || '');
+      setEscalonarFazenda(Boolean(entrada.escalonamento_fazenda));
+      setEscalonamento(entrada.escalonamento_fazenda || escalonamentoInicial());
+    } else {
+      const entrada = recuperado.entrada as CalculoHonorariosIsolados;
+      setBase(entrada.base);
+      setDados(entrada.dados_gerais);
+      setCustasDespesas(entrada.custas_despesas);
+      setCamposBase({
+        valor_causa: entrada.valor_causa || null,
+        data_protocolo: entrada.data_protocolo || null,
+        indice: entrada.indice || 'ipcae',
+        valor_certo: entrada.valor_certo || null,
+      });
+      setAtualizarValorCerto(Boolean(entrada.encargos_valor_certo));
+      setEncargosValorCerto(entrada.encargos_valor_certo || encargosValorCertoIniciais());
+      setPercentual(entrada.percentual_sentenca || '');
+      setEscalonarFazenda(Boolean(entrada.escalonamento_fazenda));
+      setEscalonamento(entrada.escalonamento_fazenda || escalonamentoInicial());
+    }
+    setResultado(null);
+    setErro('');
+    setErroRelatorio('');
+    window.scrollTo(0, 0);
+  }, [location.state]);
 
   useEffect(() => {
     if (base !== 'proveito_economico') return;
@@ -379,6 +420,7 @@ export function HonorariosSucumbenciais({ baseInicial = 'proveito_economico' }: 
       </fieldset>
     </form>
     {resultado && <section className="honorarios-result" aria-label="Resultado dos honorários sucumbenciais">
+      {resultado.chave_recuperacao && <p className="recovery-key"><span>Chave para reeditar este cálculo</span><strong>{resultado.chave_recuperacao}</strong></p>}
       <div className="result-head"><div><h2>{resultado.custas_despesas.length ? 'Total geral' : 'Honorários sucumbenciais'}</h2><p className="result-total">{formatarMoeda(resultado.total_geral)}</p></div><div className="result-actions"><Button variant="outline" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Editar dados</Button><Button disabled={gerandoRelatorio} onClick={baixarRelatorio}><Download size={16} />{gerandoRelatorio ? 'Gerando PDF…' : 'Baixar relatório PDF'}</Button></div></div>
       {erroRelatorio && <div role="alert" className="feedback-error">{erroRelatorio}</div>}
       {resultado.categoria === 'honorarios_sucumbenciais_proveito_economico' ? <div className="result-metrics honorarios-metrics">

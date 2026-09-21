@@ -454,16 +454,16 @@ def exportar_pdf_honorarios(
     proporcao = logo.imageHeight / logo.imageWidth
     logo.drawWidth = 122
     logo.drawHeight = 122 * proporcao
-    cabecalho = Table([[
-        logo,
-        [
-            p("Relatório de honorários sucumbenciais", "titulo"),
-            p(
-                f"{'Equidade - valor certo' if certo else 'Valor da causa atualizado' if isolado else 'Proveito econômico pela redução da dívida'}  /  Data-base {data_br(geral.data_base)}",
-                "subtitulo",
-            ),
-        ],
-    ]], colWidths=[157, largura - 157], hAlign="LEFT")
+    textos_cabecalho = [
+        p("Relatório de honorários sucumbenciais", "titulo"),
+        p(
+            f"{'Equidade - valor certo' if certo else 'Valor da causa atualizado' if isolado else 'Proveito econômico pela redução da dívida'}  /  Data-base {data_br(geral.data_base)}",
+            "subtitulo",
+        ),
+    ]
+    if resultado.chave_recuperacao:
+        textos_cabecalho.append(p(f"Chave de recuperação: {resultado.chave_recuperacao}", "subtitulo"))
+    cabecalho = Table([[logo, textos_cabecalho]], colWidths=[157, largura - 157], hAlign="LEFT")
     cabecalho.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("LEFTPADDING", (0, 0), (-1, -1), 0),

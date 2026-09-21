@@ -1,3 +1,14 @@
+# Cálculos Jurídicos 1.10
+
+Recuperação de cálculos e nova identidade visual do aplicativo.
+
+- Cada novo cálculo recebe uma chave `CJ1-...`, exibida na tela e impressa no relatório PDF.
+- O painel `Recuperar cálculo` reabre os dados completos para edição nos cálculos principais e de honorários.
+- Os cálculos ficam armazenados somente neste computador e protegidos pela conta do Windows, sem importação retroativa de cálculos antigos.
+- A nova logo passa a identificar a interface, o executável e o instalador, preservando a identidade Barreto Fontes nos relatórios PDF.
+- A API local recebeu proteção adicional, e a integração com o Codex passa a registrar os cálculos com a mesma chave recuperável.
+- A chave de assinatura das atualizações foi renovada; instalações da versão 1.09 ou anterior precisam instalar manualmente a 1.10 uma única vez.
+
 # Cálculos Jurídicos 1.09
 
 Integração direta com o Codex, sem abrir a interface do programa.

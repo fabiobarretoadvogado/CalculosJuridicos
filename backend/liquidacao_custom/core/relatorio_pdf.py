@@ -89,12 +89,15 @@ def exportar_pdf(resultado: ResultadoCalculo) -> bytes:
     image_width, image_height = logo.imageWidth, logo.imageHeight
     logo.drawWidth = 122
     logo.drawHeight = 122 * image_height / image_width
-    header = Table([[logo, [p("Demonstrativo de cálculo", "titulo"), p(
+    textos_cabecalho = [p("Demonstrativo de cálculo", "titulo"), p(
         f"{rotulo_data} {data_br(data_cabecalho)}"
         f"{('  /  Último índice aplicado: ' + indice_selic) if referencia_selic else ''}"
         f"  /  {len(resultado.parcelas)} parcelas"
         f"  /  {len(resultado.custas_despesas)} custas ou despesas", "nota"
-    )]]], colWidths=[157, largura - 157], hAlign="LEFT")
+    )]
+    if resultado.chave_recuperacao:
+        textos_cabecalho.append(p(f"Chave de recuperação: {resultado.chave_recuperacao}", "nota"))
+    header = Table([[logo, textos_cabecalho]], colWidths=[157, largura - 157], hAlign="LEFT")
     header.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("LEFTPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 16),
         ("LINEBELOW", (0, 0), (-1, -1), .5, colors.HexColor("#E1DED8"))]))

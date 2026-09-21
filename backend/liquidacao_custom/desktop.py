@@ -128,8 +128,12 @@ def self_check() -> int:
         mcp_ok = False
     checks = {
         "interface": (package / "web/index.html").is_file(),
-        "logo": (package / "assets/logo-barreto-fontes.png").is_file(),
+        "logos": (
+            (package / "assets/logo-barreto-fontes.png").is_file()
+            and (package / "assets/app-logo.png").is_file()
+        ),
         "api": "/api/v1/calculo" in api_paths,
+        "recuperacao": "/api/v1/calculos/{chave}" in api_paths,
         "atualizacoes": "/api/v1/app/info" in api_paths,
         "downloads": downloads_enabled,
         "mcp": mcp_ok,

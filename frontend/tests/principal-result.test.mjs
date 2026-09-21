@@ -37,7 +37,7 @@ before(async () => {
       name: 'isolated-render-api', enforce: 'pre',
       load(id) {
         if (!id.replaceAll('\\', '/').endsWith('/src/services/api.ts')) return;
-        return ['executarCalculo', 'executarHonorariosProveito', 'executarHonorariosIsolados', 'exportarPdfHonorarios', 'exportarPdfHonorariosIsolados', 'obterCriterios', 'obterCoberturaHonorarios', 'mensagemErro', 'exportarPdf', 'exportarExcel', 'exportarCsv', 'importarExcel', 'obterTemplateModelo']
+        return ['executarCalculo', 'executarHonorariosProveito', 'executarHonorariosIsolados', 'exportarPdfHonorarios', 'exportarPdfHonorariosIsolados', 'obterCriterios', 'obterCoberturaHonorarios', 'mensagemErro', 'exportarPdf', 'exportarExcel', 'exportarCsv', 'importarExcel', 'obterTemplateModelo', 'recuperarCalculo']
           .map(name => `export function ${name}() { throw new Error('Unexpected IO in render test'); }`).join('\n');
       },
     }],
@@ -163,7 +163,7 @@ test('resultado do valor certo discrimina correção, juros e datas sem fórmula
 
 test('aba Honorários permite três bases e não exige dívidas no valor certo ou causa', () => {
   for (const base of ['proveito_economico', 'valor_causa', 'valor_certo']) {
-    const html = renderToStaticMarkup(createElement(HonorariosSucumbenciais, { baseInicial: base }));
+    const html = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(HonorariosSucumbenciais, { baseInicial: base })));
     assert.match(html, /Equidade · valor certo/);
     assert.match(html, /Valor da causa atualizado/);
     assert.match(html, new RegExp('value="' + base + '" selected=""'));
@@ -268,7 +268,7 @@ test('mensagem de cobertura respeita datas inclusivas, exclusivas e referência 
 });
 
 test('honorários autônomos preservam percentual único como padrão e oferecem faixas', () => {
-  const html = renderToStaticMarkup(createElement(HonorariosSucumbenciais));
+  const html = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(HonorariosSucumbenciais)));
   assert.match(html, /Faixas · Fazenda Pública \(art\. 85\)/);
   assert.match(html, /value="percentual" selected=""/);
   assert.match(html, /Percentual fixado na sentença/);
@@ -414,6 +414,20 @@ test('menu contém somente as duas categorias renomeadas', () => {
   assert.match(nav, /Principal e honorários/);
   assert.match(nav, />Honorários</);
   assert.doesNotMatch(nav, /Resultado e PDF|Dados do cálculo|Honorários sucumbenciais/);
+});
+
+test('layout usa a nova identidade e oferece recuperação pela chave do PDF', () => {
+  const html = render(() => createElement(Layout, null, 'Conteúdo'));
+  assert.match(html, /src="\/app-logo\.png"/);
+  assert.match(html, /Recuperar cálculo/);
+  assert.match(html, /id="chave-recuperacao"/);
+  assert.match(html, /Chave impressa no PDF/);
+});
+
+test('resultado apresenta a chave usada para reeditar', () => {
+  const html = render(ResultadoPrincipal, { ...resultado, chave_recuperacao: 'CJ1-AAAA-BBBB-CCCC-DDDD-EEEE' });
+  assert.match(html, /Chave para reeditar este cálculo/);
+  assert.match(html, /CJ1-AAAA-BBBB-CCCC-DDDD-EEEE/);
 });
 
 test('antes de calcular não há resultado nem exportação', () => {

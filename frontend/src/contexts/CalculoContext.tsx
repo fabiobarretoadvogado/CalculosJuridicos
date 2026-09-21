@@ -13,6 +13,7 @@ interface CalculoState {
   resultado: ResultadoCalculo | null;
 }
 type CalculoAction =
+  | { type: 'LOAD_CALCULO'; payload: CalculoSimplificado }
   | { type: 'SET_PERFIL'; payload: CalculoSimplificado['perfil'] }
   | { type: 'SET_DADOS_GERAIS'; payload: CalculoState['dadosGerais'] }
   | { type: 'SET_PARCELAS'; payload: ParcelaSimplificada[] }
@@ -32,6 +33,17 @@ const initialState: CalculoState = {
 };
 function calculoReducer(state: CalculoState, action: CalculoAction | HonorariosAction): CalculoState {
   switch (action.type) {
+    case 'LOAD_CALCULO': return {
+      ...initialState,
+      perfil: action.payload.perfil,
+      dadosGerais: action.payload.dados_gerais,
+      parcelas: action.payload.parcelas,
+      descontos: action.payload.descontos || initialState.descontos,
+      custasDespesas: action.payload.custas_despesas || [],
+      honorariosSucumbenciais: action.payload.honorarios_sucumbenciais || initialState.honorariosSucumbenciais,
+      cumprimentoSentenca: action.payload.cumprimento_sentenca || initialState.cumprimentoSentenca,
+      resultado: null,
+    };
     case 'SET_PERFIL': return { ...state, perfil: action.payload, resultado: null,
       dadosGerais: action.payload === 'selic_cjf_v1' ? { ...state.dadosGerais, criterio_inicio_juros: 'vencimento' } : state.dadosGerais };
     case 'SET_DADOS_GERAIS': return { ...state, dadosGerais: action.payload, resultado: null };

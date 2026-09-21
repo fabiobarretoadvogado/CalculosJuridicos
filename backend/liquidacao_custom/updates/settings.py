@@ -1,4 +1,4 @@
 # Configuração pública. Chaves privadas e credenciais nunca são incluídas.
 REPOSITORY = 'fabiobarretoadvogado/CalculosJuridicos'
-PUBLIC_KEY = 'ON+nitKs33ROKdFLVCSN0W/0EZl5i3jVuLDrGDhtizg='
+PUBLIC_KEY = 'ULDuagiNCQgYJ03nNi/tsLJqJ48jxuyaC+uDaXKCn7k='
 ACCESS = 'public'

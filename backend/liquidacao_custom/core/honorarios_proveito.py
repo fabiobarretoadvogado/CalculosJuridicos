@@ -216,6 +216,7 @@ class ResultadoHonorariosProveito(BaseModel):
     fontes_custas_despesas: dict[str, str]
     formula: str
     alertas: list[str]
+    chave_recuperacao: str | None = None
 
 
 def moeda(valor: Decimal) -> Decimal:

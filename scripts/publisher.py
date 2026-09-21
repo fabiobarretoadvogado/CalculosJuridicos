@@ -446,11 +446,144 @@ def import_key(input_path: Path) -> None:
     print("Chave original restaurada e protegida nesta conta do Windows.")
 
 
+def rotate_key(
+    output: Path,
+    *,
+    gui: bool = False,
+    confirmation_text: str = "",
+    password_output: Path | None = None,
+) -> None:
+    """Substitui deliberadamente uma chave perdida e cria backup portátil."""
+    from cryptography.hazmat.primitives import serialization
+    from liquidacao_custom.updates.settings import ACCESS, PUBLIC_KEY, REPOSITORY
+
+    if not PUBLIC_KEY:
+        raise ValueError("Não existe chave pública anterior para rotacionar.")
+    path = key_path()
+    if path.exists():
+        raise ValueError("Uma chave privada já existe nesta conta e foi preservada.")
+    if output is None:
+        raise ValueError("Informe --output para o backup criptografado da nova chave.")
+    if output.exists():
+        raise ValueError("O arquivo de backup já existe e não será sobrescrito.")
+    if password_output is not None and password_output.exists():
+        raise ValueError("O arquivo temporário da senha já existe e não será sobrescrito.")
+
+    phrase = f"ROTACIONAR {PUBLIC_KEY[:8]}"
+    if password_output is not None:
+        import secrets
+
+        typed = confirmation_text
+        password = secrets.token_urlsafe(32)
+        confirmation = password
+    elif gui:
+        import tkinter as tk
+        from tkinter import simpledialog
+
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes("-topmost", True)
+        try:
+            typed = simpledialog.askstring(
+                "Rotação da chave de atualização",
+                "A versão anterior deixará de aceitar atualizações automáticas.\n\n"
+                f"Digite {phrase} para continuar:",
+                parent=root,
+            )
+            password = simpledialog.askstring(
+                "Senha do backup",
+                "Crie uma senha de pelo menos 12 caracteres para o backup da nova chave:",
+                show="*",
+                parent=root,
+            )
+            confirmation = simpledialog.askstring(
+                "Confirme a senha",
+                "Digite novamente a senha do backup:",
+                show="*",
+                parent=root,
+            )
+        finally:
+            root.destroy()
+    else:
+        import getpass
+
+        typed = input(
+            "A versão anterior deixará de aceitar atualizações automáticas. "
+            f"Digite {phrase!r} para continuar: "
+        )
+        password = getpass.getpass("Senha para proteger o novo backup: ")
+        confirmation = getpass.getpass("Repita a senha: ")
+    if typed != phrase:
+        raise ValueError("Rotação cancelada; a confirmação não corresponde.")
+    if password is None or confirmation is None:
+        raise ValueError("Rotação cancelada antes da definição da senha.")
+    if len(password) < 12 or password != confirmation:
+        raise ValueError("Use uma senha de pelo menos 12 caracteres e confirme a mesma senha.")
+
+    key = Ed25519PrivateKey.generate()
+    public_key = base64.b64encode(key.public_key().public_bytes_raw()).decode("ascii")
+    encoded = key.private_bytes(
+        serialization.Encoding.PEM,
+        serialization.PrivateFormat.PKCS8,
+        serialization.BestAvailableEncryption(password.encode("utf-8")),
+    )
+    stored = {
+        "public_key": public_key,
+        "protected_private": base64.b64encode(protect(key.private_bytes_raw())).decode("ascii"),
+        "rotated": datetime.now(timezone.utc).isoformat(),
+        "previous_public_key": PUBLIC_KEY,
+    }
+    settings_path = PROJECT / "backend/liquidacao_custom/updates/settings.py"
+    publisher_path = PROJECT / "publisher.json"
+    old_settings = settings_path.read_bytes()
+    old_publisher = publisher_path.read_bytes() if publisher_path.exists() else None
+    settings = (
+        "# Configuração pública. Chaves privadas e credenciais nunca são incluídas.\n"
+        f"REPOSITORY = {REPOSITORY!r}\n"
+        f"PUBLIC_KEY = {public_key!r}\n"
+        f"ACCESS = {ACCESS!r}\n"
+    )
+    publisher = json.dumps(
+        {"repository": REPOSITORY, "access": ACCESS, "public_key": public_key},
+        indent=2,
+    ) + "\n"
+
+    try:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        with output.open("xb") as stream:
+            stream.write(encoded)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("x", encoding="utf-8") as stream:
+            json.dump(stored, stream, indent=2)
+        settings_path.write_text(settings, encoding="utf-8")
+        publisher_path.write_text(publisher, encoding="utf-8")
+        if password_output is not None:
+            password_output.parent.mkdir(parents=True, exist_ok=True)
+            with password_output.open("x", encoding="utf-8") as stream:
+                stream.write(password + "\n")
+            os.chmod(password_output, 0o600)
+    except Exception:
+        settings_path.write_bytes(old_settings)
+        if old_publisher is None:
+            publisher_path.unlink(missing_ok=True)
+        else:
+            publisher_path.write_bytes(old_publisher)
+        path.unlink(missing_ok=True)
+        output.unlink(missing_ok=True)
+        if password_output is not None:
+            password_output.unlink(missing_ok=True)
+        raise
+    print(f"Nova chave pública: {public_key}")
+    print(f"Backup criptografado criado: {output}")
+    if password_output is not None:
+        print(f"Senha temporária criada: {password_output}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "action",
-        choices=["configure", "manifest", "preflight", "publish", "export-key", "import-key", "version"],
+        choices=["configure", "manifest", "preflight", "publish", "export-key", "import-key", "rotate-key", "version"],
     )
     parser.add_argument("--repository", default="")
     parser.add_argument("--version", default=APP_VERSION)
@@ -460,6 +593,9 @@ def main() -> None:
     parser.add_argument("--output", type=Path)
     parser.add_argument("--notes", type=Path)
     parser.add_argument("--input", type=Path)
+    parser.add_argument("--gui", action="store_true")
+    parser.add_argument("--confirm-rotation", default="")
+    parser.add_argument("--password-output", type=Path)
     arguments = parser.parse_args()
     try:
         if arguments.action == "version":
@@ -469,6 +605,13 @@ def main() -> None:
             export_key(arguments.output)
         elif arguments.action == "import-key":
             import_key(arguments.input)
+        elif arguments.action == "rotate-key":
+            rotate_key(
+                arguments.output,
+                gui=arguments.gui,
+                confirmation_text=arguments.confirm_rotation,
+                password_output=arguments.password_output,
+            )
         elif arguments.action == "configure":
             configure(
                 arguments.repository,

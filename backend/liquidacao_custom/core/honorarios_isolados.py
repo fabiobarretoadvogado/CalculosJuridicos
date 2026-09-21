@@ -79,6 +79,7 @@ class ResultadoHonorariosIsolados(BaseModel):
     formula: str
     alertas: list[str] = Field(default_factory=list)
     premissas: dict[str, Any]
+    chave_recuperacao: str | None = None
 
 
 def executar_honorarios_isolados(calculo: CalculoHonorariosIsolados) -> ResultadoHonorariosIsolados:

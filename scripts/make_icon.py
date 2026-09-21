@@ -6,7 +6,7 @@ from PIL import Image
 
 
 PROJECT = Path(__file__).resolve().parents[1]
-SOURCE = PROJECT / "frontend/public/logo-barreto-fontes-compacta.png"
+SOURCE = PROJECT / "frontend/public/app-logo.png"
 OUTPUT = PROJECT / "build/calculos-juridicos.ico"
 
 
@@ -14,8 +14,8 @@ def main() -> None:
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     with Image.open(SOURCE) as original:
         logo = original.convert("RGBA")
-        logo.thumbnail((220, 220), Image.Resampling.LANCZOS)
-        canvas = Image.new("RGBA", (256, 256), "#07182F")
+        logo.thumbnail((256, 256), Image.Resampling.LANCZOS)
+        canvas = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
         x = (canvas.width - logo.width) // 2
         y = (canvas.height - logo.height) // 2
         canvas.alpha_composite(logo, (x, y))

@@ -106,6 +106,7 @@ export interface PremissasCalculo {
 }
 
 export interface ResultadoCalculo {
+  chave_recuperacao?: string | null;
   honorarios_sucumbenciais?: ResultadoHonorariosPrincipais | null;
   cumprimento_sentenca?: ResultadoCumprimentoSentenca | null;
   destaque_contratuais?: ResultadoDestaqueContratuais | null;
@@ -388,6 +389,7 @@ export interface ResultadoParcelaDivida {
 }
 
 export interface ResultadoHonorariosProveito {
+  chave_recuperacao?: string | null;
   categoria: CalculoHonorariosProveito['categoria'];
   dados_gerais: DadosHonorarios;
   divida_original: ResultadoOperacaoDivida;
@@ -473,6 +475,20 @@ export const exportarPdfHonorarios = async (
 ): Promise<Blob> => (
   await api.post('/honorarios/proveito-economico/exportar/pdf', calculo, { responseType: 'blob' })
 ).data;
+
+export interface CalculoRecuperado {
+  chave_recuperacao: string;
+  categoria: 'calculo_principal' | 'honorarios_sucumbenciais_proveito_economico' | 'honorarios_sucumbenciais_isolados';
+  schema_version: number;
+  versao_aplicativo: string;
+  criado_em: string;
+  entrada: CalculoSimplificado | CalculoHonorariosProveito | CalculoHonorariosIsolados;
+}
+
+export const recuperarCalculo = async (chave: string): Promise<CalculoRecuperado> => (
+  await api.get<CalculoRecuperado>(`/calculos/${encodeURIComponent(chave.trim())}`)
+).data;
+
 export async function mensagemErro(erro: unknown): Promise<string> {
   if (axios.isAxiosError(erro)) {
     let data = erro.response?.data;

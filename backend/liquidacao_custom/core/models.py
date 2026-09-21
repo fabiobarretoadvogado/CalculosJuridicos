@@ -594,3 +594,4 @@ class ResultadoCalculo(BaseModel):
     destaque_contratuais: Optional[ResultadoDestaqueContratuais] = None
     alertas: list[str] = Field(default_factory=list)
     premissas: dict = Field(default_factory=dict)
+    chave_recuperacao: Optional[str] = None

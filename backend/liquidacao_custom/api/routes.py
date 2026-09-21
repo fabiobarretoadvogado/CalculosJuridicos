@@ -18,16 +18,21 @@ from pydantic import BaseModel
 
 from liquidacao_custom.core.models import ResultadoCalculo
 from liquidacao_custom.core.criterios_simplificados import CalculoSimplificado as CalculoJudicial
-from liquidacao_custom.core.motor_simplificado import executar_calculo, criterios_publicos
+from liquidacao_custom.core.motor_simplificado import criterios_publicos
 from liquidacao_custom.core.importacao_simplificada import importar_parcelas, gerar_template
 from liquidacao_custom.core.exportadores import exportar_excel, exportar_csv
 from liquidacao_custom.core.relatorio_pdf import exportar_pdf
 from liquidacao_custom.core.relatorio_honorarios_pdf import exportar_pdf_honorarios
-from liquidacao_custom.core.honorarios_isolados import CalculoHonorariosIsolados, ResultadoHonorariosIsolados, executar_honorarios_isolados
+from liquidacao_custom.core.honorarios_isolados import CalculoHonorariosIsolados, ResultadoHonorariosIsolados
 from liquidacao_custom.core.honorarios_proveito import (
     CalculoHonorariosProveito,
     ResultadoHonorariosProveito,
-    executar_honorarios_proveito,
+)
+from liquidacao_custom.calculos_salvos import CalculoRecuperado, recuperar_calculo
+from liquidacao_custom.calculos_registrados import (
+    executar_calculo_registrado,
+    executar_honorarios_isolados_registrado,
+    executar_honorarios_proveito_registrado,
 )
 
 router = APIRouter(prefix="/api/v1")
@@ -36,7 +41,7 @@ router = APIRouter(prefix="/api/v1")
 @router.post("/honorarios/isolados", summary="Honorários isolados por valor da causa ou equidade")
 def api_honorarios_isolados(calculo: CalculoHonorariosIsolados) -> ResultadoHonorariosIsolados:
     try:
-        return executar_honorarios_isolados(calculo)
+        return executar_honorarios_isolados_registrado(calculo)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
@@ -44,7 +49,7 @@ def api_honorarios_isolados(calculo: CalculoHonorariosIsolados) -> ResultadoHono
 @router.post("/honorarios/isolados/exportar/pdf", summary="Relatório dos honorários isolados")
 def api_pdf_honorarios_isolados(calculo: CalculoHonorariosIsolados):
     try:
-        resultado = executar_honorarios_isolados(calculo)
+        resultado = executar_honorarios_isolados_registrado(calculo)
         return StreamingResponse(
             io.BytesIO(exportar_pdf_honorarios(resultado)), media_type="application/pdf",
             headers={"Content-Disposition": "attachment; filename=relatorio_honorarios_sucumbenciais.pdf"},
@@ -68,6 +73,16 @@ def api_health_check():
     }
 
 
+@router.get("/calculos/{chave}", response_model=CalculoRecuperado, summary="Recupera um cálculo salvo pela chave")
+def api_recuperar_calculo(chave: str):
+    try:
+        return recuperar_calculo(chave)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=e.args[0]) from e
+
+
 @router.post("/calculo", response_model=ResultadoCalculo, summary="Executa cálculo judicial completo")
 def api_executar_calculo(calculo: CalculoJudicial):
     """
@@ -75,7 +90,7 @@ def api_executar_calculo(calculo: CalculoJudicial):
     com resumo geral, dados por parcela, memória de cálculo mensal e alertas.
     """
     try:
-        resultado = executar_calculo(calculo)
+        resultado = executar_calculo_registrado(calculo)
         return resultado
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erro ao executar cálculo: {str(e)}")
@@ -89,7 +104,7 @@ def api_executar_calculo(calculo: CalculoJudicial):
 def api_honorarios_proveito(calculo: CalculoHonorariosProveito):
     """Atualiza dívidas independentes e aplica percentual único ou faixas do art. 85 à redução positiva."""
     try:
-        return executar_honorarios_proveito(calculo)
+        return executar_honorarios_proveito_registrado(calculo)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erro ao calcular honorários: {str(e)}") from e
 
@@ -100,7 +115,7 @@ def api_honorarios_proveito(calculo: CalculoHonorariosProveito):
 )
 def api_exportar_pdf_honorarios(calculo: CalculoHonorariosProveito):
     try:
-        resultado = executar_honorarios_proveito(calculo)
+        resultado = executar_honorarios_proveito_registrado(calculo)
         return StreamingResponse(
             io.BytesIO(exportar_pdf_honorarios(resultado)),
             media_type="application/pdf",
@@ -120,7 +135,7 @@ def api_exportar_pdf_honorarios(calculo: CalculoHonorariosProveito):
 @router.post("/calculo/exportar/pdf", summary="Executa cálculo e exporta relatório PDF")
 def api_exportar_pdf(calculo: CalculoJudicial):
     try:
-        resultado = executar_calculo(calculo)
+        resultado = executar_calculo_registrado(calculo)
         return StreamingResponse(
             io.BytesIO(exportar_pdf(resultado)), media_type="application/pdf",
             headers={"Content-Disposition": "attachment; filename=relatorio_calculo.pdf"},
@@ -136,7 +151,7 @@ def api_exportar_excel(calculo: CalculoJudicial):
     arquivo Excel memoria_calculo.xlsx com as 9 abas completas de auditoria.
     """
     try:
-        resultado = executar_calculo(calculo)
+        resultado = executar_calculo_registrado(calculo)
         
         # Cria arquivo temporário
         with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
@@ -166,7 +181,7 @@ def api_exportar_csv(calculo: CalculoJudicial):
     memoria_mensal.csv e alertas.csv.
     """
     try:
-        resultado = executar_calculo(calculo)
+        resultado = executar_calculo_registrado(calculo)
         
         # Cria diretório temporário para gerar os CSVs
         tmp_dir = tempfile.mkdtemp()

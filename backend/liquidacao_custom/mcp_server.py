@@ -15,14 +15,17 @@ from mcp.types import CallToolResult, ResourceLink, TextContent, ToolAnnotations
 from .core.criterios_simplificados import CalculoSimplificado
 from .core.honorarios_isolados import (
     CalculoHonorariosIsolados,
-    executar_honorarios_isolados,
 )
 from .core.honorarios_principais import criterios_correcao_honorarios
 from .core.honorarios_proveito import (
     CalculoHonorariosProveito,
-    executar_honorarios_proveito,
 )
-from .core.motor_simplificado import criterios_publicos, executar_calculo
+from .core.motor_simplificado import criterios_publicos
+from .calculos_registrados import (
+    executar_calculo_registrado,
+    executar_honorarios_isolados_registrado,
+    executar_honorarios_proveito_registrado,
+)
 from .core.perfis import PERFIS
 from .core.relatorio_honorarios_pdf import exportar_pdf_honorarios
 from .core.relatorio_pdf import exportar_pdf
@@ -150,6 +153,7 @@ def _salvar_pdf(
 def _resumo_principal(resultado: Any) -> dict[str, Any]:
     resumo = resultado.resumo
     return {
+        "chave_recuperacao": resultado.chave_recuperacao,
         "data_base": resultado.dados_gerais.data_base.isoformat(),
         "principal_original": str(resumo.principal_original),
         "correcao_monetaria": str(resumo.correcao_monetaria),
@@ -164,6 +168,7 @@ def _resumo_principal(resultado: Any) -> dict[str, Any]:
 
 def _resumo_proveito(resultado: Any) -> dict[str, Any]:
     return {
+        "chave_recuperacao": resultado.chave_recuperacao,
         "data_base": resultado.dados_gerais.data_base.isoformat(),
         "divida_original_atualizada": str(resultado.divida_original.valor_atualizado),
         "divida_correta_atualizada": str(resultado.divida_correta.valor_atualizado),
@@ -177,6 +182,7 @@ def _resumo_proveito(resultado: Any) -> dict[str, Any]:
 
 def _resumo_isolados(resultado: Any) -> dict[str, Any]:
     return {
+        "chave_recuperacao": resultado.chave_recuperacao,
         "data_base": resultado.dados_gerais.data_base.isoformat(),
         "base": resultado.base,
         "base_atualizada": str(resultado.apuracao.base_atualizada),
@@ -238,7 +244,7 @@ def calcular_debito_judicial(
     calculo: CalculoSimplificado,
     modo_resultado: Literal["resumo", "completo"] = "resumo",
 ) -> dict[str, Any]:
-    resultado = executar_calculo(calculo)
+    resultado = executar_calculo_registrado(calculo)
     return _json(resultado) if modo_resultado == "completo" else _resumo_principal(resultado)
 
 
@@ -252,7 +258,7 @@ def gerar_pdf_debito_judicial(
     nome_arquivo: str = "relatorio_calculo.pdf",
     pasta_destino: str = "",
 ) -> CallToolResult:
-    resultado = executar_calculo(calculo)
+    resultado = executar_calculo_registrado(calculo)
     return _salvar_pdf(
         exportar_pdf(resultado),
         nome_arquivo=nome_arquivo,
@@ -271,7 +277,7 @@ def calcular_honorarios_proveito_economico(
     calculo: CalculoHonorariosProveito,
     modo_resultado: Literal["resumo", "completo"] = "resumo",
 ) -> dict[str, Any]:
-    resultado = executar_honorarios_proveito(calculo)
+    resultado = executar_honorarios_proveito_registrado(calculo)
     return _json(resultado) if modo_resultado == "completo" else _resumo_proveito(resultado)
 
 
@@ -285,7 +291,7 @@ def gerar_pdf_honorarios_proveito_economico(
     nome_arquivo: str = "relatorio_honorarios_sucumbenciais.pdf",
     pasta_destino: str = "",
 ) -> CallToolResult:
-    resultado = executar_honorarios_proveito(calculo)
+    resultado = executar_honorarios_proveito_registrado(calculo)
     return _salvar_pdf(
         exportar_pdf_honorarios(resultado),
         nome_arquivo=nome_arquivo,
@@ -304,7 +310,7 @@ def calcular_honorarios_isolados(
     calculo: CalculoHonorariosIsolados,
     modo_resultado: Literal["resumo", "completo"] = "resumo",
 ) -> dict[str, Any]:
-    resultado = executar_honorarios_isolados(calculo)
+    resultado = executar_honorarios_isolados_registrado(calculo)
     return _json(resultado) if modo_resultado == "completo" else _resumo_isolados(resultado)
 
 
@@ -318,7 +324,7 @@ def gerar_pdf_honorarios_isolados(
     nome_arquivo: str = "relatorio_honorarios_sucumbenciais.pdf",
     pasta_destino: str = "",
 ) -> CallToolResult:
-    resultado = executar_honorarios_isolados(calculo)
+    resultado = executar_honorarios_isolados_registrado(calculo)
     return _salvar_pdf(
         exportar_pdf_honorarios(resultado),
         nome_arquivo=nome_arquivo,

@@ -205,7 +205,7 @@ Exemplo:
 
 Com o snapshot atual, total de R$ 1.011,78: atualização de R$ 7,03 e juros da poupança (remuneração total) de R$ 4,75. Trata-se de um exemplo técnico das convenções acima.
 
-O uso permanece local. Ainda não há autenticação, armazenamento persistente de cálculos ou homologação com casos reais; recarregar a página descarta os dados não exportados.
+O uso permanece local e sem autenticação remota. A partir desta versão, cada cálculo concluído recebe uma chave `CJ1-...`, exibida na tela e impressa no PDF. A entrada e o resultado são guardados no perfil local do Windows, protegidos para a conta atual, e podem ser reabertos para edição pelo painel **Recuperar cálculo**. A chave não é um endereço público e só localiza registros criados nesta instalação; não há importação retroativa de cálculos anteriores.
 
 ## Aplicativo para Windows
 

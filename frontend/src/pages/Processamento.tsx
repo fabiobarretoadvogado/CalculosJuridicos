@@ -1,7 +1,8 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Plus, Trash2, ArrowRight, Rows3, FileSpreadsheet } from 'lucide-react';
 import { Button, Input, Textarea, Select } from '../components/ui';
-import { executarCalculo, obterCriterios, mensagemErro, type CriteriosPublicos, type CalculoSimplificado } from '../services/api';
+import { executarCalculo, obterCriterios, mensagemErro, type CalculoRecuperado, type CriteriosPublicos, type CalculoSimplificado } from '../services/api';
 import { useCalculo } from '../contexts/useCalculo';
 import { formatarData, formatarMoeda } from '../utils/formatters';
 import { Importacao } from './Importacao';
@@ -15,12 +16,21 @@ import { mensagemCoberturaSelecionada } from '../utils/coberturaIndices';
 
 export function Processamento() {
   const { state, dispatch, buildCalculoJudicial } = useCalculo();
+  const location = useLocation();
+  const ultimaChaveCarregada = useRef('');
   const [criterios, setCriterios] = useState<CriteriosPublicos | null>(null);
   const [criteriosDescontos, setCriteriosDescontos] = useState<CriteriosPublicos | null>(null);
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(false);
   const [importacaoAberta, setImportacaoAberta] = useState(false);
   const [coberturaHonorarios, setCoberturaHonorarios] = useState<CoberturaHonorarios | null>(null);
+  useEffect(() => {
+    const recuperado = (location.state as { calculoRecuperado?: CalculoRecuperado } | null)?.calculoRecuperado;
+    if (!recuperado || recuperado.categoria !== 'calculo_principal' || ultimaChaveCarregada.current === recuperado.chave_recuperacao) return;
+    ultimaChaveCarregada.current = recuperado.chave_recuperacao;
+    dispatch({ type: 'LOAD_CALCULO', payload: recuperado.entrada as CalculoSimplificado });
+    setErro('');
+  }, [dispatch, location.state]);
   const causaAtiva = state.honorariosSucumbenciais.aplicar && state.honorariosSucumbenciais.base === 'valor_causa';
   useEffect(() => {
     let ativo = true;
