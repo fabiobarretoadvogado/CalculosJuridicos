@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "calculos-juridicos": {
+      "command": "CalculosJuridicos.exe",
+      "args": [
+        "--mcp"
+      ]
+    }
+  }
+}

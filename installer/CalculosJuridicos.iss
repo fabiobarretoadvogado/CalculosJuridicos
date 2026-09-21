@@ -50,6 +50,7 @@ Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortugue
 
 [Tasks]
 Name: "desktopicon"; Description: "Criar atalho na área de trabalho"; GroupDescription: "Atalhos:"; Flags: unchecked
+Name: "codexintegration"; Description: "Integrar ao Codex para fazer cálculos e gerar PDFs sem abrir o programa"; GroupDescription: "Integrações:"
 
 [Files]
 Source: "{#PayloadDir}\CalculosJuridicos.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -62,4 +63,8 @@ Name: "{autoprograms}\Cálculos Jurídicos"; Filename: "{app}\CalculosJuridicos.
 Name: "{autodesktop}\Cálculos Jurídicos"; Filename: "{app}\CalculosJuridicos.exe"; IconFilename: "{app}\_internal\liquidacao_custom\assets\calculos-juridicos.ico"; AppUserModelID: "CalculosJuridicos.{#AppIdValue}"; WorkingDir: "{userdocs}"; Tasks: desktopicon
 
 [Run]
+Filename: "{app}\CalculosJuridicos.exe"; Parameters: "--install-codex-plugin"; StatusMsg: "Configurando a integração com o Codex..."; Flags: runhidden waituntilterminated; Tasks: codexintegration
 Filename: "{app}\CalculosJuridicos.exe"; Description: "Abrir Cálculos Jurídicos"; Flags: nowait postinstall skipifsilent
+
+[UninstallRun]
+Filename: "{app}\CalculosJuridicos.exe"; Parameters: "--uninstall-codex-plugin"; Flags: runhidden waituntilterminated; RunOnceId: "RemoveCodexIntegration"

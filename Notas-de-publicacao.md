@@ -1,3 +1,13 @@
+# Cálculos Jurídicos 1.09
+
+Integração direta com o Codex, sem abrir a interface do programa.
+
+- O instalador agora registra um plugin pessoal do Cálculos Jurídicos no Codex.
+- O Codex pode consultar critérios e executar os cálculos de débito, honorários por proveito econômico e honorários isolados pelo motor instalado.
+- Os três fluxos podem gerar o mesmo relatório PDF usado na interface, devolvendo caminho, link local, tamanho e hash do arquivo.
+- O conector funciona pelo protocolo MCP local e não depende do projeto-base nem de controle visual da tela.
+- A integração acompanha as atualizações do programa, preserva outros plugins e é removida com segurança na desinstalação.
+
 # Cálculos Jurídicos 1.08
 
 Cobertura de índices corrigida e explicada conforme cada critério.

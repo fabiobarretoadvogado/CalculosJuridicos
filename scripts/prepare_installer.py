@@ -41,7 +41,10 @@ def main() -> None:
         "Aplicativo Windows para cálculos jurídicos com processamento local.\n\n"
         "Os critérios de cada cálculo, as fontes e a memória ficam disponíveis "
         "na interface e nos arquivos exportados. O aplicativo consulta o GitHub "
-        "somente para verificar atualizações assinadas.\n",
+        "somente para verificar atualizações assinadas.\n\n"
+        "Quando a integração com o Codex é selecionada no instalador, o próprio "
+        "executável fornece ferramentas locais de cálculo e geração de PDF, sem "
+        "abrir a interface e sem enviar os dados do cálculo a um serviço do aplicativo.\n",
         encoding="utf-8",
     )
     print(f"Pacote preparado: {payload}")

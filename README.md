@@ -210,3 +210,11 @@ O uso permanece local. Ainda não há autenticação, armazenamento persistente 
 ## Aplicativo para Windows
 
 O projeto também pode ser distribuído como programa instalado, com interface própria e atualizações assinadas pelo GitHub Releases. O rodapé exibe permanentemente **Verificar atualização**; quando houver nova edição publicada, a ação muda para **Atualizar para…** e conduz o download e a instalação. O controle continua acessível em janelas estreitas. O procedimento completo está em [Publicação e atualizações](Publicacao-e-atualizacoes.md).
+
+### Integração com o Codex
+
+O instalador oferece, marcada por padrão, a opção **Integrar ao Codex**. Ela registra um plugin pessoal e um servidor MCP local que iniciam o próprio `CalculosJuridicos.exe` em modo silencioso. O Codex passa a consultar critérios, executar os três fluxos de cálculo e gerar os mesmos relatórios PDF da interface, sem precisar do código-fonte e sem controlar a tela do programa.
+
+Os PDFs são gravados, por padrão, em `Documentos\Cálculos Jurídicos\Relatórios`; uma pasta diferente pode ser informada em cada chamada. O resultado devolve ao Codex o caminho absoluto, o link local do arquivo, tamanho e hash SHA-256. Arquivos existentes não são sobrescritos.
+
+A integração acompanha o executável e é atualizada pelo mesmo instalador. Depois da primeira instalação ou de uma atualização do plugin, abra uma nova tarefa no Codex para carregar as ferramentas. A desinstalação do aplicativo remove somente os arquivos gerenciados por ele e preserva outros plugins e arquivos pessoais.

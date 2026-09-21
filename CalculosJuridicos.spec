@@ -14,6 +14,12 @@ from PyInstaller.utils.win32.versioninfo import (
     VarStruct,
 )
 
+
+def incluir_modulo_mcp(nome):
+    # mcp.cli pertence ao extra opcional `mcp[cli]`; o aplicativo usa somente
+    # o servidor STDIO e não deve carregar a interface de linha de comando.
+    return not nome.startswith("mcp.cli")
+
 project = Path(SPECPATH)
 backend = project / "backend"
 identity = runpy.run_path(str(backend / "liquidacao_custom/metadata.py"))
@@ -52,6 +58,10 @@ datas = [
         str(backend / "liquidacao_custom/updates/install-update.ps1"),
         "liquidacao_custom/updates",
     ),
+    (
+        str(backend / "liquidacao_custom/codex_plugin"),
+        "liquidacao_custom/codex_plugin",
+    ),
     (str(project / "build/calculos-juridicos.ico"), "liquidacao_custom/assets"),
 ]
 
@@ -60,7 +70,10 @@ a = Analysis(
     pathex=[str(backend)],
     binaries=[],
     datas=datas,
-    hiddenimports=collect_submodules("webview"),
+    hiddenimports=(
+        collect_submodules("webview")
+        + collect_submodules("mcp", filter=incluir_modulo_mcp)
+    ),
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

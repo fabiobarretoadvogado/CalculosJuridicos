@@ -56,6 +56,8 @@ try {
     $taskExecutable = Join-Path $taskPayload 'CalculosJuridicos.exe'
     $taskCheck = Start-Process -FilePath $taskExecutable -ArgumentList '--self-check' -WindowStyle Hidden -PassThru -Wait
     if ($taskCheck.ExitCode -ne 0) { throw 'O aplicativo empacotado não passou na verificação interna.' }
+    & $Python (Join-Path $taskProject 'scripts\smoke_mcp.py') $taskExecutable (Join-Path $taskProject 'build')
+    if ($LASTEXITCODE -ne 0) { throw 'O conector MCP empacotado não passou no teste de protocolo e PDF.' }
     if (Test-Path -LiteralPath $taskArchiveRoot) {
         $taskArchiveResolved = [IO.Path]::GetFullPath($taskArchiveRoot)
         if (-not ($taskArchiveResolved + '\').StartsWith($taskProjectPrefix, [StringComparison]::OrdinalIgnoreCase)) {

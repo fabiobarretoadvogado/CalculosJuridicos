@@ -1,0 +1,38 @@
+{
+  "name": "calculos-juridicos",
+  "version": "1.0.0",
+  "description": "Executa cálculos jurídicos auditáveis e gera relatórios pelo aplicativo instalado.",
+  "author": {
+    "name": "Barreto Fontes Sociedade de Advogados",
+    "url": "https://github.com/fabiobarretoadvogado/CalculosJuridicos"
+  },
+  "homepage": "https://github.com/fabiobarretoadvogado/CalculosJuridicos",
+  "repository": "https://github.com/fabiobarretoadvogado/CalculosJuridicos",
+  "license": "MIT",
+  "keywords": [
+    "calculos-juridicos",
+    "liquidacao",
+    "honorarios",
+    "pdf"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Cálculos Jurídicos",
+    "shortDescription": "Cálculos judiciais auditáveis e relatórios PDF.",
+    "longDescription": "Usa o aplicativo Cálculos Jurídicos instalado para executar o motor oficial e gerar relatórios PDF sem abrir a interface gráfica.",
+    "developerName": "Barreto Fontes Sociedade de Advogados",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/fabiobarretoadvogado/CalculosJuridicos",
+    "defaultPrompt": [
+      "Atualize esta dívida e gere o relatório PDF.",
+      "Calcule honorários sobre o proveito econômico.",
+      "Mostre os critérios e a cobertura dos índices."
+    ],
+    "brandColor": "#072F54"
+  }
+}

@@ -20,6 +20,7 @@ dependencies = [
     "reportlab>=4.4,<5",
     "cryptography>=45,<50",
     "pywebview>=5.4,<7",
+    "mcp>=1.18,<2",
 ]
 
 [project.optional-dependencies]
@@ -35,7 +36,14 @@ dev = [
 include = ["liquidacao_custom*"]
 
 [tool.setuptools.package-data]
-liquidacao_custom = ["assets/*.png", "web/*", "web/assets/*", "updates/*.ps1"]
+liquidacao_custom = [
+    "assets/*.png",
+    "web/*",
+    "web/assets/*",
+    "updates/*.ps1",
+    "codex_plugin/.codex-plugin/*",
+    "codex_plugin/skills/calculos-juridicos/*",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
