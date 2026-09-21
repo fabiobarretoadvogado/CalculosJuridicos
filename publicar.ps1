@@ -42,6 +42,7 @@ try {
     & $Python -B $taskPublisher configure --repository $Repositorio --version $Versao --display-version $taskDisplayVersion --access public
     if ($LASTEXITCODE -ne 0) { throw 'A configuração da publicação foi interrompida.' }
 
+    $taskPytestTemp = $null
     Push-Location -LiteralPath (Join-Path $taskProject 'backend')
     try {
         $taskBuildRoot = Join-Path $taskProject 'build'
@@ -50,7 +51,17 @@ try {
         & $Python -B -m pytest -q --basetemp $taskPytestTemp
         if ($LASTEXITCODE -ne 0) { throw 'Os testes do cálculo falharam. Publicação interrompida.' }
     }
-    finally { Pop-Location }
+    finally {
+        Pop-Location
+        if ($taskPytestTemp -and (Test-Path -LiteralPath $taskPytestTemp)) {
+            $taskResolvedTemp = [IO.Path]::GetFullPath($taskPytestTemp)
+            $taskBuildPrefix = [IO.Path]::GetFullPath((Join-Path $taskProject 'build')).TrimEnd('\') + '\'
+            if (-not ($taskResolvedTemp + '\').StartsWith($taskBuildPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+                throw 'Pasta temporária dos testes fora da área de build.'
+            }
+            Remove-Item -LiteralPath $taskResolvedTemp -Recurse -Force
+        }
+    }
 
     & (Join-Path $taskProject 'build-installer.ps1') -Python $Python
     if ($LASTEXITCODE -ne 0) { throw 'O instalador não foi gerado.' }
