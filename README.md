@@ -1,5 +1,9 @@
 # Cálculos Jurídicos — escopo inicial simplificado
 
+**Baixar o instalador para Windows:** [abrir a página de Releases](https://github.com/fabiobarretoadvogado/CalculosJuridicos/releases/latest). Na versão desejada, expanda **Assets** e baixe o arquivo `CalculosJuridicos-Setup-...-x64.exe`.
+
+
+
 O aplicativo aplica exclusivamente os critérios definidos para este projeto:
 
 - **Fazenda Pública 1**: IPCA-E e poupança a partir de 01/07/2009.
