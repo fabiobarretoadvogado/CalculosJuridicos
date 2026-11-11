@@ -38,6 +38,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npm run lint --prefix frontend
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run build --prefix frontend
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item -Path 'frontend/dist/*' -Destination 'backend/liquidacao_custom/web' -Recurse -Force
       - name: Executar suíte completa
         shell: pwsh
         run: ./scripts/test-suite.ps1 -Suite completa
