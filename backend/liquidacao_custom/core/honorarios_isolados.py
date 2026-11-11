@@ -4,6 +4,7 @@ from decimal import Decimal, ROUND_HALF_UP, localcontext
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from .moedas_historicas import INICIO_IPCAE, conversao_monetaria, registrar_conversoes, validar_origem
 
 from .acessorios import calcular_honorarios
 from .criterios_simplificados import CustaDespesaProcessual, HonorariosPrincipais
@@ -47,8 +48,7 @@ class CalculoHonorariosIsolados(BaseModel):
                 raise ValueError("Informe o valor da causa no protocolo, a data do protocolo e o índice.")
             if self.valor_certo is not None:
                 raise ValueError("Não cumular valor certo com honorários sobre o valor da causa.")
-            if self.data_protocolo < date(2009, 7, 1):
-                raise ValueError("Valor da causa: a série disponível começa em 01/07/2009.")
+            validar_origem(self.data_protocolo, self.indice, "Valor da causa")
             if self.data_protocolo > self.dados_gerais.data_base:
                 raise ValueError("Valor da causa: data do protocolo posterior à data-base.")
             if (self.percentual_sentenca is None) == (self.escalonamento_fazenda is None):
@@ -56,8 +56,8 @@ class CalculoHonorariosIsolados(BaseModel):
         if len({c.numero for c in self.custas_despesas}) != len(self.custas_despesas):
             raise ValueError("As custas e despesas devem ter números distintos.")
         for c in self.custas_despesas:
-            if not date(2009, 7, 1) <= c.data <= self.dados_gerais.data_base:
-                raise ValueError(f"Custa ou despesa {c.numero}: informe data entre 01/07/2009 e a data-base.")
+            if not INICIO_IPCAE <= c.data <= self.dados_gerais.data_base:
+                raise ValueError(f"Custa ou despesa {c.numero}: informe data entre 01/01/1992 e a data-base.")
         return self
 
 
@@ -82,6 +82,9 @@ class ResultadoHonorariosIsolados(BaseModel):
     chave_recuperacao: str | None = None
 
 
+from liquidacao_custom.index_data.store import with_index_dataset
+
+@with_index_dataset
 def executar_honorarios_isolados(calculo: CalculoHonorariosIsolados) -> ResultadoHonorariosIsolados:
     certo = calculo.base == "valor_certo"
     original = calculo.valor_certo if certo else calculo.valor_causa
@@ -98,6 +101,11 @@ def executar_honorarios_isolados(calculo: CalculoHonorariosIsolados) -> Resultad
             data_protocolo=calculo.data_protocolo, indice=calculo.indice,
         )
         base, fator, memoria, fonte, sha = corrigir_valor_causa(config, calculo.dados_gerais.data_base)
+    conversao = None
+    if not certo or atualizacao:
+        original, conversao = conversao_monetaria(original, calculo.encargos_valor_certo.data_fixacao if certo else calculo.data_protocolo,
+            "Honorários fixados" if certo else "Valor da causa")
+        original = moeda(original)
     escalonamento = None
     if calculo.escalonamento_fazenda:
         escalonamento = apurar_faixas_fazenda(base, calculo.escalonamento_fazenda)
@@ -140,7 +148,7 @@ def executar_honorarios_isolados(calculo: CalculoHonorariosIsolados) -> Resultad
         premissas["sha256_ipca_valor_causa"] = sha
     if atualizacao:
         premissas.update(premissas_atualizacao)
-    return ResultadoHonorariosIsolados(
+    resultado = ResultadoHonorariosIsolados(
         dados_gerais=calculo.dados_gerais, base=calculo.base, apuracao=apuracao, atualizacao_valor_certo=atualizacao,
         percentual_sentenca=calculo.percentual_sentenca, escalonamento_fazenda=escalonamento,
         honorarios_sucumbenciais=valor, custas_despesas=custas,
@@ -150,3 +158,4 @@ def executar_honorarios_isolados(calculo: CalculoHonorariosIsolados) -> Resultad
         fontes_custas_despesas={"ipcae": dados_fonte_ipcae()} if custas else {},
         total_geral=moeda(valor + total_custas), formula=formula, premissas=premissas,
     )
+    return registrar_conversoes(resultado, [conversao, *[c.conversao_monetaria for c in custas]])

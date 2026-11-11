@@ -21,6 +21,7 @@ dependencies = [
     "cryptography>=45,<50",
     "pywebview>=5.4,<7",
     "mcp>=1.18,<2",
+    "tomli>=2; python_version < '3.11'",
 ]
 
 [project.optional-dependencies]

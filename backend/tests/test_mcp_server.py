@@ -12,6 +12,7 @@ from liquidacao_custom.mcp_server import (
     calcular_debito_judicial,
     gerar_pdf_debito_judicial,
     informacoes_aplicativo,
+    mcp,
     nomes_ferramentas,
 )
 
@@ -65,6 +66,30 @@ def test_mcp_lista_todas_as_operacoes_e_informa_versao():
     assert informacoes_aplicativo()["pdf"] is True
 
 
+def test_mcp_orienta_observacoes_na_inicializacao_e_em_todos_os_calculos():
+    inicializacao = mcp._mcp_server.create_initialization_options()
+    assert "dados_gerais.observacoes" in inicializacao.instructions
+    assert "Mantenha no chat" in inicializacao.instructions
+    ferramentas_calculo = [
+        item for item in mcp._tool_manager.list_tools()
+        if item.name.startswith(("calcular_", "gerar_pdf_"))
+    ]
+    assert len(ferramentas_calculo) == 6
+    for ferramenta in ferramentas_calculo:
+        esquema = ferramenta.parameters
+        referencia_calculo = esquema["properties"]["calculo"]["$ref"]
+        entrada = esquema["$defs"][referencia_calculo.rsplit("/", 1)[1]]
+        referencia_dados = entrada["properties"]["dados_gerais"]["$ref"]
+        dados_gerais = esquema["$defs"][referencia_dados.rsplit("/", 1)[1]]
+        observacoes = dados_gerais["properties"]["observacoes"]
+        assert observacoes["type"] == "string"
+        assert observacoes["default"] == ""
+        assert "observacoes" not in dados_gerais.get("required", [])
+        assert "reproduzido literalmente no relatório" in observacoes["description"]
+        assert "Mantenha no chat" in observacoes["description"]
+        assert "Deixe vazio" in observacoes["description"]
+
+
 def test_protocolo_stdio_inicializa_calcula_e_gera_pdf(tmp_path):
     raiz = Path(__file__).resolve().parents[2]
 
@@ -73,6 +98,10 @@ def test_protocolo_stdio_inicializa_calcula_e_gera_pdf(tmp_path):
             command=sys.executable,
             args=[str(raiz / "desktop_main.py"), "--mcp"],
             cwd=raiz,
+            env={
+                "PYTHONPATH": str(raiz / "backend"),
+                "CALCULOS_JURIDICOS_DATA_DIR": str(tmp_path / "mcp-dados"),
+            },
         )
         async with stdio_client(parametros) as (leitura, escrita):
             async with ClientSession(leitura, escrita) as sessao:

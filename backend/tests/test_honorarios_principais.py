@@ -188,12 +188,14 @@ def test_api_pdf_excel_csv_conciliam_e_separam_destaque():
     assert pdf.status_code == 200
     paginas = [p.extract_text() for p in PdfReader(io.BytesIO(pdf.content)).pages]
     texto = " ".join(paginas)
-    assert "Honorários sucumbenciais" in texto and "Destaque de honorários contratuais" in texto
+    assert "Honorários sucumbenciais" in texto and "DESTAQUE DE HONORÁRIOS CONTRATUAIS" in texto
     assert "não acresce ao cálculo" in texto
     assert "Honorários da sentença, custas e despesas excluídos" in texto
     assert "honorários da sentença incluídos na base" not in texto
     custos = next(p for p in paginas if "Fator IPCA-E" in p)
-    assert "Destaque de honorários contratuais" not in custos and "Valores por parcela" not in custos
+    assert "CRÉDITO - ACRÉSCIMO" not in custos
+    if "DESTAQUE DE HONORÁRIOS CONTRATUAIS" in custos:
+        assert custos.index("DESTAQUE DE HONORÁRIOS CONTRATUAIS") < custos.index("CUSTAS E DESPESAS PROCESSUAIS")
     excel = client.post("/api/v1/calculo/exportar/excel", json=payload)
     assert excel.status_code == 200
     wb = openpyxl.load_workbook(io.BytesIO(excel.content))
@@ -216,4 +218,4 @@ def test_api_pdf_excel_csv_conciliam_e_separam_destaque():
 
 def test_cobertura_correcao_oficial():
     r = TestClient(app).get("/api/v1/honorarios/criterios-correcao")
-    assert r.status_code == 200 and r.json()["ipca"]["data_base_maxima"] == "2026-08-31"
+    assert r.status_code == 200 and r.json()["ipca"]["data_base_maxima"] == "2026-09-30"

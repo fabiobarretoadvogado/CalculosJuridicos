@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Calculator, KeyRound, Scale } from 'lucide-react';
+import { Calculator, Database, KeyRound, Scale } from 'lucide-react';
+import { IndicesStatus } from './IndicesStatus';
 import { UpdateStatus } from './UpdateStatus';
 import { mensagemErro, recuperarCalculo } from '../services/api';
 
@@ -46,6 +47,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <nav className="office-nav" aria-label="Cálculos disponíveis">
         <NavLink to="/processamento"><Calculator size={18} /><span>Principal e honorários</span></NavLink>
         <NavLink to="/honorarios-sucumbenciais"><Scale size={18} /><span>Honorários</span></NavLink>
+        <NavLink to="/indices"><Database size={18} /><span>Índices</span></NavLink>
       </nav>
       <details className="recovery-panel">
         <summary><KeyRound size={16} /><span>Recuperar cálculo</span></summary>
@@ -60,6 +62,7 @@ export function Layout({ children }: { children: ReactNode }) {
       </details>
       <div className="sidebar-foot">
         <UpdateStatus />
+        <IndicesStatus />
         <span className="brand-rule" />
         <p>Barreto Fontes<br />Sociedade de Advogados</p>
       </div>

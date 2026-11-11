@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useIndicesVersion } from '../utils/useIndicesVersion';
 import { useLocation } from 'react-router-dom';
-import { Plus, Trash2, ArrowRight, Rows3, FileSpreadsheet } from 'lucide-react';
+import { Plus, Trash2, ArrowRight, Rows3, FileSpreadsheet, GripVertical } from 'lucide-react';
 import { Button, Input, Textarea, Select } from '../components/ui';
 import { executarCalculo, obterCriterios, mensagemErro, type CalculoRecuperado, type CriteriosPublicos, type CalculoSimplificado } from '../services/api';
 import { useCalculo } from '../contexts/useCalculo';
@@ -12,37 +13,44 @@ import { DescontosForm } from '../components/DescontosForm';
 import { HonorariosPrincipaisForm, CumprimentoSentencaForm, DestaquesForm } from '../components/HonorariosPrincipaisForm';
 import { obterCoberturaHonorarios, type CoberturaHonorarios } from '../services/api';
 import { opcoesPerfisCalculo } from '../utils/perfisCalculo';
-import { mensagemCoberturaSelecionada } from '../utils/coberturaIndices';
+import { dataBaseMinimaAplicavel, mensagemCoberturaSelecionada } from '../utils/coberturaIndices';
+import { useReordenacaoParcelas } from '../utils/useReordenacaoParcelas';
+import { simboloMoeda, notaMoeda, equivalenteNominalReais, formatarValorOrigem } from '../utils/moedasHistoricas';
 
 export function Processamento() {
   const { state, dispatch, buildCalculoJudicial } = useCalculo();
   const location = useLocation();
-  const ultimaChaveCarregada = useRef('');
+  const indicesVersion = useIndicesVersion();
+  const ultimaNavegacaoRecuperada = useRef<string | null>(null);
   const [criterios, setCriterios] = useState<CriteriosPublicos | null>(null);
   const [criteriosDescontos, setCriteriosDescontos] = useState<CriteriosPublicos | null>(null);
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(false);
+  const reordenacao = useReordenacaoParcelas(state.parcelas,
+    payload => dispatch({ type: 'SET_PARCELAS', payload }), carregando);
   const [importacaoAberta, setImportacaoAberta] = useState(false);
   const [coberturaHonorarios, setCoberturaHonorarios] = useState<CoberturaHonorarios | null>(null);
   useEffect(() => {
     const recuperado = (location.state as { calculoRecuperado?: CalculoRecuperado } | null)?.calculoRecuperado;
-    if (!recuperado || recuperado.categoria !== 'calculo_principal' || ultimaChaveCarregada.current === recuperado.chave_recuperacao) return;
-    ultimaChaveCarregada.current = recuperado.chave_recuperacao;
+    if (!recuperado || recuperado.categoria !== 'calculo_principal' || ultimaNavegacaoRecuperada.current === location.key) return;
+    ultimaNavegacaoRecuperada.current = location.key;
     dispatch({ type: 'LOAD_CALCULO', payload: recuperado.entrada as CalculoSimplificado });
     setErro('');
-  }, [dispatch, location.state]);
+  }, [dispatch, location.key, location.state]);
+  useEffect(() => { if (indicesVersion) dispatch({ type: 'SET_RESULTADO', payload: null }); }, [indicesVersion, dispatch]);
   const causaAtiva = state.honorariosSucumbenciais.aplicar && state.honorariosSucumbenciais.base === 'valor_causa';
+  const consultarCoberturaHonorarios = causaAtiva || state.custasDespesas.length > 0;
   useEffect(() => {
     let ativo = true;
-    if (!causaAtiva) return;
+    if (!consultarCoberturaHonorarios) return;
     obterCoberturaHonorarios().then(c => { if (ativo) setCoberturaHonorarios(c); }).catch(async e => { const msg = await mensagemErro(e); if (ativo) setErro(msg); });
     return () => { ativo = false; };
-  }, [causaAtiva]);
+  }, [consultarCoberturaHonorarios, indicesVersion]);
   useEffect(() => {
     let ativo = true;
     obterCriterios(state.perfil).then(c => { if (ativo) setCriterios(c); }).catch(async e => { const msg = await mensagemErro(e); if (ativo) setErro(msg); });
     return () => { ativo = false; };
-  }, [state.perfil]);
+  }, [state.perfil, indicesVersion]);
   const perfilDescontos = state.descontos.perfil || state.perfil;
   const descontosAtivos = state.descontos.itens.filter(item => item.aplicar !== false);
   useEffect(() => {
@@ -50,9 +58,15 @@ export function Processamento() {
     if (!descontosAtivos.length) return;
     obterCriterios(perfilDescontos).then(c => { if (ativo) setCriteriosDescontos(c); }).catch(async e => { const msg = await mensagemErro(e); if (ativo) setErro(msg); });
     return () => { ativo = false; };
-  }, [perfilDescontos, descontosAtivos.length]);
+  }, [perfilDescontos, descontosAtivos.length, indicesVersion]);
   const coberturaDescontos = !descontosAtivos.length || criteriosDescontos?.perfil === perfilDescontos;
   const cobertura = criterios?.perfil === state.perfil ? criterios : null;
+  const dataBaseMinima = dataBaseMinimaAplicavel(
+    cobertura?.data_base_minima ?? cobertura?.inicio,
+    descontosAtivos.length && criteriosDescontos?.perfil === perfilDescontos
+      ? criteriosDescontos.data_base_minima ?? criteriosDescontos.inicio : undefined,
+    consultarCoberturaHonorarios ? coberturaHonorarios?.data_base_minima : undefined,
+  );
   const candidatosLimite = criterios ? [
     { data: criterios.data_base_maxima, motivo: 'padrão do cálculo principal' },
     ...(state.custasDespesas.length ? [{ data: criterios.data_base_maxima_ipcae, motivo: 'custas e despesas pelo IPCA-E' }] : []),
@@ -66,8 +80,13 @@ export function Processamento() {
   const fazenda2 = state.perfil === 'fazenda_publica_2_v1';
   const cjf = state.perfil === 'selic_cjf_v1';
   const civil1 = state.perfil === 'ipca_taxa_legal_v1';
-  const civil2 = state.perfil === 'civil_2_v1';
-  const datasIndependentes = civil1 || civil2;
+  const civil5 = state.perfil === 'civil_5_taxa_legal_reconstruida_v1';
+  const civil3 = state.perfil === 'civil_3_v1';
+  const civil2 = state.perfil === 'civil_2_v1' || civil3;
+  const indiceCivil = civil3 ? 'INPC' : 'IPCA';
+  const civil6 = state.perfil === 'civil_6_v1';
+  const civil4 = state.perfil === 'civil_4_temporario_v1' || civil6;
+  const datasIndependentes = civil1 || civil2 || civil4 || civil5;
   const dataJurosNecessaria = !cjf && ['citacao', 'data_fixa'].includes(state.dadosGerais.criterio_inicio_juros);
   function atualizarParcela(index: number, campo: string, valor: string | null) {
     dispatch({ type: 'SET_PARCELAS', payload: state.parcelas.map((p, i) => i === index ? { ...p, [campo]: valor } : p) });
@@ -80,17 +99,23 @@ export function Processamento() {
     if (!criterios || !cobertura || !coberturaDescontos || (causaAtiva && !coberturaHonorarios)) { setErro('Aguarde a consulta dos índices antes de calcular.'); return; }
     if (limiteDataBase && state.dadosGerais.data_base > limiteDataBase) { setErro(`Escolha uma data até ${formatarData(limiteDataBase)}.`); return; }
     if (!state.parcelas.length) { setErro('Adicione pelo menos uma parcela.'); return; }
+    const navegacaoRecuperada = ultimaNavegacaoRecuperada.current;
     setCarregando(true);
     dispatch({ type: 'SET_RESULTADO', payload: null });
     try {
       const resultado = await executarCalculo(buildCalculoJudicial());
-      dispatch({ type: 'SET_RESULTADO', payload: resultado });
-    } catch (e) { setErro(await mensagemErro(e)); }
+      if (navegacaoRecuperada === ultimaNavegacaoRecuperada.current) {
+        dispatch({ type: 'SET_RESULTADO', payload: resultado });
+      }
+    } catch (e) {
+      const mensagem = await mensagemErro(e);
+      if (navegacaoRecuperada === ultimaNavegacaoRecuperada.current) setErro(mensagem);
+    }
     finally { setCarregando(false); }
   }
-  const principal = state.parcelas.reduce((s, p) => s + (Number(p.valor_bruto) || 0) - (Number(p.valor_pago_na_data) || 0), 0);
-  const custasInformadas = state.custasDespesas.reduce((s, item) => s + (Number(item.valor) || 0), 0);
-  const descontosInformados = descontosAtivos.reduce((s, item) => s + (Number(item.valor) || 0), 0);
+  const principal = state.parcelas.reduce((s, p) => s + equivalenteNominalReais((Number(p.valor_bruto) || 0) - (Number(p.valor_pago_na_data) || 0), p.data_vencimento), 0);
+  const custasInformadas = state.custasDespesas.reduce((s, item) => s + equivalenteNominalReais(item.valor, item.data), 0);
+  const descontosInformados = descontosAtivos.reduce((s, item) => s + equivalenteNominalReais(item.valor, item.data), 0);
   return <div className="processamento-page">
     <div className="page-intro"><p className="eyebrow">PRINCIPAL E HONORÁRIOS</p><h1>Atualize as parcelas.</h1><p>Informe a data final e os valores. Os critérios são aplicados automaticamente.</p></div>
     <form onSubmit={calcular} onInvalid={e => { const details = (e.target as HTMLElement).closest('details'); if (details) details.open = true; }}>
@@ -110,7 +135,7 @@ export function Processamento() {
         <section className="sheet-panel processamento-dados" aria-labelledby="dados-titulo">
           <div className="section-heading"><h2 id="dados-titulo">Dados do cálculo</h2><span className="count-label">Base e critérios</span></div>
           <div className={`field-grid processamento-base-grid${cjf ? ' processamento-base-selic' : dataJurosNecessaria ? ' processamento-base-com-data' : ''}`}>
-            <Input id="data-base" label="Atualizar até" type="date" min={criterios?.inicio} max={limiteDataBase} disabled={!cobertura} required value={state.dadosGerais.data_base} onChange={e => geral('data_base', e.target.value)} error={limiteDataBase && state.dadosGerais.data_base > limiteDataBase ? `Data máxima: ${formatarData(limiteDataBase)}.` : undefined} />
+            <Input id="data-base" label="Atualizar até" type="date" min={dataBaseMinima} max={limiteDataBase} disabled={!cobertura} required value={state.dadosGerais.data_base} onChange={e => geral('data_base', e.target.value)} error={limiteDataBase && state.dadosGerais.data_base > limiteDataBase ? `Data máxima: ${formatarData(limiteDataBase)}.` : undefined} />
             <Select id="padrao-calculo" label="Padrão do cálculo" value={state.perfil} onChange={e => dispatch({ type: 'SET_PERFIL', payload: e.target.value as CalculoSimplificado['perfil'] })} options={opcoesPerfisCalculo(criterios?.perfis)} />
             {!cjf && <>
             <Select id="inicio-juros" label="Início dos juros" value={state.dadosGerais.criterio_inicio_juros} onChange={e => geral('criterio_inicio_juros', e.target.value)} options={[
@@ -119,47 +144,50 @@ export function Processamento() {
               { value: 'data_fixa', label: 'Data específica' },
               { value: 'por_parcela', label: 'Definir por parcela' },
             ]} />
-            {dataJurosNecessaria && <Input id="data-inicio-juros" label={state.dadosGerais.criterio_inicio_juros === 'citacao' ? 'Data da citação' : 'Data de início dos juros'} type="date" required value={state.dadosGerais.data_inicial_juros || ''} onChange={e => geral('data_inicial_juros', e.target.value || null)} />}
+            {dataJurosNecessaria && <Input id="data-inicio-juros" label={state.dadosGerais.criterio_inicio_juros === 'citacao' ? 'Data da citação' : 'Data de início dos juros'} type="date" min={criterios?.inicio_juros} required value={state.dadosGerais.data_inicial_juros || ''} onChange={e => geral('data_inicial_juros', e.target.value || null)} />}
             </>}
           </div>
           <details className="quiet-details criteria-note"><summary>Ver os critérios aplicados</summary>
+            {criterios?.inicio_correcao && <p>Correção disponível desde {formatarData(criterios.inicio_correcao)}.{criterios.inicio_juros && ` Juros disponíveis desde ${formatarData(criterios.inicio_juros)}.`} Antes do marco dos juros, aplica-se somente a correção.</p>}
             <p id="indices-disponiveis">{limiteDataBase ? mensagemCoberturaSelecionada(limiteDataBase, motivosLimite, cobertura) : 'Consultando os índices…'}</p>
             {cjf && state.dadosGerais.data_base && <p>Data-base SELIC: {formatarData(`${state.dadosGerais.data_base.slice(0, 7)}-01`)}. Referência mensal, sem atualização diária dentro do mês. Custas e demais operações usam a data final informada no campo acima.</p>}
-            {datasIndependentes ? <p>Juros e correção têm datas independentes: os juros podem começar antes da correção. O campo da data de cada parcela indica o início da correção pelo IPCA.</p> : !cjf && <p>Início dos juros: aplica-se {novo ? 'à poupança até 08/12/2021 e aos juros de 2% ao ano a partir de 10/09/2025' : 'à poupança nos períodos em que ela incide'}, respeitado o vencimento da parcela. Não altera os períodos do IPCA-E ou da SELIC.</p>}
-            {civil1 ? <p>IPCA: fatores mensais geométricos. Taxa Legal: taxas oficiais do Banco Central, acumuladas de forma simples, sobre o principal corrigido. Não há SELIC integral adicional nem subtração direta de percentuais.</p> : civil2 ? <p>IPCA: fatores mensais geométricos. Juros de mora: 1% ao mês, de forma simples e proporcional aos dias, sobre o principal corrigido.</p> : cjf ? <p>SELIC simples por competência: atualização e juros em todo o período. A taxa do mês é aplicada no mês seguinte (Manual de Cálculos da Justiça Federal).</p> : fazenda1 ? <ul className="criteria-list">
-              <li><strong>A partir de 01/07/2009:</strong> IPCA-E e poupança.</li>
+            {datasIndependentes ? <p>Juros e correção têm datas independentes: os juros podem começar antes da correção. O campo da data de cada parcela indica o início da correção pelo {indiceCivil}.</p> : !cjf && <p>Início dos juros: aplica-se {novo ? 'à poupança até 08/12/2021 e aos juros de 2% ao ano a partir de 10/09/2025' : 'à poupança nos períodos em que ela incide'}, respeitado o vencimento da parcela. Não altera os períodos do IPCA-E ou da SELIC.</p>}
+            {civil6 ? <p>Até 10/01/2003: <strong>IPCA</strong> e <strong>juros simples de 0,5% ao mês</strong>, proporcionais aos dias, com termos próprios. De 11/01/2003 a 29/08/2024: <strong>IPCA</strong> antes dos juros; <strong>SELIC</strong> deduzida do IPCA quando somente juros, e integral quando ambos. Desde 30/08/2024: <strong>IPCA</strong> e <strong>Taxa Legal</strong>, com base consolidada na transição.</p> : civil5 ? <p><strong>IPCA</strong>: fatores mensais geométricos. <strong>Taxa Legal</strong>: juros simples sobre o principal corrigido, com termos próprios. Reconstruída pela metodologia do Bacen até 29/08/2024; oficial depois.</p> : civil4 ? <p>Critério temporário: <strong>IPCA</strong> antes dos juros; <strong>SELIC</strong> deduzida do IPCA quando incidem somente juros, e integral quando incidem ambos. Desde 30/08/2024, <strong>IPCA</strong> e <strong>Taxa Legal</strong>, com termos próprios. Base consolidada na transição.</p> : civil1 ? <p><strong>IPCA</strong>: fatores mensais geométricos. <strong>Taxa Legal</strong>: taxas oficiais do Banco Central, acumuladas de forma simples, sobre o principal corrigido. Não há SELIC integral adicional nem subtração direta de percentuais.</p> : civil2 ? <p><strong>{indiceCivil}</strong>: fatores mensais geométricos. <strong>Juros de mora de 1% ao mês</strong>, de forma simples e proporcional aos dias, sobre o principal corrigido.</p> : cjf ? <p><strong>SELIC</strong> simples por competência: atualização e juros em todo o período. A taxa do mês é aplicada no mês seguinte (Manual de Cálculos da Justiça Federal).</p> : fazenda1 ? <ul className="criteria-list">
+              <li><strong>A partir de 01/07/2009:</strong> <strong>IPCA-E</strong> e <strong>poupança</strong>.</li>
             </ul> : fazenda2 ? <ul className="criteria-list">
-              <li><strong>01/07/2009 a 08/12/2021:</strong> IPCA-E e poupança.</li>
-              <li><strong>A partir de 09/12/2021:</strong> SELIC (atualização e juros).</li>
+              <li><strong>01/07/2009 a 08/12/2021:</strong> <strong>IPCA-E</strong> e <strong>poupança</strong>.</li>
+              <li><strong>A partir de 09/12/2021:</strong> <strong>SELIC</strong> (atualização e juros).</li>
             </ul> : novo ? <ul className="criteria-list">
-              <li><strong>01/07/2009 a 08/12/2021:</strong> IPCA-E e poupança.</li>
-              <li><strong>09/12/2021 a 09/09/2025:</strong> SELIC (atualização e juros).</li>
-              <li><strong>A partir de 10/09/2025:</strong> IPCA-E + juros simples de 2% ao ano, limitado à SELIC quando inferior.</li>
+              <li><strong>01/07/2009 a 08/12/2021:</strong> <strong>IPCA-E</strong> e <strong>poupança</strong>.</li>
+              <li><strong>09/12/2021 a 09/09/2025:</strong> <strong>SELIC</strong> (atualização e juros).</li>
+              <li><strong>A partir de 10/09/2025:</strong> <strong>IPCA-E</strong> + <strong>juros simples de 2% ao ano</strong>, limitado à SELIC quando inferior.</li>
             </ul> : <ul className="criteria-list">
-              <li><strong>01/07/2009 a 08/12/2021:</strong> IPCA-E e poupança (Tema 905).</li>
-              <li><strong>09/12/2021 a 09/09/2025:</strong> SELIC (atualização e juros).</li>
-              <li><strong>A partir de 10/09/2025:</strong> IPCA-E oficial do IBGE, formado pelo IPCA-15, e poupança.</li>
+              <li><strong>01/07/2009 a 08/12/2021:</strong> <strong>IPCA-E</strong> e <strong>poupança</strong> (Tema 905).</li>
+              <li><strong>09/12/2021 a 09/09/2025:</strong> <strong>SELIC</strong> (atualização e juros).</li>
+              <li><strong>A partir de 10/09/2025:</strong> <strong>IPCA-E</strong> oficial do IBGE, formado pelo IPCA-15, e <strong>poupança</strong>.</li>
             </ul>}
-            <p>{civil1 ? 'Dias corridos: inclui o início e exclui a data-base, conforme a Calculadora do Cidadão. Meses parciais são proporcionais; taxas legais com seis casas decimais. Não estimar IPCA ainda não publicado.' : civil2 ? 'Dias corridos: inclui o início e exclui a data-base. Meses parciais são proporcionais; os juros não são capitalizados. Não estimar IPCA ainda não publicado.' : cjf ? 'Meses futuros ou sem índices completos permanecem bloqueados.' : 'Meses parciais: proporcionais aos dias corridos, com divisão nas transições. Meses sem índices completos permanecem bloqueados.'}</p>
-            <p>Multa: percentual sobre o saldo após pagamento no vencimento. Recebe a mesma atualização e os mesmos juros da parcela. O saldo do formulário não inclui multa ou encargos.</p>
-            {criterios && <p>Base consultada em {formatarData(criterios.atualizado_em)}. <a className="underline" href={civil1 ? criterios.fontes.resolucao_taxa_legal : civil2 ? criterios.fontes.ipca : cjf ? criterios.fontes.manual_cjf : criterios.fontes.ipcae_ibge || criterios.fontes.ipcae} target="_blank" rel="noreferrer">{civil1 ? 'Metodologia oficial da Taxa Legal' : civil2 ? 'IPCA oficial do Banco Central' : cjf ? 'Manual de Cálculos da Justiça Federal' : 'IPCA-E oficial do IBGE'}</a>.</p>}
+            <p>{civil5 ? 'Dias corridos: inclui o início e exclui a data-base. Meses parciais proporcionais; taxas com seis casas decimais e sem capitalização.' : civil4 ? 'Inclui o início e exclui a data-base, com divisão diária em 30/08/2024. SELIC e Taxa Legal acumulam de forma simples. Não estimar índice ausente nem competência SELIC ainda não fechada.' : civil1 ? 'Dias corridos: inclui o início e exclui a data-base, conforme a Calculadora do Cidadão. Meses parciais são proporcionais; taxas legais com seis casas decimais. Não estimar IPCA ainda não publicado.' : civil2 ? `Dias corridos: inclui o início e exclui a data-base. Meses parciais são proporcionais; os juros não são capitalizados. Não estimar ${indiceCivil} ainda não publicado.` : cjf ? 'Meses futuros ou sem índices completos permanecem bloqueados.' : 'Meses parciais: proporcionais aos dias corridos, com divisão nas transições. Meses sem índices completos permanecem bloqueados.'}</p>
+            <p><strong>Multa</strong>: percentual sobre o saldo após pagamento no vencimento. Recebe a mesma atualização e os mesmos juros da parcela. O saldo do formulário não inclui multa ou encargos.</p>
+            {criterios && <p>Base consultada em {formatarData(criterios.atualizado_em)}. <a className="underline" href={civil1 || civil4 || civil5 ? criterios.fontes.resolucao_taxa_legal : civil2 ? criterios.fontes[civil3 ? 'inpc' : 'ipca'] : cjf ? criterios.fontes.manual_cjf : criterios.fontes.ipcae_ibge || criterios.fontes.ipcae} target="_blank" rel="noreferrer">{civil1 || civil4 || civil5 ? 'Metodologia oficial da Taxa Legal' : civil2 ? `${indiceCivil} oficial do Banco Central` : cjf ? 'Manual de Cálculos da Justiça Federal' : 'IPCA-E oficial do IBGE'}</a>.</p>}
           </details>
         </section>
-        <section className="sheet-panel" aria-labelledby="parcelas-titulo">
+        <section ref={reordenacao.listaRef} className="sheet-panel" aria-labelledby="parcelas-titulo">
           <div className="section-heading"><div><h2 id="parcelas-titulo">Parcelas</h2><p>{datasIndependentes ? 'Informe o início da correção pelo IPCA. O início dos juros é informado separadamente, mesmo que anterior.' : 'Uma data e um valor para cada vencimento.'}</p></div><span className="count-label">{state.parcelas.length} parcela{state.parcelas.length !== 1 ? 's' : ''}</span></div>
           {!state.parcelas.length && <div className="costs-empty"><Rows3 size={20} /><span>Adicione a primeira parcela ou importe uma planilha.</span></div>}
-          {state.parcelas.map((p, i) => <div key={p.numero} className="parcel-line">
+          {state.parcelas.length > 1 && <p id="parcelas-ordem-ajuda" className="parcel-reorder-help">Arraste pela alça ao lado do número para trocar a ordem. Pelo teclado, use as setas para cima e para baixo; Esc cancela o arraste.</p>}
+          <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">{reordenacao.anuncio}</span>
+          {state.parcelas.map((p, i) => <div key={p.numero} className={reordenacao.classeLinha(i, p.numero)} data-parcela-numero={p.numero}>
             <div className="parcel-main">
-              <span className="parcel-number" aria-label={`Parcela ${p.numero}`}>{String(p.numero).padStart(2, '0')}</span>
+              <button type="button" className="parcel-number parcel-drag-handle" aria-label={`Reordenar parcela ${p.numero}`} aria-describedby={state.parcelas.length > 1 ? 'parcelas-ordem-ajuda' : undefined} title="Arraste para reordenar ou use as setas para cima e para baixo" {...reordenacao.propsAlca(p.numero)}><GripVertical size={14} aria-hidden="true" /><span>{String(p.numero).padStart(2, '0')}</span></button>
               <Input id={`historico-${p.numero}`} label="Descrição" value={p.historico} onChange={e => atualizarParcela(i, 'historico', e.target.value)} />
-              <Input id={`vencimento-${p.numero}`} label={datasIndependentes ? 'Início da correção' : 'Vencimento'} type="date" required min={criterios?.inicio} max={state.dadosGerais.data_base || undefined} value={p.data_vencimento} onChange={e => atualizarParcela(i, 'data_vencimento', e.target.value)} />
-              <Input id={`valor-${p.numero}`} label="Valor original (R$)" type="number" required min="0.01" step="0.01" placeholder="0,00" value={p.valor_bruto} onChange={e => atualizarParcela(i, 'valor_bruto', e.target.value)} />
-              <Input id={`pago-${p.numero}`} label="Pago no vencimento (R$)" type="number" required min="0" max={p.valor_bruto || undefined} step="0.01" value={p.valor_pago_na_data} onChange={e => atualizarParcela(i, 'valor_pago_na_data', e.target.value)} />
-              <Input id={`saldo-${p.numero}`} label="Saldo (R$)" readOnly className="parcel-balance" value={p.valor_bruto ? formatarMoeda((Number(p.valor_bruto) || 0) - (Number(p.valor_pago_na_data) || 0)) : '—'} />
+              <Input id={`vencimento-${p.numero}`} label={datasIndependentes ? 'Início da correção' : 'Vencimento'} type="date" required min={criterios?.inicio_correcao || criterios?.inicio} max={state.dadosGerais.data_base || undefined} value={p.data_vencimento} onChange={e => atualizarParcela(i, 'data_vencimento', e.target.value)} />
+              <Input id={`valor-${p.numero}`} label={`Valor original (${simboloMoeda(p.data_vencimento)})`} hint={notaMoeda(p.data_vencimento)} type="number" required min="0.01" step="0.01" placeholder="0,00" value={p.valor_bruto} onChange={e => atualizarParcela(i, 'valor_bruto', e.target.value)} />
+              <Input id={`pago-${p.numero}`} label={`Pago no vencimento (${simboloMoeda(p.data_vencimento)})`} type="number" required min="0" max={p.valor_bruto || undefined} step="0.01" value={p.valor_pago_na_data} onChange={e => atualizarParcela(i, 'valor_pago_na_data', e.target.value)} />
+              <Input id={`saldo-${p.numero}`} label={`Saldo (${simboloMoeda(p.data_vencimento)})`} readOnly className="parcel-balance" value={p.valor_bruto ? formatarValorOrigem((Number(p.valor_bruto) || 0) - (Number(p.valor_pago_na_data) || 0), p.data_vencimento) : '—'} />
               <Input id={`multa-${p.numero}`} label="Multa (%)" type="number" min="0" max="100" step="0.0001" value={p.multa_percentual ?? '0'} onChange={e => atualizarParcela(i, 'multa_percentual', e.target.value || '0')} />
               <button type="button" className="icon-button" aria-label={`Remover parcela ${p.numero}`} onClick={() => dispatch({ type: 'SET_PARCELAS', payload: state.parcelas.filter((_, j) => i !== j) })}><Trash2 size={17} /></button>
             </div>
-            {state.dadosGerais.criterio_inicio_juros === 'por_parcela' && <div className="parcel-interest"><Input id={`juros-${p.numero}`} label="Início dos juros (opcional)" type="date" value={p.data_inicial_juros || ''} onChange={e => atualizarParcela(i, 'data_inicial_juros', e.target.value || null)} hint={datasIndependentes ? 'Pode ser anterior à correção. Em branco: mesmo início da correção.' : 'Em branco: vencimento da parcela.'} /></div>}
+            {state.dadosGerais.criterio_inicio_juros === 'por_parcela' && <div className="parcel-interest"><Input id={`juros-${p.numero}`} label="Início dos juros (opcional)" type="date" min={criterios?.inicio_juros} value={p.data_inicial_juros || ''} onChange={e => atualizarParcela(i, 'data_inicial_juros', e.target.value || null)} hint={datasIndependentes ? 'Pode ser anterior à correção. Em branco: mesmo início da correção, respeitada a cobertura dos juros.' : 'Em branco: vencimento da parcela, respeitada a cobertura dos juros.'} /></div>}
           </div>)}
           <div className="parcel-toolbar" role="group" aria-label="Adicionar parcelas">
             <Button type="button" variant="ghost" size="sm" onClick={() => dispatch({ type: 'SET_PARCELAS', payload: [...state.parcelas, { numero: Math.max(0, ...state.parcelas.map(p => p.numero)) + 1, historico: '', data_vencimento: '', valor_bruto: '', valor_pago_na_data: '0', multa_percentual: '0', data_inicial_juros: null }] })}><Plus size={15} />Adicionar parcela</Button>
@@ -168,15 +196,17 @@ export function Processamento() {
           <Importacao aberto={importacaoAberta} />
         </section>
         <DescontosForm operacao={state.descontos} perfilPrincipal={state.perfil} dataBase={state.dadosGerais.data_base}
-          inicio={criteriosDescontos?.perfil === perfilDescontos ? criteriosDescontos.inicio : undefined}
+          inicio={criteriosDescontos?.perfil === perfilDescontos ? (criteriosDescontos.inicio_correcao || criteriosDescontos.inicio) : undefined}
+          inicioJuros={criteriosDescontos?.perfil === perfilDescontos ? criteriosDescontos.inicio_juros : undefined}
           onChange={payload => dispatch({ type: 'SET_DESCONTOS', payload })} />
-        <HonorariosPrincipaisForm config={state.honorariosSucumbenciais} dataBase={state.dadosGerais.data_base} onChange={payload => dispatch({ type: 'SET_HONORARIOS', payload })} />
+        <HonorariosPrincipaisForm config={state.honorariosSucumbenciais} dataBase={state.dadosGerais.data_base} cobertura={coberturaHonorarios} onChange={payload => dispatch({ type: 'SET_HONORARIOS', payload })} />
         <CumprimentoSentencaForm config={state.cumprimentoSentenca} onChange={payload => dispatch({ type: 'SET_CUMPRIMENTO', payload })} />
         <DestaquesForm config={state.cumprimentoSentenca} onChange={payload => dispatch({ type: 'SET_CUMPRIMENTO', payload })} />
         <CustasDespesasForm
           idPrefix="principal"
           itens={state.custasDespesas}
           dataBase={state.dadosGerais.data_base}
+          cobertura={coberturaHonorarios}
           onChange={itens => dispatch({ type: 'SET_CUSTAS_DESPESAS', payload: itens })}
         />
         {erro && <div role="alert" className="feedback-error">{erro}</div>}

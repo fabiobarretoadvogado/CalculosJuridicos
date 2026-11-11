@@ -131,10 +131,10 @@ def test_indices_ausentes_e_negativos_impedem_substituicao(tmp_path, monkeypatch
 
 def test_ipca_futuro_nao_e_estimado():
     payload = entrada()
-    payload["dados_gerais"]["data_base"] = "2026-09-17"
+    payload["dados_gerais"]["data_base"] = "2026-10-17"
     with pytest.raises(ValueError, match="último mês com IPCA"):
         calcular(payload)
-    assert criterios_publicos(perfil="ipca_taxa_legal_v1")["data_base_maxima"] == "2026-09-01"
+    assert criterios_publicos(perfil="ipca_taxa_legal_v1")["data_base_maxima"] == "2026-10-01"
 
 
 def test_primeiro_dia_do_mes_seguinte_inclui_ultima_competencia_ipca():
@@ -173,7 +173,7 @@ def test_api_pdf_excel_csv_mesmos_valores_e_fontes(tmp_path):
     pdf = c.post("/api/v1/calculo/exportar/pdf", json=entrada())
     assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")
     text = "\n".join(p.extract_text() for p in PdfReader(io.BytesIO(pdf.content)).pages)
-    assert "4,325078%" in text and "Memória da Taxa Legal" in text
+    assert "4,325078%" in text and "MEMÓRIA DA TAXA LEGAL" in text
     assert "02/02/2026" in text and "28/08/2026" in text
     assert "Poupança" not in text and "IPCA-E pós EC" not in text
     assert "5.214,64" in text and "BCB" in text
@@ -201,7 +201,7 @@ def test_pdf_muitas_parcelas_preserva_cabecalhos_e_datas(quantidade):
     doc = PdfReader(io.BytesIO(exportar_pdf(r)))
     text = "\n".join(p.extract_text() for p in doc.pages)
     assert text.count("Correção desde") == 1
-    assert text.count("Memória da Taxa Legal - parcela") == quantidade
+    assert text.count("MEMÓRIA DA TAXA LEGAL - PARCELA") == quantidade
     assert len(doc.pages) >= 2
     assert r.resumo.total_atualizado == D("5214.64") * quantidade
 
@@ -213,4 +213,4 @@ def test_pdf_cabecalho_nao_fica_orfao_apos_observacao_extensa():
     paginas = [" ".join(p.extract_text().split()) for p in PdfReader(io.BytesIO(exportar_pdf(calcular(payload)))).pages]
     inicio = next(t for t in paginas if "Correção desde" in t)
     assert "Dano moral 1" in inicio
-    assert "Valores por parcela" in inicio
+    assert "CRÉDITO - ACRÉSCIMO" in inicio

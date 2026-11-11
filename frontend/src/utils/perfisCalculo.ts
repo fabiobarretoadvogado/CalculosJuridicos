@@ -10,6 +10,10 @@ const PERFIS_PADRAO: { id: PerfilPadrao; nome: string }[] = [
   { id: 'selic_cjf_v1', nome: 'SELIC' },
   { id: 'ipca_taxa_legal_v1', nome: 'Civil 1' },
   { id: 'civil_2_v1', nome: 'Civil 2' },
+  { id: 'civil_3_v1', nome: 'Civil 3' },
+  { id: 'civil_4_temporario_v1', nome: 'Civil 4 (temporário)' },
+  { id: 'civil_5_taxa_legal_reconstruida_v1', nome: 'Civil 5' },
+  { id: 'civil_6_v1', nome: 'Civil 6' },
 ];
 
 export function opcoesPerfisCalculo(catalogo?: CriteriosPublicos['perfis']) {

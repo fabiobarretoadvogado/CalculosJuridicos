@@ -1,17 +1,21 @@
 """Memória mensal da Taxa Legal: taxas oficiais com seis casas decimais."""
 from decimal import Decimal as D
-from reportlab.lib import colors
-from reportlab.platypus import KeepTogether, LongTable, TableStyle
+from .relatorio_layout import separar_operacoes, tabela_operacional
 
 
 def linhas_taxa_legal(resultado):
-    yield ["Parcela", "Mês", "Período", "Dias / mês", "Taxa Legal mensal (%)", "Taxa proporcional (%)", "Acumulada (%)", "Base corrigida", "Juros do trecho", "Juros acumulados"]
+    civil5 = resultado.premissas.get("perfil") == "civil_5_taxa_legal_reconstruida_v1"
+    extras = ["Origem da taxa", "Competência dos insumos", "Fator SELIC", "Fator IPCA-15"] if civil5 else []
+    yield ["Parcela", "Mês", "Período", "Dias / mês", "Taxa Legal mensal (%)", "Taxa proporcional (%)", "Acumulada (%)", "Base corrigida", "Juros do trecho", "Juros acumulados", *extras]
     for m in resultado.premissas.get("memoria_taxa_legal", []):
+        formacao = m.get("formacao_taxa") or {}
+        origem = "Reconstruída" if m.get("origem") == "reconstruida" else "Publicada BCB SGS 29543"
+        extras = [origem, formacao.get("competencia_insumos", ""), formacao.get("fator_selic", ""), formacao.get("fator_ipca15", "")] if civil5 else []
         yield [m["parcela"], m["competencia"], m["inicio"] + " a " + m["fim"], f"{m['dias']} / {m['dias_mes']}",
-               m["taxa_mensal"], m["taxa_proporcional"], m["taxa_acumulada"], m["base"], m["juros_periodo"], m["juros_acumulados"]]
+               m["taxa_mensal"], m["taxa_proporcional"], m["taxa_acumulada"], m["base"], m["juros_periodo"], m["juros_acumulados"], *extras]
 
 
-def blocos_memoria_taxa_legal(resultado, largura, estilos, p):
+def blocos_memoria_taxa_legal(resultado, largura, estilos, p, *, altura=523):
     from .relatorio_pdf import moeda, data_br
     blocos = []
     for parcela in resultado.parcelas:
@@ -26,18 +30,8 @@ def blocos_memoria_taxa_legal(resultado, largura, estilos, p):
                 *[p(f"{D(m[k]):.6f}".replace(".", ","), "numero") for k in ("taxa_mensal", "taxa_proporcional", "taxa_acumulada")],
                 p(moeda(m["juros_periodo"]), "numero"), p(moeda(m["juros_acumulados"]), "numero")])
         larguras = [largura*f for f in (.075, .225, .085, .12, .13, .12, .12, .125)]
-        def tabela(conteudo, tem_cabecalho):
-            t = LongTable(conteudo, colWidths=larguras, repeatRows=0, splitInRow=0, hAlign="LEFT")
-            regras = [("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 5),
-                      ("RIGHTPADDING", (0, 0), (-1, -1), 5), ("TOPPADDING", (0, 0), (-1, -1), 5),
-                      ("BOTTOMPADDING", (0, 0), (-1, -1), 5), ("LINEBELOW", (0, 0), (-1, -1), .3, colors.HexColor("#E1DED8"))]
-            if tem_cabecalho:
-                regras.append(("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#F7F5F0")))
-            t.setStyle(TableStyle(regras))
-            return t
-        blocos.append(KeepTogether([p(f"Memória da Taxa Legal - parcela {parcela.numero}", "secao"),
-            p(f"Base corrigida final: R$ {moeda(parcela.valor_corrigido)}. Taxas simples; data-base excluída; valores em reais. Taxas com seis casas decimais.", "nota"),
-            tabela(dados[:2], True)]))
-        if len(dados) > 2:
-            blocos.append(tabela(dados[2:], False))
+        introducao = [p(f"Memória da Taxa Legal - parcela {parcela.numero}", "secao"),
+            p(f"Base corrigida final: R$ {moeda(parcela.valor_corrigido)}. Taxas simples; data-base excluída; valores em reais. Taxas com seis casas decimais.", "nota")]
+        memoria = tabela_operacional(dados, larguras)
+        blocos.extend([*separar_operacoes(introducao, memoria, largura, altura), *introducao, memoria])
     return blocos

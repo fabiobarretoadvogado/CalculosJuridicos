@@ -34,22 +34,22 @@ def gerar_relatorio_texto(resultado: ResultadoCalculo) -> str:
     md.append("## 1. RESUMO GERAL DO DÉBITO")
     md.append(f"- **Principal Original:** R$ {res.principal_original:,.2f}")
     md.append(f"- **(-) Pago na Data:** R$ {res.valor_pago_na_data_parcelas:,.2f}")
-    md.append(f"- **Principal Apurado:** R$ {res.principal_apurado:,.2f}")
+    md.append(f"- **Principal:** R$ {res.principal_apurado:,.2f}")
     md.append(f"- **(+) Correção Monetária:** R$ {res.correcao_monetaria:,.2f}")
     md.append(f"- **(+) Juros de Mora:** R$ {res.juros_mora:,.2f}")
     md.append(f"- **(+) Multas/Astreintes:** R$ {res.multas:,.2f}")
     md.append(f"- **(+) Honorários Advocatícios:** R$ {res.honorarios:,.2f}")
     md.append(f"- **(+) Custas Processuais:** R$ {res.custas:,.2f}")
     md.append(f"- **(+) Despesas:** R$ {res.despesas:,.2f}")
-    md.append(f"- **(-) Abatimentos Posteriores:** R$ {res.abatimentos:,.2f}")
+    md.append(f"- **(-) Descontos:** R$ {res.abatimentos:,.2f}")
     md.append(f"### **TOTAL ATUALIZADO DO DÉBITO:** R$ {res.total_atualizado:,.2f}")
     if honorarios_contratuais > Decimal("0"):
         md.append(f"- **(-) Honorários Contratuais Destacados:** R$ {honorarios_contratuais:,.2f}")
         md.append(f"### **VALOR LÍQUIDO DO CRÉDITO:** R$ {valor_liquido_credito:,.2f}")
     md.append("\n" + "-"*40 + "\n")
 
-    md.append("## 2. DETALHAMENTO DAS PARCELAS")
-    headers = ["Nº", "Vencimento", "Histórico", "Valor Bruto", "Pago na Data", "Apurado", "Correção", "Juros", "Multa", "Total"]
+    md.append("## 2. CRÉDITO - ACRÉSCIMO")
+    headers = ["Nº", "Vencimento", "Descrição", "Valor Bruto", "Pago na Data", "Principal", "Correção", "Juros", "Multa", "Total"]
     md.append("| " + " | ".join(headers) + " |")
     md.append("|" + "|".join(["---" for _ in headers]) + "|")
 
@@ -71,8 +71,8 @@ def gerar_relatorio_texto(resultado: ResultadoCalculo) -> str:
 
     if resultado.memorias_abatimento:
         md.append("\n" + "-"*40 + "\n")
-        md.append("## 3. ABATIMENTOS E PAGAMENTOS PARCIAIS POSTERIORES")
-        ab_headers = ["Data Pagto", "Histórico", "Imputação", "Saldo Anterior", "Valor Abatido", "Saldo Devedor"]
+        md.append("## 3. DÉBITO - DECRÉSCIMO")
+        ab_headers = ["Data", "Descrição", "Imputação", "Saldo Anterior", "Valor Abatido", "Saldo Devedor"]
         ab_headers.extend(["Mes Quit.", "Saldo Reman."])
         md.append("| " + " | ".join(ab_headers) + " |")
         md.append("|" + "|".join(["---" for _ in ab_headers]) + "|")

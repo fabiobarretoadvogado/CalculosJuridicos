@@ -1,10 +1,7 @@
 {
   "mcpServers": {
     "calculos-juridicos": {
-      "command": "CalculosJuridicos.exe",
-      "args": [
-        "--mcp"
-      ]
+      "url": "http://127.0.0.1:49179/mcp"
     }
   }
 }

@@ -212,7 +212,11 @@ def check_latest(
         raise UpdateError("Publicação ainda não aprovada para distribuição.")
     tag = release["tag_name"]
     version = tag.removeprefix("v")
-    version_tuple(version)
+    available_version = version_tuple(version)
+    if tag != "v" + version:
+        raise UpdateError("Tag de publicação inválida.")
+    if available_version <= version_tuple(current_version):
+        return None
     assets = [asset for asset in release["assets"] if asset["name"] == "update.json"]
     if len(assets) != 1:
         raise UpdateError("A publicação não possui um manifesto único de atualização.")
@@ -225,14 +229,14 @@ def check_latest(
         check_asset_url(url, transport_repository, version, "update.json")
     manifest_url = asset_api_url(assets[0], transport_repository) if token else url
     info = verify_manifest(read_small(manifest_url, MANIFEST_LIMIT, token), public_key, repository)
-    if info.version != version or tag != "v" + info.version:
+    if info.version != version:
         raise UpdateError("A versão assinada difere da publicação.")
     if token:
         installers = [asset for asset in release["assets"] if asset["name"] == info.name]
         if len(installers) != 1:
             raise UpdateError("Instalador privado ausente ou duplicado.")
         info = replace(info, api_url=asset_api_url(installers[0], transport_repository))
-    return info if version_tuple(info.version) > version_tuple(current_version) else None
+    return info
 
 
 def cache_root() -> Path:

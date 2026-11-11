@@ -76,3 +76,15 @@ def test_instalador_fora_do_repositorio_e_rejeitado():
 def test_versao_invalida(value: str):
     with pytest.raises(UpdateError):
         version_tuple(value)
+
+
+@pytest.mark.parametrize("current", [VERSION, "2026.9.19.2"])
+def test_consulta_sem_versao_nova_nao_baixa_manifesto(monkeypatch, current):
+    from liquidacao_custom.updates import client
+
+    def read(url, limit, token):
+        assert url == f"https://api.github.com/repos/{REPOSITORY}/releases/latest"
+        return json.dumps({"tag_name": f"v{VERSION}"}).encode()
+
+    monkeypatch.setattr(client, "read_small", read)
+    assert client.check_latest(REPOSITORY, "", current) is None

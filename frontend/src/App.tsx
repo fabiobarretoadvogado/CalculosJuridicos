@@ -1,5 +1,6 @@
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CalculoProvider } from './contexts/CalculoContext';
+import { Indices } from './pages/Indices';
 import { Layout } from './components/Layout';
 import { Processamento } from './pages/Processamento';
 import { HonorariosSucumbenciais } from './pages/HonorariosSucumbenciais';
@@ -10,6 +11,7 @@ function App() {
       <HashRouter>
         <Layout>
           <Routes>
+            <Route path="/indices" element={<Indices />} />
             <Route path="/" element={<Navigate to="/processamento" replace />} />
             <Route path="/importacao" element={<Navigate to="/processamento" replace />} />
             <Route path="/processamento" element={<Processamento />} />

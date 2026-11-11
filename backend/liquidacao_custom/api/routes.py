@@ -17,7 +17,8 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel
 
 from liquidacao_custom.core.models import ResultadoCalculo
-from liquidacao_custom.core.criterios_simplificados import CalculoSimplificado as CalculoJudicial
+from liquidacao_custom.core.criterios_simplificados import CalculoSimplificado, PERFIS_DATA_BASE_REAL
+from liquidacao_custom.core.moedas_historicas import INICIO_REAL
 from liquidacao_custom.core.motor_simplificado import criterios_publicos
 from liquidacao_custom.core.importacao_simplificada import importar_parcelas, gerar_template
 from liquidacao_custom.core.exportadores import exportar_excel, exportar_csv
@@ -84,7 +85,7 @@ def api_recuperar_calculo(chave: str):
 
 
 @router.post("/calculo", response_model=ResultadoCalculo, summary="Executa cálculo judicial completo")
-def api_executar_calculo(calculo: CalculoJudicial):
+def api_executar_calculo(calculo: CalculoSimplificado):
     """
     Recebe a especificação completa de um cálculo judicial e retorna o resultado detalhado
     com resumo geral, dados por parcela, memória de cálculo mensal e alertas.
@@ -133,7 +134,7 @@ def api_exportar_pdf_honorarios(calculo: CalculoHonorariosProveito):
 
 
 @router.post("/calculo/exportar/pdf", summary="Executa cálculo e exporta relatório PDF")
-def api_exportar_pdf(calculo: CalculoJudicial):
+def api_exportar_pdf(calculo: CalculoSimplificado):
     try:
         resultado = executar_calculo_registrado(calculo)
         return StreamingResponse(
@@ -145,7 +146,7 @@ def api_exportar_pdf(calculo: CalculoJudicial):
 
 
 @router.post("/calculo/exportar/excel", summary="Executa cálculo e exporta arquivo Excel (.xlsx)")
-def api_exportar_excel(calculo: CalculoJudicial):
+def api_exportar_excel(calculo: CalculoSimplificado):
     """
     Recebe a especificação do cálculo judicial, executa e retorna o download do
     arquivo Excel memoria_calculo.xlsx com as 9 abas completas de auditoria.
@@ -175,7 +176,7 @@ def api_exportar_excel(calculo: CalculoJudicial):
 
 
 @router.post("/calculo/exportar/csv", summary="Executa cálculo e exporta arquivos CSV (ZIP)")
-def api_exportar_csv(calculo: CalculoJudicial):
+def api_exportar_csv(calculo: CalculoSimplificado):
     """
     Recebe o cálculo, executa-o e retorna um arquivo ZIP contendo resumo_geral.csv,
     memoria_mensal.csv e alertas.csv.
@@ -251,7 +252,9 @@ def api_listar_indices():
 @router.get("/criterios", summary="Critérios fixos e cobertura dos índices oficiais")
 def api_criterios(perfil: str = "selic_ipcae_poupanca_v1"):
     try:
-        return criterios_publicos(perfil=perfil)
+        criterios = criterios_publicos(perfil=perfil)
+        inicio = INICIO_REAL.isoformat() if perfil in PERFIS_DATA_BASE_REAL else criterios["inicio"]
+        return {**criterios, "data_base_minima": inicio}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 

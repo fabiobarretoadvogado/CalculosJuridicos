@@ -32,7 +32,33 @@ from liquidacao_custom.updates.protected import protect  # noqa: E402
 
 
 def key_path() -> Path:
-    return Path(os.environ["LOCALAPPDATA"]) / "CalculosJuridicos-Publisher/update-signing-key.json"
+    relative = Path("CalculosJuridicos-Publisher/update-signing-key.json")
+    configured = Path(os.environ["LOCALAPPDATA"]) / relative
+    if configured.is_file():
+        return configured
+    # Algumas sessões do Windows virtualizam LOCALAPPDATA. Reutilizar somente
+    # uma chave já existente no perfil da mesma conta, sem copiar ou recriá-la.
+    profile = os.environ.get("USERPROFILE")
+    if os.name == "nt" and profile:
+        original = Path(profile) / "AppData/Local" / relative
+        if original.is_file():
+            return original
+        # O aplicativo Codex empacotado redireciona gravações de AppData/Local
+        # para LocalCache/Local. O terminal externo não enxerga esse redirecionamento.
+        packages = Path(profile) / "AppData/Local/Packages"
+        packaged_keys = sorted(
+            candidate for candidate in packages.glob(
+                "OpenAI.Codex_*/LocalCache/Local/" + relative.as_posix()
+            ) if candidate.is_file()
+        )
+        if len(packaged_keys) == 1:
+            return packaged_keys[0]
+        if len(packaged_keys) > 1:
+            raise ValueError(
+                "Há mais de uma chave no armazenamento do Codex. "
+                "Defina LOCALAPPDATA para a pasta LocalCache/Local da chave original."
+            )
+    return configured
 
 
 def signing_key() -> Ed25519PrivateKey:
@@ -244,38 +270,34 @@ def preflight(repository: str, access: str) -> str:
 
 
 def upload_file(token: str, url: str, path: Path) -> None:
-    import http.client
-    from urllib.parse import urlsplit
+    from urllib.error import HTTPError
 
-    parsed = urlsplit(url)
-    # Uploads de instaladores podem levar vários minutos em conexões mais lentas.
-    connection = http.client.HTTPSConnection(parsed.hostname, timeout=600)
-    try:
-        connection.putrequest("POST", parsed.path + "?" + parsed.query)
-        connection.putheader("Authorization", "Bearer " + token)
-        connection.putheader("User-Agent", "CalculosJuridicos-Publisher/1")
-        connection.putheader("Accept", "application/vnd.github+json")
-        connection.putheader("Content-Type", "application/octet-stream")
-        connection.putheader("Content-Length", str(path.stat().st_size))
-        connection.endheaders()
-        with path.open("rb") as stream:
-            sent = 0
-            milestone = 0
-            while chunk := stream.read(1024 * 1024):
-                connection.send(chunk)
-                sent += len(chunk)
-                if sent // (8 * 1024 * 1024) > milestone:
-                    milestone = sent // (8 * 1024 * 1024)
-                    print(f"Envio {path.name}: {sent * 100 // path.stat().st_size}%", flush=True)
-        response = connection.getresponse()
-        response.read(1024 * 1024)
-        if response.status != 201:
-            raise ValueError(
-                f"Falha no envio de {path.name}: HTTP {response.status}. "
-                "O rascunho foi preservado."
-            )
-    finally:
-        connection.close()
+    print(f"Enviando {path.name}...", flush=True)
+    with path.open("rb") as stream:
+        request = Request(
+            url,
+            data=stream,
+            method="POST",
+            headers={
+                "User-Agent": "CalculosJuridicos-Publisher/1",
+                "Accept": "application/vnd.github+json",
+                "Content-Type": "application/octet-stream",
+                "Content-Length": str(path.stat().st_size),
+            },
+        )
+        request.add_unredirected_header("Authorization", "Bearer " + token)
+        try:
+            with urlopen(request, timeout=600) as response:
+                response.read(1024 * 1024)
+                status = response.status
+        except HTTPError as exc:
+            status = exc.code
+            exc.close()
+    if status != 201:
+        raise ValueError(
+            f"Falha no envio de {path.name}: HTTP {status}. "
+            "O rascunho foi preservado."
+        )
 
 
 def publish(repository: str, directory: Path, notes_path: Path, access: str) -> None:

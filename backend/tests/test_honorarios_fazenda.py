@@ -121,7 +121,7 @@ def test_modos_exclusivos_e_legado_preservado():
         CalculoHonorariosProveito.model_validate(dados)
 
 
-def test_pdf_discrimina_faixas_sem_percentual_unico_e_custas_em_pagina_exclusiva():
+def test_pdf_discrimina_faixas_sem_percentual_unico_e_custas_em_bloco_proprio():
     dados = entrada()
     dados["custas_despesas"] = [{"numero": 1, "nome": "Custa demonstrativa", "data": "2026-08-01", "valor": "250.00"}]
     r = executar_honorarios_proveito(CalculoHonorariosProveito.model_validate(dados))
@@ -129,15 +129,14 @@ def test_pdf_discrimina_faixas_sem_percentual_unico_e_custas_em_pagina_exclusiva
     primeira = paginas[0]
     assert "Por faixas" in primeira
     assert "Percentual da sentença" not in primeira
-    faixas = next(t for t in paginas if "Honorários por faixa" in t)
+    faixas = next(t for t in paginas if "HONORÁRIOS POR FAIXA" in t)
     assert "Acima de 100.000 SM" in faixas
     assert "R$ 3.964.000,00" in primeira
     assert "09/09/2026" in faixas
     assert "Salário mínimo vigente informado: R$ 1.000,00" in faixas
     assert sum(t.count("Base na faixa") for t in paginas) == 1
     custas = next(t for t in paginas if "Custa demonstrativa" in t)
-    assert "Custas e despesas processuais" in custas
-    assert "Dívida original" not in custas and "Dívida correta" not in custas
+    assert "CUSTAS E DESPESAS PROCESSUAIS" in custas
 
 
 def test_api_json_pdf_validacao_e_limites_nao_editaveis():

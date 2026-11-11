@@ -40,6 +40,11 @@ try {
     if ((Get-Item -LiteralPath $taskExecutable).VersionInfo.FileVersion -ne $taskIdentity.version) {
         throw 'A versão do executável difere do código.'
     }
+    foreach ($taskServiceFile in @('runtime\pythonw.exe','manage.py','shared_host.py','stop_service.ps1')) {
+        if (-not (Test-Path -LiteralPath (Join-Path $taskPayload ('codex-service\' + $taskServiceFile)))) {
+            throw ('Arquivo do serviço MCP ausente: ' + $taskServiceFile)
+        }
+    }
 
     $taskOutput = Join-Path $taskProject ('instaladores\' + $taskIdentity.version)
     New-Item -ItemType Directory -Path $taskOutput -Force | Out-Null
@@ -78,6 +83,14 @@ try {
             throw 'Pasta de instalador anterior fora da área de publicação.'
         }
         Remove-Item -LiteralPath $taskOldResolved -Recurse -Force
+    }
+    $taskArchiveRoot = [IO.Path]::GetFullPath((Join-Path $taskProject 'build\previous-packages'))
+    $taskProjectPrefix = [IO.Path]::GetFullPath($taskProject).TrimEnd('\') + '\'
+    if (Test-Path -LiteralPath $taskArchiveRoot) {
+        if (-not ($taskArchiveRoot + '\').StartsWith($taskProjectPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+            throw 'Pasta de versões anteriores fora do projeto.'
+        }
+        Remove-Item -LiteralPath $taskArchiveRoot -Recurse -Force
     }
     Write-Host ('Instalador criado: ' + $taskFriendly)
 }

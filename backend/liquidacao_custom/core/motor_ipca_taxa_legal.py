@@ -4,15 +4,17 @@ import json
 from calendar import monthrange
 from datetime import date, timedelta
 from decimal import Decimal as D, ROUND_HALF_UP
-from pathlib import Path
 from types import SimpleNamespace
 
 from .honorarios_principais import BASE_IPCA, corrigir_valor_causa
 from .models import ComponenteCalculo, DadosGerais, MemoriaMensal, ResultadoCalculo, ResultadoParcela, ResumoGeral
 from .motor_simplificado import consultar, moeda, proximo_mes, trechos
 from .perfis import IPCA_TAXA_LEGAL, PERFIS
+from .moedas_historicas import parcelas_em_reais
 
-BASE_TAXA_LEGAL = Path(__file__).resolve().parents[2] / "data" / "taxa_legal_oficial.json"
+from liquidacao_custom.index_data.store import DataPath
+
+BASE_TAXA_LEGAL = DataPath("taxa_legal_oficial.json")
 INICIO = date(2024, 8, 30)
 RESOLUCAO = "https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?numero=5171&tipo=resolu%C3%A7%C3%A3o+cmn"
 CALCULADORA = "https://www3.bcb.gov.br/CALCIDADAO/publico/metodologiaCorrigirPelaTaxaLegal.do?method=metodologiaCorrigirPelaTaxaLegal"
@@ -25,7 +27,9 @@ def criterios_ipca_taxa_legal():
     # Civil 1 exclui a data-base. Assim, com a competência de agosto
     # publicada, 01/09 é o primeiro limite que inclui agosto por inteiro.
     limite = proximo_mes(date.fromisoformat(competencia + "-01"))
+    inicio_correcao = min(ipca["ipca"]) + "-01"
     return {"perfil": IPCA_TAXA_LEGAL, "perfis": PERFIS, "inicio": INICIO.isoformat(),
+            "inicio_correcao": inicio_correcao, "inicio_juros": INICIO.isoformat(),
             "inicio_selic": "", "transicao": "", "data_base_maxima": limite.isoformat(),
             "atualizado_em": max(ipca["obtido_em"], legal["obtido_em"]),
             "versao_metodologia": "ipca_taxa_legal_oficial_datas_independentes_v1",
@@ -74,6 +78,7 @@ def apurar_juros_taxa_legal(saldo_exato, inicio_juros, fim, numero=1, indice_cor
     return anterior_juros, componente, memoria, auditoria
 
 
+@parcelas_em_reais
 def executar_ipca_taxa_legal(calculo):
     dados = json.loads(BASE_TAXA_LEGAL.read_text(encoding="utf-8"))
     criterios = criterios_ipca_taxa_legal()
@@ -85,13 +90,15 @@ def executar_ipca_taxa_legal(calculo):
     for entrada in calculo.parcelas:
         inicio_correcao = entrada.data_vencimento
         inicio_juros = calculo.inicio_juros_parcela(entrada)
-        if inicio_correcao < INICIO or inicio_juros < INICIO:
-            raise ValueError("Civil 1: os termos iniciais devem ser a partir de 30/08/2024. Períodos anteriores exigem outro critério expresso.")
+        if inicio_correcao < date.fromisoformat(criterios["inicio_correcao"]):
+            raise ValueError(f"Civil 1: início da correção anterior à cobertura IPCA ({criterios['inicio_correcao']}).")
+        if inicio_juros < INICIO:
+            raise ValueError("Civil 1: Taxa Legal oficial disponível desde 30/08/2024; juros anteriores exigem outro critério expresso.")
         principal = entrada.valor_bruto - entrada.valor_pago_na_data
         fator, mem_correcao = D(1), []
         if inicio_correcao < fim:
             _, fator, registros, _, _ = corrigir_valor_causa(SimpleNamespace(
-                indice="ipca", valor_causa=principal, data_protocolo=inicio_correcao), ultimo_dia)
+                indice="ipca", valor_causa=principal, data_protocolo=inicio_correcao), ultimo_dia, valor_em_reais=True)
             mem_correcao = [m.model_copy(update={"parcela": entrada.numero, "indice_aplicado": "IPCA (SGS 433)"}) for m in registros]
         saldo_exato = principal * fator
         saldo = moeda(saldo_exato)

@@ -35,7 +35,6 @@ class IndiceCorrecao(str, Enum):
     IPCAE = "ipcae"
     IGPM = "igpm"
     SELIC = "selic"
-    TAXA_LEGAL = "taxa_legal"
     INDICE_MANUAL = "indice_manual"
 
 
@@ -45,7 +44,6 @@ class TipoJuros(str, Enum):
     PERCENTUAL_MENSAL_SIMPLES = "percentual_mensal_simples"
     PERCENTUAL_MENSAL_COMPOSTO = "percentual_mensal_composto"
     SELIC = "selic"
-    TAXA_LEGAL = "taxa_legal"
     POUPANCA = "poupanca"
     TAXA_MANUAL = "taxa_manual"
 
@@ -112,19 +110,6 @@ class DadosGerais(BaseModel):
     observacoes: str = ""
     criterio_inicio_juros: str = "por_parcela"
     data_inicial_juros: date | None = None
-
-
-class CriteriosDisponiveis(BaseModel):
-    """
-    Catálogo de critérios disponíveis para o cálculo.
-    Funcionam como opções — não obrigam todas as parcelas a usar o mesmo critério.
-    """
-    indices_correcao: list[IndiceCorrecao] = Field(
-        default_factory=lambda: list(IndiceCorrecao)
-    )
-    tipos_juros: list[TipoJuros] = Field(
-        default_factory=lambda: list(TipoJuros)
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -362,82 +347,6 @@ class Astreintes(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Abatimentos
-# ---------------------------------------------------------------------------
-
-class Abatimento(BaseModel):
-    """
-    Abatimento posterior ao vencimento da parcela.
-
-    Pagamentos realizados na data do vencimento devem ser lançados
-    como valor_pago_na_data na parcela.
-    Pagamentos posteriores são lançados aqui como abatimentos.
-    """
-    data_pagamento: date
-    valor: Decimal
-    historico: str = ""
-    parcela_especifica: Optional[int] = None
-    forma_imputacao: FormaImputacao = FormaImputacao.ABATER_DO_TOTAL_NA_DATA_BASE
-    correcao_monetaria: IndiceCorrecao = IndiceCorrecao.SEM_CORRECAO
-    data_inicial_correcao: Optional[date] = None
-    juros_moratorios: TipoJuros = TipoJuros.SEM_JUROS
-    data_inicial_juros: Optional[date] = None
-    percentual_juros: Decimal = Decimal("0")
-
-
-# ---------------------------------------------------------------------------
-# Configuração da Taxa Legal
-# ---------------------------------------------------------------------------
-
-class ConfigTaxaLegal(BaseModel):
-    """Configuração para a Taxa Legal."""
-    data_inicio_vigencia: date = date(2022, 12, 1)
-    resultado_negativo_como_zero: bool = True
-    fonte: str = "Banco Central do Brasil"
-
-
-# ---------------------------------------------------------------------------
-# Configuração da SELIC como taxa única
-# ---------------------------------------------------------------------------
-
-class ConfigSelicTaxaUnica(BaseModel):
-    """
-    Configuração para uso da SELIC como taxa única.
-    Usada tipicamente em cálculos contra Fazenda Pública (EC 113/2021).
-    """
-    aplicar: bool = False
-    data_inicio: Optional[date] = None
-    consolidar_saldo_ate: Optional[date] = None
-    observacao: str = ""
-
-
-# ---------------------------------------------------------------------------
-# Modelo raiz do cálculo
-# ---------------------------------------------------------------------------
-
-class CalculoJudicial(BaseModel):
-    """
-    Modelo raiz que agrega todos os elementos de um cálculo judicial.
-    """
-    dados_gerais: DadosGerais
-    criterios_disponiveis: CriteriosDisponiveis = Field(
-        default_factory=CriteriosDisponiveis
-    )
-    parcelas: list[Parcela] = Field(default_factory=list)
-    honorarios: list[Honorarios] = Field(default_factory=list)
-    multa_cpc523: MultaCPC523 = Field(default_factory=MultaCPC523)
-    multas_adicionais: list[MultaAdicional] = Field(default_factory=list)
-    custas: list[CustaDespesa] = Field(default_factory=list)
-    despesas: list[CustaDespesa] = Field(default_factory=list)
-    astreintes: list[Astreintes] = Field(default_factory=list)
-    abatimentos: list[Abatimento] = Field(default_factory=list)
-    config_taxa_legal: ConfigTaxaLegal = Field(default_factory=ConfigTaxaLegal)
-    config_selic_taxa_unica: ConfigSelicTaxaUnica = Field(
-        default_factory=ConfigSelicTaxaUnica
-    )
-
-
-# ---------------------------------------------------------------------------
 # Modelos de resultado
 # ---------------------------------------------------------------------------
 
@@ -466,6 +375,7 @@ class ResultadoCustaDespesaProcessual(BaseModel):
     correcao_monetaria: Decimal
     valor_atualizado: Decimal
     memoria: list[MemoriaMensal] = Field(default_factory=list)
+    conversao_monetaria: dict | None = None
 
 
 class ComponenteCalculo(BaseModel):

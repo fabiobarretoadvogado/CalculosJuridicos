@@ -1,10 +1,11 @@
 {
-  "obtido_em": "2026-09-18",
-  "fonte": "https://api.bcb.gov.br/dados/serie/bcdata.sgs.195/dados?formato=json&dataInicial=09/12/2021&dataFinal=18/09/2026",
+  "obtido_em": "2026-11-09",
+  "fonte": "https://api.bcb.gov.br/dados/serie/bcdata.sgs.195/dados?formato=json&dataInicial=09%2F12%2F2021&dataFinal=2026-11-09",
   "serie": 195,
   "arquivos": [
     "bcb_poupanca_total_2012_2016.json",
     "bcb_poupanca_total_2017_2021.json",
     "bcb_poupanca_depositos_2021_2026.json"
-  ]
+  ],
+  "sha256_resposta_oficial": "2a8f92de207cee7b46b2a38277d147d770f4d9afe0824885a366521c89e87d2a"
 }

@@ -82,7 +82,7 @@ def test_escalonamento_causa_usa_base_corrigida_e_preserva_referencia():
 
 @pytest.mark.parametrize("campo,valor", [
     ("valor_causa", None), ("valor_causa", "0"), ("valor_causa", "-1"),
-    ("data_protocolo", None), ("data_protocolo", "2026-09-01"), ("data_protocolo", "2009-06-30"),
+    ("data_protocolo", None), ("data_protocolo", "2026-09-01"), ("data_protocolo", "1991-12-31"),
     ("indice", None), ("indice", "selic"), ("percentual_sentenca", None),
     ("percentual_sentenca", "0"), ("percentual_sentenca", "101"), ("percentual_sentenca", "10.12345"),
     ("valor_certo", "1500"),
@@ -107,7 +107,7 @@ def test_equidade_rejeita_dados_incompativeis(campo, valor):
 
 
 def test_custas_datas_numeros_e_cobertura_oficial():
-    for data in ["2009-06-30", "2026-09-01"]:
+    for data in ["1991-12-31", "2026-09-01"]:
         d = entrada()
         d["custas_despesas"] = [{"numero": 1, "nome": "Custa", "data": data, "valor": "1"}]
         with pytest.raises(ValidationError):
@@ -128,7 +128,7 @@ def test_custas_datas_numeros_e_cobertura_oficial():
 
 
 @pytest.mark.parametrize("base", ["valor_causa", "valor_certo"])
-def test_api_e_pdf_sem_operacoes_de_divida_e_custas_exclusivas(base):
+def test_api_e_pdf_sem_operacoes_de_divida_e_custas_em_bloco_proprio(base):
     d = entrada(base)
     d["custas_despesas"] = [{"numero": 1, "nome": "Custa demonstrativa", "data": "2025-09-01", "valor": "250"}]
     client = TestClient(app)
@@ -147,12 +147,16 @@ def test_api_e_pdf_sem_operacoes_de_divida_e_custas_exclusivas(base):
     assert "EXEMPLO-HIPOTETICO" in paginas[0]
     assert all(p.mediabox.width > p.mediabox.height for p in reader.pages)
     custo = next(t for t in paginas if "Custa demonstrativa" in t)
-    assert "Custas e despesas processuais" in custo
+    assert "CUSTAS E DESPESAS PROCESSUAIS" in custo
     assert "Identificação do processo" not in custo and "Memória da correção" not in custo
     if base == "valor_causa":
-        assert "Valor da causa atualizado" in paginas[0] and "Fator acumulado" in paginas[0]
+        assert "Valor da causa atualizado" in paginas[0]
+        base_pagina = next(t for t in paginas if "BASE DOS HONORÁRIOS - VALOR DA CAUSA" in t)
+        assert "Fator acumulado" in base_pagina
+        assert texto.count("DADOS DO PROCESSO") == 1
+        assert texto.index("DADOS DO PROCESSO") < texto.index("BASE DOS HONORÁRIOS - VALOR DA CAUSA")
         assert sum(t.count("Período e critério") for t in paginas) == 1
-        assert "Memória da correção do valor da causa" in texto
+        assert "MEMÓRIA DA CORREÇÃO DO VALOR DA CAUSA" in texto
     else:
         assert "Equidade" in paginas[0] and "1.500,05" in paginas[0]
         assert "Percentual da sentença" not in texto and "Fator acumulado" not in texto

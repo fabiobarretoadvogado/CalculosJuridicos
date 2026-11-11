@@ -1,6 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 import os
 import runpy
+import ssl
 from pathlib import Path
 
 from PyInstaller.utils.hooks import collect_submodules
@@ -64,6 +65,11 @@ datas = [
     ),
     (str(project / "build/calculos-juridicos.ico"), "liquidacao_custom/assets"),
 ]
+
+# O Python usado pelo Codex carrega esta lista ao criar o contexto TLS.
+rejected_cas = Path(ssl.__file__).with_name("codex-rejected-cas.pem")
+if rejected_cas.is_file():
+    datas.append((str(rejected_cas), "."))
 
 a = Analysis(
     [str(project / "desktop_main.py")],

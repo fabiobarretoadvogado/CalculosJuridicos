@@ -66,7 +66,7 @@ def test_fixacao_na_data_base_sem_periodo_decorrido(juros):
     assert r.atualizacao_valor_certo.componentes["juros"].data_inicial is None
 
 
-@pytest.mark.parametrize("campo,valor", [("data_fixacao", "2026-09-01"), ("data_fixacao", "2009-06-30"), ("data_inicio_juros", None), ("data_inicio_juros", "2026-01-14"), ("data_inicio_juros", "2026-09-01"), ("percentual_mensal", None), ("percentual_mensal", "0"), ("percentual_mensal", "101"), ("indice", "selic")])
+@pytest.mark.parametrize("campo,valor", [("data_fixacao", "2026-09-01"), ("data_fixacao", "1991-12-31"), ("data_inicio_juros", None), ("data_inicio_juros", "2026-01-14"), ("data_inicio_juros", "2026-09-01"), ("percentual_mensal", None), ("percentual_mensal", "0"), ("percentual_mensal", "101"), ("indice", "selic")])
 def test_nao_presumir_fixacao_transito_taxa_ou_indice(campo, valor):
     d = entrada()
     d["encargos_valor_certo"][campo] = valor
@@ -102,8 +102,10 @@ def test_api_pdf_custas_separadas_e_memorias_unicas(juros):
     pages = [p.extract_text() for p in reader.pages]
     text = "\n".join(pages)
     assert "Dívida correta" not in text and "Valor da causa atualizado" not in text and "Proveito econômico" not in text
-    assert "Encargos dos honorários fixados" in pages[0]
-    assert "15/01/2026" in pages[0] and "03/03/2026" in pages[0]
+    encargos_pagina = next(t for t in pages if "ENCARGOS DOS HONORÁRIOS FIXADOS" in t)
+    assert text.count("DADOS DO PROCESSO") == 1
+    assert text.index("DADOS DO PROCESSO") < text.index("ENCARGOS DOS HONORÁRIOS FIXADOS")
+    assert "15/01/2026" in encargos_pagina and "03/03/2026" in encargos_pagina
     assert "Sem nova correção ou juros automáticos" not in text
     assert text.count("Taxa acumulada") == 1 and text.count("Juros acumulados") == 1
     custo = next(t for t in pages if "Custa demonstrativa" in t)

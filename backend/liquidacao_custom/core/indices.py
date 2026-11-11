@@ -4,7 +4,7 @@ Módulo de carregamento e consulta de índices econômicos de correção monetá
 
 from __future__ import annotations
 
-import csv
+import json
 import os
 from datetime import date
 from decimal import Decimal
@@ -13,14 +13,17 @@ from typing import Optional
 
 # Diretório base para os arquivos de dados
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DATA_DIR = os.path.join(BASE_DIR, "data", "indices")
+from liquidacao_custom.index_data.store import DataPath, current_dataset
+from liquidacao_custom.index_data.series import selic_values
+
+DATA_DIR = DataPath()
 
 # Cache global para evitar leituras de disco repetidas
-_cache_indices: dict[str, dict[str, tuple[Decimal, Decimal]]] = {}
+_cache_indices: dict[tuple, dict[str, tuple[Decimal, Decimal]]] = {}
 
 
 def _normalizar_nome_indice(nome: str) -> str:
-    """Normaliza o nome do índice para corresponder ao nome do arquivo CSV."""
+    """Normaliza o identificador de compatibilidade do índice."""
     nome = nome.lower().replace("-", "").replace("_", "")
     if nome == "ipcae":
         return "ipcae"
@@ -29,29 +32,26 @@ def _normalizar_nome_indice(nome: str) -> str:
 
 def carregar_indice(nome: str) -> dict[str, tuple[Decimal, Decimal]]:
     """
-    Carrega o índice do CSV correspondente e retorna um dicionário indexado pela competência.
+    Carrega o índice da base canônica fixada para a operação e retorna um dicionário indexado pela competência.
     Retorna: { "AAAA-MM": (percentual, fator) }
     """
     nome_norm = _normalizar_nome_indice(nome)
-    if nome_norm in _cache_indices:
-        return _cache_indices[nome_norm]
-
-    caminho = os.path.join(DATA_DIR, f"{nome_norm}.csv")
-    dados: dict[str, tuple[Decimal, Decimal]] = {}
-
-    if not os.path.exists(caminho):
-        # Retorna dicionário vazio caso o arquivo de índice não exista (será alertado)
-        return dados
-
-    with open(caminho, "r", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            comp = row["competencia"].strip()
-            perc = Decimal(row["percentual"].strip())
-            fat = Decimal(row["fator"].strip())
-            dados[comp] = (perc, fat)
-
-    _cache_indices[nome_norm] = dados
+    dataset = current_dataset()
+    key = (str(dataset.directory), dataset.identity, nome_norm)
+    if key in _cache_indices:
+        return _cache_indices[key]
+    if nome_norm in ("ipca", "inpc", "igpm"):
+        values = json.loads(DataPath(nome_norm + "_oficial.json").read_text(encoding="utf-8"))[nome_norm]
+    elif nome_norm == "selic":
+        values = selic_values(dataset.directory)
+    elif nome_norm == "ipcae":
+        # A API antiga não possuía ipcae.csv; o perfil oficial tem leitor próprio.
+        return {}
+    else:
+        return {}
+    dados = {comp: (Decimal(str(rate)), Decimal(1) + Decimal(str(rate)) / 100)
+             for comp, rate in values.items()}
+    _cache_indices[key] = dados
     return dados
 
 

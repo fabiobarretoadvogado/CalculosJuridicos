@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from .moedas_historicas import conversao_monetaria, validar_origem, validar_data_base_real
 
 from .honorarios_principais import corrigir_valor_causa
 from .juros import calcular_juros, contar_meses
@@ -25,14 +26,15 @@ class EncargosValorCerto(BaseModel):
 
     @model_validator(mode="after")
     def validar(self):
-        if self.data_fixacao < date(2009, 7, 1):
-            raise ValueError("Valor certo: a correção disponível começa em 01/07/2009.")
+        validar_origem(self.data_fixacao, self.indice, "Valor certo")
         if self.juros != "sem_juros" and self.data_inicio_juros is None:
             raise ValueError("Informe o trânsito em julgado / termo inicial dos juros. Não se presume o trânsito.")
         if self.data_inicio_juros is not None and self.data_inicio_juros < self.data_fixacao:
             raise ValueError("Valor certo: início dos juros anterior à fixação.")
         if self.juros == "simples" and self.percentual_mensal is None:
             raise ValueError("Informe o percentual mensal simples conforme a decisão.")
+        if self.juros == "simples" and self.data_inicio_juros < date(2009, 7, 1):
+            raise ValueError("Valor certo: juros simples disponíveis desde 01/07/2009; informe o termo conforme a decisão.")
         if self.juros != "simples" and self.percentual_mensal is not None:
             raise ValueError("Percentual mensal manual somente no regime simples.")
         if self.juros == "sem_juros" and self.data_inicio_juros is not None:
@@ -43,12 +45,14 @@ class EncargosValorCerto(BaseModel):
 
 
 def atualizar_valor_certo(original, config: EncargosValorCerto, data_base):
+    validar_data_base_real(data_base)
     if config.data_fixacao > data_base or (config.data_inicio_juros and config.data_inicio_juros > data_base):
         raise ValueError("Valor certo: fixação e início dos juros não podem ser posteriores à data-base.")
+    original, _ = conversao_monetaria(original, config.data_fixacao, "Honorários fixados")
     fator, memoria, fonte, sha = Decimal(1), [], "", None
     if config.data_fixacao < data_base:
         _, fator, registros, fonte, sha = corrigir_valor_causa(SimpleNamespace(
-            indice=config.indice, valor_causa=original, data_protocolo=config.data_fixacao), data_base)
+            indice=config.indice, valor_causa=original, data_protocolo=config.data_fixacao), data_base, valor_em_reais=True)
         memoria = [m.model_copy(update={"indice_aplicado": m.indice_aplicado.replace("Valor da causa", "Honorários fixados")}) for m in registros]
     saldo_exato = original * fator
     saldo = moeda(saldo_exato)
@@ -81,11 +85,11 @@ def atualizar_valor_certo(original, config: EncargosValorCerto, data_base):
             base_calculo=saldo_exato, taxa_acumulada_percentual=taxa_acumulada, valor=juros)
         metodologia.append(f"Juros simples de {config.percentual_mensal}% a.m. sobre o valor corrigido final; rotina calcular_juros/contar_meses existente. Contagem: {'meses inteiros conforme rotina existente' if config.contagem_mes_cheio else 'dias corridos / 30,4368, meses com seis casas decimais'}. Sem capitalização. Valores financeiros HALF_UP ao centavo.")
     resultado = ResultadoParcela(numero=1, natureza="honorarios_sucumbenciais", historico="Honorários fixados em valor certo",
-        data_vencimento=config.data_fixacao, valor_bruto=original, valor_apurado=original,
-        correcao_monetaria=saldo-original, valor_corrigido=saldo, juros_mora=juros,
+        data_vencimento=config.data_fixacao, valor_bruto=moeda(original), valor_apurado=moeda(original),
+        correcao_monetaria=saldo-moeda(original), valor_corrigido=saldo, juros_mora=juros,
         total_parcela=moeda(saldo+juros), memoria_correcao=memoria, memoria_juros=mem_juros,
         componentes={config.indice: ComponenteCalculo(
             data_inicial=config.data_fixacao if config.data_fixacao < data_base else None,
             data_final=data_base if config.data_fixacao < data_base else None,
-            base_calculo=original, fator_acumulado=fator, valor=saldo-original), "juros": componente_juros})
+            base_calculo=original, fator_acumulado=fator, valor=saldo-moeda(original)), "juros": componente_juros})
     return resultado, fator, fonte, {"metodologia": metodologia, "fontes": fontes, **hashes, "memoria_taxa_legal": auditoria}

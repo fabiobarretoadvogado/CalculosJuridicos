@@ -48,9 +48,9 @@ def test_referencia_mensal_e_ultima_taxa_sem_alterar_selic():
     assert final.dados_gerais.data_base.isoformat() == '2026-08-31'
     assert final.premissas['entrada']['dados_gerais']['data_base'] == '2026-08-31'
     criterios = criterios_cjf()
-    assert criterios['data_base_maxima'] == '2026-09-01'
-    assert criterios['data_referencia_selic_maxima'] == '2026-09-01'
-    assert criterios['ultima_competencia_selic_disponivel'] == '2026-08'
+    assert criterios['data_base_maxima'] == '2026-11-01'
+    assert criterios['data_referencia_selic_maxima'] == '2026-11-01'
+    assert criterios['ultima_competencia_selic_disponivel'] == '2026-10'
 
 
 def test_competencia_fechada_aplicavel_no_primeiro_dia_do_mes_corrente():
@@ -103,7 +103,8 @@ def test_referencia_selic_preserva_data_exata_das_custas_e_valor_causa():
     texto = '\n'.join(p.extract_text() for p in PdfReader(io.BytesIO(exportar_pdf(final))).pages)
     assert 'Data-base SELIC 01/08/2026' in texto
     assert 'Último índice aplicado: 07/2026' in texto
-    assert 'Data final das demais operações: 31/08/2026.' in texto
+    assert 'Demais operações: 31/08/2026' in texto
+    assert final.dados_gerais.data_base.isoformat() == '2026-08-31'
 
 
 def test_pdf_selic_referencia_mensal_no_cabecalho_e_rodapes():
@@ -129,7 +130,7 @@ def test_escopo_e_meses_incompletos():
     client = TestClient(app)
     assert client.post('/api/v1/calculo',json=entrada(inicio='2021-01-01')).status_code==200
     for rota in ['calculo','calculo/exportar/pdf','calculo/exportar/excel','calculo/exportar/csv']:
-        assert client.post('/api/v1/'+rota,json=entrada(fim='2026-09-30')).status_code==400
+        assert client.post('/api/v1/'+rota,json=entrada(fim='2026-12-01')).status_code==400
 
 
 def test_selic_historica_sem_limite_de_2022():

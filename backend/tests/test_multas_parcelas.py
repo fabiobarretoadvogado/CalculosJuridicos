@@ -142,8 +142,8 @@ def test_api_e_exportacoes_discriminam_multa():
     assert pdf.status_code == 200
     reader = PdfReader(io.BytesIO(pdf.content))
     content = " ".join(" ".join(page.extract_text().split()) for page in reader.pages)
-    assert "Multas por parcela" in content and "Multa nominal" in content
-    assert content.count("Parcela / descrição") == 2  # Uma vez em cada tabela distinta.
+    assert "MULTAS POR PARCELA" in content and "Multa nominal" in content
+    assert content.count("Descrição") == 2  # Uma vez em cada tabela distinta.
     assert "sem nova capitalização" in content
     excel = client.post("/api/v1/calculo/exportar/excel", json=payload)
     assert excel.status_code == 200
@@ -158,21 +158,13 @@ def test_api_e_exportacoes_discriminam_multa():
         assert "Multa - Poupança" in archive.read("indices_por_parcela.csv").decode("utf-8-sig")
 
 
-def test_resumo_pdf_com_multa_e_custas_mantem_total_na_extremidade_direita(monkeypatch):
+def test_resumo_pdf_com_multa_e_custas_mantem_total_na_extremidade_direita():
     from liquidacao_custom.core import relatorio_pdf
-    tabela_original = relatorio_pdf.Table
-    tabelas = []
-
-    def registrar(dados, *args, **kwargs):
-        tabelas.append(dados)
-        return tabela_original(dados, *args, **kwargs)
-
-    monkeypatch.setattr(relatorio_pdf, "Table", registrar)
     payload = entrada()
     payload["custas_despesas"] = [{"numero": 1, "nome": "Taxa", "data": "2025-10-01", "valor": "100"}]
-    relatorio_pdf.exportar_pdf(calcular(payload))
-    resumo = next(dados for dados in tabelas
-                  if len(dados) == 6 and len(dados[0]) == 4)
-    assert resumo[-2][:3] == ["", "", ""]
-    assert resumo[-2][-1].getPlainText() == "TOTAL ATUALIZADO"
-    assert resumo[-1][-1].getPlainText() == "R$ 1.012,35"
+    pdf = PdfReader(io.BytesIO(relatorio_pdf.exportar_pdf(calcular(payload))))
+    posicoes = []
+    pdf.pages[0].extract_text(visitor_text=lambda texto, cm, tm, fonte, tamanho:
+        posicoes.append((texto.strip(), cm[0] * tm[4] + cm[2] * tm[5] + cm[4])))
+    total = next(x for texto, x in posicoes if texto == "R$ 1.012,35")
+    assert total > 700  # Total na coluna da margem direita, inclusive em mais de uma linha.

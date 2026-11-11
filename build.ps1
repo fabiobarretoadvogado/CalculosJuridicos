@@ -45,26 +45,33 @@ try {
     if (Test-Path -LiteralPath $taskPayload) {
         New-Item -ItemType Directory -Path $taskArchiveRoot -Force | Out-Null
         $taskArchive = Join-Path $taskArchiveRoot ('CalculosJuridicos-' + [guid]::NewGuid().ToString('N'))
+        foreach ($taskMovePath in @($taskPayload, $taskArchive)) {
+            if (-not ([IO.Path]::GetFullPath($taskMovePath) + '\').StartsWith($taskProjectPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+                throw 'Origem ou destino do pacote fora do projeto.'
+            }
+        }
         Move-Item -LiteralPath $taskPayload -Destination $taskArchive
     }
     & $Python -m PyInstaller --noconfirm --distpath $taskDist --workpath (Join-Path $taskProject 'build\pyinstaller') (Join-Path $taskProject 'CalculosJuridicos.spec')
     if ($LASTEXITCODE -ne 0) { throw 'A geração do aplicativo falhou.' }
 
+    & $Python (Join-Path $taskProject 'scripts\prepare_shared_service.py') $taskPayload
+    if ($LASTEXITCODE -ne 0) { throw 'O ambiente do serviço MCP não pôde ser preparado.' }
     & $Python (Join-Path $taskProject 'scripts\prepare_installer.py') $taskPayload
     if ($LASTEXITCODE -ne 0) { throw 'O pacote não pôde ser preparado.' }
 
     $taskExecutable = Join-Path $taskPayload 'CalculosJuridicos.exe'
-    $taskCheck = Start-Process -FilePath $taskExecutable -ArgumentList '--self-check' -WindowStyle Hidden -PassThru -Wait
+    $taskOldDataDirectory = $env:CALCULOS_JURIDICOS_DATA_DIR
+    try {
+        $env:CALCULOS_JURIDICOS_DATA_DIR = Join-Path $taskProject ('build\self-check-data-' + [guid]::NewGuid().ToString('N'))
+        $taskCheck = Start-Process -FilePath $taskExecutable -ArgumentList '--self-check' -WindowStyle Hidden -PassThru -Wait
+    }
+    finally { $env:CALCULOS_JURIDICOS_DATA_DIR = $taskOldDataDirectory }
     if ($taskCheck.ExitCode -ne 0) { throw 'O aplicativo empacotado não passou na verificação interna.' }
     & $Python (Join-Path $taskProject 'scripts\smoke_mcp.py') $taskExecutable (Join-Path $taskProject 'build')
     if ($LASTEXITCODE -ne 0) { throw 'O conector MCP empacotado não passou no teste de protocolo e PDF.' }
-    if (Test-Path -LiteralPath $taskArchiveRoot) {
-        $taskArchiveResolved = [IO.Path]::GetFullPath($taskArchiveRoot)
-        if (-not ($taskArchiveResolved + '\').StartsWith($taskProjectPrefix, [StringComparison]::OrdinalIgnoreCase)) {
-            throw 'Pasta de versões anteriores fora do projeto.'
-        }
-        Remove-Item -LiteralPath $taskArchiveResolved -Recurse -Force
-    }
+    & $Python (Join-Path $taskProject 'scripts\smoke_shared_mcp.py') $taskExecutable (Join-Path $taskProject 'build')
+    if ($LASTEXITCODE -ne 0) { throw 'O serviço MCP compartilhado não passou nos testes de concorrência e repouso.' }
     Write-Host 'Verificação interna do aplicativo: aprovada.'
     Write-Host ('Aplicativo criado: ' + $taskExecutable)
 }

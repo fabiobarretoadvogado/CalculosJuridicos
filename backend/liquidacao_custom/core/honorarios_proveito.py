@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from .criterios_simplificados import (
     CalculoSimplificado,
     CustaDespesaProcessual,
+    DESCRICAO_OBSERVACOES,
     DadosSimplificados,
     ParcelaSimplificada,
 )
@@ -20,6 +21,7 @@ from .acessorios import calcular_honorarios
 from .motor_simplificado import calcular_custas_despesas_ipcae, dados_fonte_ipcae, executar_calculo
 from .perfis import PERFIS
 from .perfis import IPCAE_1AM_SIMPLES
+from .moedas_historicas import INICIO_IPCAE, nota_conversao
 
 
 PerfilCalculo = Literal[
@@ -30,7 +32,7 @@ PerfilCalculo = Literal[
     "selic_cjf_v1",
     "ipcae_1am_simples_v1",
     "ipca_taxa_legal_v1",
-    "civil_2_v1",
+    "civil_2_v1", "civil_3_v1", "civil_4_temporario_v1", "civil_5_taxa_legal_reconstruida_v1", "civil_6_v1",
 ]
 CriterioInicioJuros = Literal["vencimento", "citacao", "data_fixa", "por_parcela"]
 CATEGORIA = "honorarios_sucumbenciais_proveito_economico"
@@ -46,7 +48,7 @@ class DadosHonorarios(BaseModel):
     requerido: str = ""
     comarca: str = ""
     vara: str = ""
-    observacoes: str = ""
+    observacoes: str = Field(default="", description=DESCRICAO_OBSERVACOES)
 
 
 class ParcelaDivida(BaseModel):
@@ -156,9 +158,9 @@ class CalculoHonorariosProveito(BaseModel):
                         "posterior à data-base."
                     )
         for item in self.custas_despesas:
-            if item.data < date(2009, 7, 1):
+            if item.data < INICIO_IPCAE:
                 raise ValueError(
-                    f"Custa ou despesa {item.numero}: informe uma data a partir de 01/07/2009, "
+                    f"Custa ou despesa {item.numero}: informe uma data a partir de 01/01/1992, "
                     "início da série IPCA-E disponível neste aplicativo."
                 )
             if item.data > self.dados_gerais.data_base:
@@ -199,6 +201,7 @@ class ResultadoOperacaoDivida(BaseModel):
 
 
 class ResultadoHonorariosProveito(BaseModel):
+    base_indices: dict[str, str | int] | None = None
     categoria: Literal["honorarios_sucumbenciais_proveito_economico"] = CATEGORIA
     dados_gerais: DadosHonorarios
     divida_original: ResultadoOperacaoDivida
@@ -306,7 +309,7 @@ def _executar_operacao(
     ]
     calculo = CalculoSimplificado(perfil=operacao.perfil, dados_gerais=dados, parcelas=parcelas)
     resultado = executar_calculo(calculo)
-    valor_informado = sum((parcela.valor for parcela in operacao.parcelas), Decimal("0"))
+    valor_informado = resultado.resumo.principal_original
     parcelas_resultado = []
     memoria_multa = []
     for entrada, saida in zip(operacao.parcelas, resultado.parcelas, strict=True):
@@ -342,8 +345,8 @@ def _executar_operacao(
             numero=entrada.numero,
             historico=entrada.historico,
             data_origem=entrada.data_origem,
-            valor_informado=entrada.valor,
-            encargos_apurados=moeda(valor_atualizado - entrada.valor),
+            valor_informado=saida.valor_bruto,
+            encargos_apurados=moeda(valor_atualizado - saida.valor_bruto),
             valor_atualizado=valor_atualizado,
             componentes=componentes,
         ))
@@ -409,6 +412,9 @@ def apurar_faixas_fazenda(
     )
 
 
+from liquidacao_custom.index_data.store import with_index_dataset
+
+@with_index_dataset
 def executar_honorarios_proveito(
     calculo: CalculoHonorariosProveito,
 ) -> ResultadoHonorariosProveito:
@@ -432,6 +438,9 @@ def executar_honorarios_proveito(
     custas_atualizadas = sum((item.valor_atualizado for item in custas_despesas), Decimal("0"))
     total_geral = moeda(honorarios + custas_atualizadas)
     alertas: list[str] = []
+    for operacao in (original, correta):
+        alertas.extend(f"{operacao.rotulo}: {nota_conversao(r)}" for r in operacao.premissas.get("conversoes_monetarias", []))
+    alertas.extend(nota_conversao(c.conversao_monetaria) for c in custas_despesas if c.conversao_monetaria)
     if diferenca <= 0:
         alertas.append(
             "A dívida correta atualizada não é inferior à dívida original atualizada. "

@@ -16,7 +16,7 @@ export function Exportacao({ pdfOnly = false }: { pdfOnly?: boolean }) {
     setOcupado(true); setErro('');
     const formatos = { pdf: [exportarPdf, 'relatorio_calculo.pdf'], excel: [exportarExcel, 'memoria_calculo.xlsx'], csv: [exportarCsv, 'memoria_calculo.zip'] } as const;
     const [exportar, nome] = formatos[tipo];
-    try { downloadBlob(await exportar(buildCalculoJudicial()), nome); }
+    try { downloadBlob(await exportar(buildCalculoJudicial(), r?.premissas.base_indices?.sha256), nome); }
     catch (e) { setErro(await mensagemErro(e)); }
     finally { setOcupado(false); }
   }

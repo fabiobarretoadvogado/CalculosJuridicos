@@ -93,10 +93,8 @@ def gerar_serie(config: ConfigPreenchimentoSerie) -> list[Parcela]:
 
 def carregar_salario_minimo() -> dict[int, Decimal]:
     """Carrega dados do salário mínimo do CSV."""
-    caminho = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-        "data", "salario_minimo.csv"
-    )
+    from liquidacao_custom.index_data.store import DataPath
+    caminho = DataPath("salario_minimo.csv")
     sm: dict[int, Decimal] = {}
     if not os.path.exists(caminho):
         return sm

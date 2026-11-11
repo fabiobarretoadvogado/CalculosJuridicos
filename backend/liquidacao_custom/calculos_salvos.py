@@ -18,6 +18,18 @@ from .updates.protected import protect
 
 
 SCHEMA_VERSION = 1
+_DB_FILENAME = "calculos.sqlite3"
+_CALCULO_COLUMNS = (
+    "chave",
+    "hash_completo",
+    "categoria",
+    "schema_version",
+    "versao_aplicativo",
+    "criado_em",
+    "entrada",
+    "resultado",
+    "protegido",
+)
 CategoriaCalculo = Literal[
     "calculo_principal",
     "honorarios_sucumbenciais_proveito_economico",
@@ -38,21 +50,58 @@ def _data_dir() -> Path:
     override = os.environ.get("CALCULOS_JURIDICOS_DATA_DIR")
     if override:
         return Path(override)
-    root = os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData/Local"))
-    return Path(root) / "CalculosJuridicos" / "data"
+    # LOCALAPPDATA pode ser virtualizado quando o mesmo executável é iniciado
+    # por um aplicativo empacotado (por exemplo, a integração com o Codex).
+    # Uma pasta diretamente no perfil do usuário é comum aos dois contextos.
+    return Path.home() / "CalculosJuridicos" / "data"
 
 
 def _db_path() -> Path:
-    return _data_dir() / "calculos.sqlite3"
+    return _data_dir() / _DB_FILENAME
 
 
-def _connect() -> sqlite3.Connection:
-    path = _db_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(path, timeout=10)
-    connection.row_factory = sqlite3.Row
-    connection.execute("PRAGMA busy_timeout = 10000")
-    connection.execute("PRAGMA journal_mode = WAL")
+def _legacy_db_paths() -> list[Path]:
+    """Bancos usados antes do armazenamento compartilhado entre app e Codex."""
+    if os.environ.get("CALCULOS_JURIDICOS_DATA_DIR"):
+        # Testes e instalações administradas que escolheram um diretório
+        # explicitamente não devem importar dados do perfil real do usuário.
+        return []
+
+    home = Path.home()
+    candidates: list[Path] = []
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if local_app_data:
+        candidates.append(Path(local_app_data) / "CalculosJuridicos" / "data" / _DB_FILENAME)
+
+    candidates.append(home / "AppData" / "Local" / "CalculosJuridicos" / "data" / _DB_FILENAME)
+
+    packages = home / "AppData" / "Local" / "Packages"
+    try:
+        codex_packages = sorted(packages.glob("OpenAI.Codex_*"))
+    except OSError:
+        codex_packages = []
+    for package in codex_packages:
+        candidates.append(
+            package
+            / "LocalCache"
+            / "Local"
+            / "CalculosJuridicos"
+            / "data"
+            / _DB_FILENAME
+        )
+
+    destination = os.path.normcase(os.path.abspath(str(_db_path())))
+    unique: list[Path] = []
+    seen: set[str] = {destination}
+    for candidate in candidates:
+        normalized = os.path.normcase(os.path.abspath(str(candidate)))
+        if normalized not in seen:
+            seen.add(normalized)
+            unique.append(candidate)
+    return unique
+
+
+def _create_schema(connection: sqlite3.Connection) -> None:
     connection.execute(
         """
         CREATE TABLE IF NOT EXISTS calculos (
@@ -68,6 +117,56 @@ def _connect() -> sqlite3.Connection:
         )
         """
     )
+
+
+def _import_legacy_databases(connection: sqlite3.Connection) -> int:
+    """Reúne, sem apagar a origem, registros criados nos locais antigos."""
+    imported = 0
+    column_list = ", ".join(_CALCULO_COLUMNS)
+    placeholders = ", ".join("?" for _ in _CALCULO_COLUMNS)
+
+    for legacy_path in _legacy_db_paths():
+        try:
+            if not legacy_path.is_file():
+                continue
+            legacy = sqlite3.connect(
+                f"file:{legacy_path.as_posix()}?mode=ro",
+                uri=True,
+                timeout=2,
+            )
+            legacy.row_factory = sqlite3.Row
+            try:
+                has_table = legacy.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'calculos'"
+                ).fetchone()
+                if not has_table:
+                    continue
+                rows = legacy.execute(f"SELECT {column_list} FROM calculos").fetchall()
+            finally:
+                legacy.close()
+
+            for row in rows:
+                cursor = connection.execute(
+                    f"INSERT OR IGNORE INTO calculos ({column_list}) VALUES ({placeholders})",
+                    tuple(row[column] for column in _CALCULO_COLUMNS),
+                )
+                imported += max(cursor.rowcount, 0)
+        except (OSError, sqlite3.Error):
+            # Um banco legado indisponível não pode impedir o uso do app.
+            # Ele será tentado novamente na próxima abertura da base.
+            continue
+    return imported
+
+
+def _connect() -> sqlite3.Connection:
+    path = _db_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    connection = sqlite3.connect(path, timeout=10)
+    connection.row_factory = sqlite3.Row
+    connection.execute("PRAGMA busy_timeout = 10000")
+    connection.execute("PRAGMA journal_mode = WAL")
+    _create_schema(connection)
+    _import_legacy_databases(connection)
     return connection
 
 

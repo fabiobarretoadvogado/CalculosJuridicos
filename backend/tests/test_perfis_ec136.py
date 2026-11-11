@@ -128,7 +128,8 @@ def test_pdf_excel_csv_e_catalogo(base):
     pdf = c.post('/api/v1/calculo/exportar/pdf', json=entrada())
     assert pdf.status_code == 200
     texto = '\n'.join(p.extract_text() for p in PdfReader(io.BytesIO(pdf.content)).pages)
-    assert 'Juros 2% a.a.' in texto and 'Limite SELIC' in texto
+    assert 'Juros 2% a.a.' in texto and 'valores pós EC 136/2025 são líquidos' in texto
+    assert 'Ajuste ao limite SELIC' not in texto and 'Limite SELIC' not in texto
     assert 'Poupança pós' not in texto
     excel = c.post('/api/v1/calculo/exportar/excel', json=entrada())
     assert excel.status_code == 200
@@ -136,3 +137,54 @@ def test_pdf_excel_csv_e_catalogo(base):
     assert 'Índices por parcela' in wb.sheetnames
     assert any('Juros 2%' in str(c.value) for c in wb['Parcelas'][1])
     assert c.post('/api/v1/calculo/exportar/csv', json=entrada()).status_code == 200
+
+
+@pytest.mark.parametrize('taxa_limite, correcao, total', [
+    ('0.1', '-0.47', '1000.70'), ('3', '6.99', '1008.16'),
+])
+def test_pdf_campos_pos_ec136_liquidos_sem_mutar_apuracao(base, taxa_limite, correcao, total):
+    from liquidacao_custom.core.relatorio_componentes import componentes_liquidos
+    from liquidacao_custom.core.relatorio_pdf import exportar_pdf, moeda
+
+    base[1]['selic']['2025-09'] = taxa_limite
+    dados = entrada()
+    dados['parcelas'][0]['multa_percentual'] = '10'
+    dados['descontos'] = {'perfil': EC136, 'itens': [
+        {'numero': 1, 'descricao': 'Pagamento de teste', 'data': '2025-09-10', 'valor': '100'}]}
+    resultado = m.executar_calculo(CalculoSimplificado.model_validate(dados))
+    antes = resultado.model_dump(mode='json')
+    reader = PdfReader(io.BytesIO(exportar_pdf(resultado)))
+    texto = '\n'.join(p.extract_text() for p in reader.pages)
+    assert resultado.model_dump(mode='json') == antes
+    assert '(-) Descontos' in reader.pages[0].extract_text()
+    assert 'Descontos abatidos' not in texto and 'descontos abatidos:' not in texto
+    assert 'Ajuste ao limite SELIC' not in texto and 'Limite SELIC' not in texto
+    parcela = resultado.parcelas[0]
+    componentes = componentes_liquidos(parcela.componentes)
+    assert componentes['ipcae_pos'].valor == D(correcao)
+    assert componentes['juros_2aa'].valor == D('1.17')
+    assert D('1000') + componentes['ipcae_pos'].valor + componentes['juros_2aa'].valor == D(total)
+    assert f'R$ {moeda(D(correcao))}' in texto
+    assert 'limite_selic' not in componentes
+    assert parcela.valor_apurado + sum(c.valor for c in componentes.values()) == parcela.total_parcela
+    multa = parcela.multa_detalhes
+    assert multa.valor_original + sum(c.valor for c in componentes_liquidos(multa.componentes).values()) == multa.total_atualizado
+    pagamento = resultado.descontos.parcelas[0]
+    assert pagamento.valor_apurado + sum(c.valor for c in componentes_liquidos(pagamento.componentes).values()) == pagamento.total_parcela
+
+
+def test_pdf_honorarios_ec136_liquido_com_limite_ativo(base):
+    from liquidacao_custom.core.honorarios_proveito import CalculoHonorariosProveito, executar_honorarios_proveito
+    from liquidacao_custom.core.relatorio_honorarios_pdf import exportar_pdf_honorarios
+
+    base[1]['selic']['2025-09'] = '0.1'
+    operacao = {'perfil': EC136, 'parcelas': [
+        {'numero': 1, 'data_origem': '2025-09-10', 'valor': '1000'}]}
+    dados = {'dados_gerais': {'data_base': '2025-09-30'}, 'percentual_sentenca': '10',
+             'divida_original': operacao, 'divida_correta': operacao}
+    resultado = executar_honorarios_proveito(CalculoHonorariosProveito.model_validate(dados))
+    antes = resultado.model_dump(mode='json')
+    texto = '\n'.join(p.extract_text() for p in PdfReader(io.BytesIO(exportar_pdf_honorarios(resultado))).pages)
+    assert resultado.model_dump(mode='json') == antes
+    assert 'R$ -0,47' in texto and 'R$ 1.000,70' in texto
+    assert 'Ajuste ao limite SELIC' not in texto and 'Limite SELIC' not in texto

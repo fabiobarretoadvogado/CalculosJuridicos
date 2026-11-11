@@ -12,7 +12,7 @@ from typing import Any, Literal
 from mcp.server.fastmcp import FastMCP
 from mcp.types import CallToolResult, ResourceLink, TextContent, ToolAnnotations
 
-from .core.criterios_simplificados import CalculoSimplificado
+from .core.criterios_simplificados import CalculoSimplificado, DESCRICAO_OBSERVACOES
 from .core.honorarios_isolados import (
     CalculoHonorariosIsolados,
 )
@@ -38,7 +38,7 @@ Jurídicos. Consulte os critérios antes de montar uma entrada. Não invente dat
 valores, percentuais ou marcos jurídicos ausentes: peça esses dados ao usuário.
 As ferramentas de cálculo não alteram arquivos. As ferramentas de relatório executam
 o mesmo motor e o mesmo gerador de PDF da interface e salvam um novo arquivo local.
-""".strip()
+""".strip() + "\n\nSobre dados_gerais.observacoes: " + DESCRICAO_OBSERVACOES
 
 mcp = FastMCP(
     APP_NAME,

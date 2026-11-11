@@ -36,7 +36,7 @@ def incorporar_multas_parcelas(resultado, calculo):
         if not entrada.multa_percentual:
             continue
         apurada = apuradas.get(parcela.numero)
-        original = originais[parcela.numero]
+        original = apurada.valor_bruto if apurada else Decimal(0)
         memoria = [m.model_copy(update={
             "indice_aplicado": f"Multa - {m.indice_aplicado}",
             "observacao": f"Multa da parcela {parcela.numero}; {m.observacao}",

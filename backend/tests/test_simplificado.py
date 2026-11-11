@@ -128,14 +128,14 @@ def test_custas_despesas_aparecem_no_pdf_excel_e_csv(indices):
     paginas_pdf = PdfReader(io.BytesIO(pdf.content)).pages
     texto_pdf = "\n".join(page.extract_text() for page in paginas_pdf)
     primeira_pagina = paginas_pdf[0].extract_text()
-    pagina_custas = paginas_pdf[1].extract_text()
-    assert "Custas e despesas processuais" in texto_pdf
+    pagina_custas = next(page.extract_text() for page in paginas_pdf if "CUSTAS E DESPESAS PROCESSUAIS" in page.extract_text())
+    assert "CUSTAS E DESPESAS PROCESSUAIS" in texto_pdf
     assert "Taxa judiciária" in texto_pdf
     assert "Fator IPCA-E" in texto_pdf
-    assert "Taxa judiciária" not in primeira_pagina
-    assert "Custas e despesas processuais" in pagina_custas
+    assert texto_pdf.count("Taxa judiciária") == 1
+    assert texto_pdf.index("CRÉDITO - ACRÉSCIMO") < texto_pdf.index("CUSTAS E DESPESAS PROCESSUAIS")
+    assert "CUSTAS E DESPESAS PROCESSUAIS" in pagina_custas
     assert "Taxa judiciária" in pagina_custas
-    assert "Valores por parcela" not in pagina_custas
 
     excel = cliente.post("/api/v1/calculo/exportar/excel", json=dados)
     assert excel.status_code == 200, excel.text
@@ -237,11 +237,12 @@ def test_base_oficial_e_cobertura():
     data = motor.carregar_base()
     assert data["ipcae_taxas"]["2025-09"] == "0.48"
     assert data["selic"]["2025-09"] == "1.22"
-    assert motor.criterios_publicos()["data_base_maxima"] == "2026-08-31"
+    limite = date.fromisoformat(motor.criterios_publicos()["data_base_maxima"])
+    assert limite >= date(2026, 10, 31)
     r = calcular(inicio="2021-12-09", fim="2026-08-31")
     assert not r.alertas and r.resumo.total_atualizado > 1000
-    with pytest.raises(ValueError, match="31/08/2026"):
-        calcular(inicio="2025-09-10", fim="2026-09-06")
+    with pytest.raises(ValueError, match=limite.strftime("%d/%m/%Y")):
+        calcular(inicio="2025-09-10", fim=(limite + timedelta(days=1)).isoformat())
 
 
 def test_citacao_anterior_nao_antecipa_juros_ao_vencimento(indices):
@@ -258,19 +259,23 @@ def test_nao_muta_entrada_e_reexecuta_com_mesmo_resultado(indices):
 
 
 @pytest.mark.parametrize("endpoint", ["calculo", "calculo/exportar/excel", "calculo/exportar/csv", "calculo/exportar/pdf"])
-@pytest.mark.parametrize("fim", ["2026-09-01", "2026-09-06", "2027-01-01"])
-def test_api_bloqueia_apos_ultimo_mes_completo(endpoint, fim):
+@pytest.mark.parametrize("dias_apos_limite", [1, 6, 90])
+def test_api_bloqueia_apos_ultimo_mes_completo(endpoint, dias_apos_limite):
+    limite = date.fromisoformat(motor.criterios_publicos()["data_base_maxima"])
+    fim = (limite + timedelta(days=dias_apos_limite)).isoformat()
     response = TestClient(app).post("/api/v1/" + endpoint, json=entrada(fim=fim))
     assert response.status_code == 400
-    assert "data-base máxima permitida é 31/08/2026" in response.json()["detail"]
+    assert f"data-base máxima permitida é {limite:%d/%m/%Y}" in response.json()["detail"]
 
 
-@pytest.mark.parametrize("fim", ["2026-08-30", "2026-08-31"])
-def test_api_aceita_datas_ate_limite(fim):
+@pytest.mark.parametrize("dias_antes_limite", [1, 0])
+def test_api_aceita_datas_ate_limite(dias_antes_limite):
+    limite = date.fromisoformat(motor.criterios_publicos()["data_base_maxima"])
+    fim = (limite - timedelta(days=dias_antes_limite)).isoformat()
     response = TestClient(app).post("/api/v1/calculo", json=entrada(fim=fim))
     assert response.status_code == 200
     assert response.json()["dados_gerais"]["data_base"] == fim
-    assert response.json()["premissas"]["data_base_maxima"] == "2026-08-31"
+    assert response.json()["premissas"]["data_base_maxima"] == limite.isoformat()
 
 
 def test_limite_considera_cobertura_da_poupanca(indices):
@@ -292,8 +297,10 @@ def test_limite_so_avanca_com_mes_inteiro_disponivel(indices):
 
 
 def test_bloqueio_nao_depende_do_saldo_ou_do_periodo_da_parcela():
-    with pytest.raises(ValueError, match="31/08/2026"):
-        calcular(inicio="2025-01-01", fim="2026-09-01", valor_pago_na_data="1000.00")
+    limite = date.fromisoformat(motor.criterios_publicos()["data_base_maxima"])
+    fim = (limite + timedelta(days=1)).isoformat()
+    with pytest.raises(ValueError, match=limite.strftime("%d/%m/%Y")):
+        calcular(inicio="2025-01-01", fim=fim, valor_pago_na_data="1000.00")
 
 
 def test_tr_incluida_uma_unica_vez_na_taxa_total(indices):
@@ -343,8 +350,7 @@ def test_snapshot_ipcae_corresponde_serie_ipca15_ibge():
     )
     dados = motor.carregar_base()
 
-    assert len(fonte) == 206
-    assert len(dados["ipcae_taxas"]) == len(fonte)
+    assert sum(mes >= "2009-07" for mes in dados["ipcae_taxas"]) == len(fonte)
     for item in fonte:
         chave = datetime.strptime(item["data"], "%d/%m/%Y").strftime("%Y-%m")
         assert dados["ipcae_taxas"][chave] == item["valor"]

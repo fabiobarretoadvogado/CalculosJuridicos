@@ -28,9 +28,21 @@ export function componentesPerfil(r: ResultadoCalculo) {
   if (r.premissas.entrada.perfil === 'poupanca_deposito_v1') return [
     { chave: 'poupanca_deposito', nome: 'Poupança — remuneração da conta', periodo: 'Aniversários completos' },
   ];
-  if (r.premissas.entrada.perfil === 'ipca_taxa_legal_v1') return [
+  if (['ipca_taxa_legal_v1', 'civil_5_taxa_legal_reconstruida_v1'].includes(r.premissas.entrada.perfil)) return [
     { chave: 'ipca', nome: 'IPCA', periodo: 'Desde o início da correção' },
     { chave: 'taxa_legal', nome: 'Taxa Legal', periodo: 'Desde o início dos juros' },
+  ];
+  if (['civil_4_temporario_v1', 'civil_6_v1'].includes(r.premissas.entrada.perfil)) return [
+    { chave: 'ipca_pre', nome: 'IPCA anterior', periodo: 'Antes da SELIC, até 29/08/2024' },
+    ...(r.premissas.entrada.perfil === 'civil_6_v1' ? [{ chave: 'juros_05am', nome: 'Juros simples de 0,5% a.m.', periodo: 'Até 10/01/2003' }] : []),
+    { chave: 'juros_selic_deduzida', nome: 'SELIC deduzida do IPCA', periodo: 'Somente juros, até 29/08/2024' },
+    { chave: 'selic', nome: 'SELIC única', periodo: 'Até 29/08/2024' },
+    { chave: 'ipca_pos', nome: 'IPCA posterior', periodo: 'Desde 30/08/2024' },
+    { chave: 'taxa_legal', nome: 'Taxa Legal', periodo: 'Desde 30/08/2024' },
+  ];
+  if (r.premissas.entrada.perfil === 'civil_3_v1') return [
+    { chave: 'inpc', nome: 'INPC', periodo: 'Desde o início da correção' },
+    { chave: 'juros_1am', nome: 'Juros simples de 1% a.m.', periodo: 'Desde o início dos juros' },
   ];
   if (r.premissas.entrada.perfil === 'civil_2_v1') return [
     { chave: 'ipca', nome: 'IPCA', periodo: 'Desde o início da correção' },
@@ -42,7 +54,7 @@ export function componentesPerfil(r: ResultadoCalculo) {
   ];
   if (r.premissas.entrada.perfil === 'selic_cjf_v1') return [{ chave: 'selic', nome: 'SELIC', periodo: 'Até a data-base' }];
   if (r.premissas.entrada.perfil === 'fazenda_publica_1_v1') return [
-    { chave: 'ipcae_pre', nome: 'IPCA-E', periodo: 'Desde 01/07/2009' },
+    { chave: 'ipcae_pre', nome: 'IPCA-E', periodo: 'Desde o início da correção' },
     { chave: 'poupanca_pre', nome: 'Poupança', periodo: 'Desde 01/07/2009' },
   ];
   if (r.premissas.entrada.perfil === 'fazenda_publica_2_v1') return [

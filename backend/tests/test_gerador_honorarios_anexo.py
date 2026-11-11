@@ -24,13 +24,15 @@ def test_caso_do_anexo_delega_layout_ao_exportador_oficial():
     reader = PdfReader(io.BytesIO(carregar_gerador().gerar()))
     texto = "\n".join(pagina.extract_text() for pagina in reader.pages)
 
-    assert len(reader.pages) == 1
+    assert all(len(pagina.extract_text().splitlines()) > 3 for pagina in reader.pages)
+    assert texto.count("DADOS DO PROCESSO") == 1
+    assert texto.count("FONTES E CONFERÊNCIA") == 1
     assert reader.metadata.title == "Demonstrativo de cálculo"
     assert reader.metadata.author == "Barreto Fontes Sociedade de Advogados"
     assert "Relatório de honorários sucumbenciais" in texto
     assert "Valor da causa no protocolo" in texto
     assert "27/11/2024 a 31/08/2026" in texto
-    assert texto.count("1,08117790") == 1
+    assert texto.count("1,0812") == 1
     assert "Fator acumulado do período" in texto
     assert "Fator do mês" not in texto
     assert "Memória da correção" not in texto

@@ -13,10 +13,28 @@ import openpyxl
 
 from liquidacao_custom.core.models import ResultadoCalculo
 from .componentes import colunas_componentes, colunas_perfil
+from .relatorio_layout import indice_memoria, cabecalho_componente
+from .relatorio_componentes import colunas_liquidas, componentes_liquidos, totais_liquidos
+from .moedas_historicas import simbolo_moeda
 
 
 def memoria_exibida(texto):
     return re.sub(r"-?\d+\.\d{5,}", lambda m: f"{Decimal(m.group()):.4f}", texto)
+
+
+ROTULOS_RESUMO = {
+    "principal_original": "Principal original",
+    "valor_pago_na_data_parcelas": "Pago no vencimento",
+    "principal_apurado": "Principal",
+    "correcao_monetaria": "Correção monetária",
+    "juros_mora": "Juros de mora",
+    "multas": "Multas",
+    "honorarios": "Honorários",
+    "custas": "Custas e despesas processuais",
+    "despesas": "Despesas",
+    "abatimentos": "Descontos",
+    "total_atualizado": "TOTAL ATUALIZADO",
+}
 
 
 def linhas_indices(resultado):
@@ -25,14 +43,14 @@ def linhas_indices(resultado):
         for chave, nome, faixa in colunas_componentes(resultado):
             c = parcela.componentes.get(chave)
             if c is not None:
-                yield [parcela.numero, nome, faixa, str(c.data_inicial or ""), str(c.data_final or ""),
+                yield [parcela.numero, cabecalho_componente(nome, "até a data-base"), "" if faixa in ("até a data-base", "desde o início da correção", "desde o início dos juros") else faixa, str(c.data_inicial or ""), str(c.data_final or ""),
                        f"{c.base_calculo:.4f}", f"{c.fator_acumulado:.4f}" if c.fator_acumulado is not None else "",
                        (f"{c.taxa_acumulada_percentual:.6f}" if chave == "taxa_legal" else f"{c.taxa_acumulada_percentual:.4f}") if c.taxa_acumulada_percentual is not None else "", str(c.valor)]
         if parcela.multa_detalhes:
             for chave, nome, faixa in colunas_perfil(resultado):
                 c = parcela.multa_detalhes.componentes.get(chave)
                 if c is not None:
-                    yield [parcela.numero, f"Multa - {nome}", faixa, str(c.data_inicial or ""), str(c.data_final or ""),
+                    yield [parcela.numero, f"Multa - {cabecalho_componente(nome, 'até a data-base')}", "" if faixa in ("até a data-base", "desde o início da correção", "desde o início dos juros") else faixa, str(c.data_inicial or ""), str(c.data_final or ""),
                            f"{c.base_calculo:.4f}", f"{c.fator_acumulado:.4f}" if c.fator_acumulado is not None else "",
                            (f"{c.taxa_acumulada_percentual:.6f}" if chave == "taxa_legal" else f"{c.taxa_acumulada_percentual:.4f}") if c.taxa_acumulada_percentual is not None else "", str(c.valor)]
 
@@ -56,16 +74,16 @@ def linhas_memoria_valor_causa(resultado):
     yield ["Competência", "Base", "Índice", "Fator", "Valor corrigido", "Período e critério"]
     if resultado.honorarios_sucumbenciais:
         for m in resultado.honorarios_sucumbenciais.memoria:
-            yield [m.competencia, str(m.valor_base), m.indice_aplicado, str(m.fator_aplicado), str(m.valor_corrigido), m.observacao]
+            yield [m.competencia, str(m.valor_base), indice_memoria(m.indice_aplicado), str(m.fator_aplicado), str(m.valor_corrigido), m.observacao]
 
 
 def linhas_pagamentos_registrados(resultado):
-    yield ["Nº", "Descrição", "Data", "Valor total pago", "Base da atualização", "Encargos sem nova incidência", "Selecionado para abater"]
+    yield ["Nº", "Descrição", "Data", "Valor total pago", "Base da atualização", "Encargos sem nova incidência", "Selecionado para abater", "Moeda de origem"]
     for item in resultado.premissas.get("selecao_descontos", []):
         valor = Decimal(item["valor"]) if item["valor"] is not None else None
         nominal = Decimal(item["encargos_sem_atualizacao"])
         yield [item["numero"], item["descricao"], item["data"] or "", str(valor) if valor is not None else "",
-               str(valor - nominal) if valor is not None else "", str(nominal), "SIM" if item["aplicar"] else "NÃO"]
+               str(valor - nominal) if valor is not None else "", str(nominal), "SIM" if item["aplicar"] else "NÃO", simbolo_moeda(item["data"])]
 
 
 def exportar_csv(resultado: ResultadoCalculo, pasta_destino: str) -> None:
@@ -75,6 +93,9 @@ def exportar_csv(resultado: ResultadoCalculo, pasta_destino: str) -> None:
 
     with open(os.path.join(pasta_destino, "premissas.json"), "w", encoding="utf-8") as f:
         json.dump(resultado.premissas, f, ensure_ascii=False, indent=2, default=str)
+    # Preserva os componentes originais para conferência da apresentação líquida.
+    with open(os.path.join(pasta_destino, "resultado.json"), "w", encoding="utf-8") as f:
+        json.dump(resultado.model_dump(mode="json"), f, ensure_ascii=False, indent=2)
 
     # 1. Resumo Geral
     caminho_resumo = os.path.join(pasta_destino, "resumo_geral.csv")
@@ -84,9 +105,14 @@ def exportar_csv(resultado: ResultadoCalculo, pasta_destino: str) -> None:
         res = resultado.resumo
         for k, v in res.model_dump().items():
             if isinstance(v, dict):
-                writer.writerows((chave, str(valor)) for chave, valor in v.items())
+                if k == "totais_componentes":
+                    totais = totais_liquidos(resultado.parcelas)
+                    writer.writerows((cabecalho_componente(nome, faixa).replace("\n", " "), str(totais.get(chave, Decimal("0"))))
+                                     for chave, nome, faixa in colunas_liquidas(colunas_componentes(resultado)))
+                else:
+                    writer.writerows((chave, str(valor)) for chave, valor in v.items())
             else:
-                writer.writerow([k, str(v)])
+                writer.writerow([ROTULOS_RESUMO.get(k, k), str(v)])
 
     if resultado.resumo.totais_componentes:
         with open(os.path.join(pasta_destino, "indices_por_parcela.csv"), "w", newline="", encoding="utf-8-sig") as f:
@@ -103,7 +129,7 @@ def exportar_csv(resultado: ResultadoCalculo, pasta_destino: str) -> None:
         writer.writerow(["Parcela", "Competencia", "Valor Base", "Indice", "Fator", "Valor Corrigido", "Juros Periodo", "Juros Acumulado", "Multa", "Total", "Observacao"])
         for m in resultado.memoria_mensal:
             writer.writerow([
-                m.parcela, m.competencia, f"{m.valor_base:.4f}", m.indice_aplicado,
+                m.parcela, m.competencia, f"{m.valor_base:.4f}", indice_memoria(m.indice_aplicado),
                 f"{m.fator_aplicado:.4f}",
                 str(m.valor_corrigido), str(m.juros_periodo), str(m.juros_acumulados),
                 str(m.multa), str(m.total), memoria_exibida(m.observacao)
@@ -112,7 +138,7 @@ def exportar_csv(resultado: ResultadoCalculo, pasta_destino: str) -> None:
     if resultado.custas_despesas:
         with open(os.path.join(pasta_destino, "custas_despesas.csv"), "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.writer(f)
-            writer.writerow(["Nº", "Nome", "Data", "Valor original", "Fator IPCA-E", "Correção monetária", "Valor atualizado"])
+            writer.writerow(["Nº", "Descrição", "Data", "Valor original", "Fator IPCA-E", "Correção monetária", "Valor atualizado"])
             for item in resultado.custas_despesas:
                 writer.writerow([
                     item.numero, item.nome, item.data.isoformat(), str(item.valor_original),
@@ -120,12 +146,12 @@ def exportar_csv(resultado: ResultadoCalculo, pasta_destino: str) -> None:
                 ])
         with open(os.path.join(pasta_destino, "memoria_custas_despesas.csv"), "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.writer(f)
-            writer.writerow(["Nº", "Nome", "Competência", "Valor base", "Índice", "Fator", "Valor corrigido", "Observação"])
+            writer.writerow(["Nº", "Descrição", "Competência", "Valor base", "Índice", "Fator", "Valor corrigido", "Observação"])
             for item in resultado.custas_despesas:
                 for memoria in item.memoria:
                     writer.writerow([
                         item.numero, item.nome, memoria.competencia, f"{memoria.valor_base:.4f}",
-                        memoria.indice_aplicado, f"{memoria.fator_aplicado:.8f}",
+                        indice_memoria(memoria.indice_aplicado), f"{memoria.fator_aplicado:.8f}",
                         str(memoria.valor_corrigido), memoria_exibida(memoria.observacao),
                     ])
 
@@ -145,7 +171,7 @@ def exportar_csv(resultado: ResultadoCalculo, pasta_destino: str) -> None:
         descontos = resultado.descontos
         with open(os.path.join(pasta_destino, "descontos.csv"), "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.writer(f)
-            writer.writerow(["Nº", "Descrição", "Data do desconto", "Valor informado", "Correção", "Juros", "Valor atualizado", "Abatido", "Excedente"])
+            writer.writerow(["Nº", "Descrição", "Data", "Valor", "Correção", "Juros", "Valor atualizado", "Abatido", "Excedente"])
             for p, ab in zip(descontos.parcelas, resultado.memorias_abatimento):
                 writer.writerow([p.numero, p.historico, str(p.data_vencimento), str(p.valor_bruto), str(p.correcao_monetaria), str(p.juros_mora), str(p.total_parcela), str(ab.valor_abatido), str(ab.saldo_remanescente)])
         with open(os.path.join(pasta_destino, "indices_descontos.csv"), "w", newline="", encoding="utf-8-sig") as f:
@@ -154,7 +180,7 @@ def exportar_csv(resultado: ResultadoCalculo, pasta_destino: str) -> None:
             writer = csv.writer(f)
             writer.writerow(["Nº", "Competência", "Base", "Índice", "Fator", "Atualizado", "Juros", "Observação"])
             for m in descontos.memoria_mensal:
-                writer.writerow([m.parcela, m.competencia, str(m.valor_base), m.indice_aplicado, str(m.fator_aplicado), str(m.valor_corrigido), str(m.juros_periodo), m.observacao])
+                writer.writerow([m.parcela, m.competencia, str(m.valor_base), indice_memoria(m.indice_aplicado), str(m.fator_aplicado), str(m.valor_corrigido), str(m.juros_periodo), m.observacao])
         with open(os.path.join(pasta_destino, "premissas_descontos.json"), "w", encoding="utf-8") as f:
             json.dump(descontos.premissas, f, ensure_ascii=False, indent=2, default=str)
 
@@ -205,7 +231,6 @@ def exportar_excel(resultado: ResultadoCalculo, caminho_arquivo: str) -> None:
         ws_dados.append(["Último índice SELIC aplicado (competência)", resultado.premissas.get("ultima_competencia_selic") or "Nenhum"])
     ws_dados.append(["Observações", dg.observacoes])
     if resultado.premissas.get("perfil") == "selic_ipcae_2aa_v1":
-        ws_dados.append(["Padrão do cálculo", "Fazenda Pública 4"])
         ws_dados.append(["Início dos juros", {"vencimento": "Vencimento de cada parcela", "citacao": "Citação", "data_fixa": "Data específica", "por_parcela": "Por parcela"}.get(dg.criterio_inicio_juros, dg.criterio_inicio_juros)])
         ws_dados.append(["Data do início dos juros", dg.data_inicial_juros.strftime("%d/%m/%Y") if dg.data_inicial_juros else ""])
 
@@ -236,7 +261,7 @@ def exportar_excel(resultado: ResultadoCalculo, caminho_arquivo: str) -> None:
 
     # 2. Aba Parcelas
     ws_parc = wb.create_sheet("Parcelas")
-    ws_parc.append(["Nº", "Natureza", "Vencimento", "Histórico", "Valor Bruto", "Pago na Data", "Apurado", "Total Atualizado"])
+    ws_parc.append(["Nº", "Natureza", "Vencimento", "Descrição", "Valor Bruto", "Pago na Data", "Principal", "Total Atualizado"])
     for p in resultado.parcelas:
         venc = p.data_vencimento.strftime("%Y-%m-%d") if p.data_vencimento else ""
         ws_parc.append([
@@ -257,7 +282,7 @@ def exportar_excel(resultado: ResultadoCalculo, caminho_arquivo: str) -> None:
     ws_mem.append(["Parcela", "Competência", "Valor Base", "Índice", "Fator", "Valor Corrigido", "Juros Período", "Juros Acumulados", "Multa", "Total", "Observação"])
     for m in resultado.memoria_mensal:
         ws_mem.append([
-            m.parcela, m.competencia, float(m.valor_base), m.indice_aplicado,
+            m.parcela, m.competencia, float(m.valor_base), indice_memoria(m.indice_aplicado),
             float(m.fator_aplicado), float(m.valor_corrigido), float(m.juros_periodo),
             float(m.juros_acumulados), float(m.multa), float(m.total), memoria_exibida(m.observacao)
         ])
@@ -267,7 +292,7 @@ def exportar_excel(resultado: ResultadoCalculo, caminho_arquivo: str) -> None:
     ws_corr.append(["Parcela", "Competência", "Índice", "Fator", "Valor Corrigido"])
     for m in resultado.memoria_mensal:
         if m.valor_corrigido > Decimal("0") or m.fator_aplicado != Decimal("1"):
-            ws_corr.append([m.parcela, m.competencia, m.indice_aplicado, float(m.fator_aplicado), float(m.valor_corrigido)])
+            ws_corr.append([m.parcela, m.competencia, indice_memoria(m.indice_aplicado), float(m.fator_aplicado), float(m.valor_corrigido)])
 
     # 5. Juros
     ws_jur = wb.create_sheet("Juros")
@@ -286,19 +311,19 @@ def exportar_excel(resultado: ResultadoCalculo, caminho_arquivo: str) -> None:
 
     if resultado.custas_despesas:
         ws_custas = wb.create_sheet("Custas e despesas")
-        ws_custas.append(["Nº", "Nome", "Data", "Valor original", "Fator IPCA-E", "Correção monetária", "Valor atualizado"])
+        ws_custas.append(["Nº", "Descrição", "Data", "Valor original", "Fator IPCA-E", "Correção monetária", "Valor atualizado"])
         for item in resultado.custas_despesas:
             ws_custas.append([
                 item.numero, item.nome, item.data.isoformat(), float(item.valor_original),
                 float(item.fator_ipcae), float(item.correcao_monetaria), float(item.valor_atualizado),
             ])
         ws_mem_custas = wb.create_sheet("Memória custas")
-        ws_mem_custas.append(["Nº", "Nome", "Competência", "Valor base", "Índice", "Fator", "Valor corrigido", "Observação"])
+        ws_mem_custas.append(["Nº", "Descrição", "Competência", "Valor base", "Índice", "Fator", "Valor corrigido", "Observação"])
         for item in resultado.custas_despesas:
             for memoria in item.memoria:
                 ws_mem_custas.append([
                     item.numero, item.nome, memoria.competencia, float(memoria.valor_base),
-                    memoria.indice_aplicado, float(memoria.fator_aplicado),
+                    indice_memoria(memoria.indice_aplicado), float(memoria.fator_aplicado),
                     float(memoria.valor_corrigido), memoria_exibida(memoria.observacao),
                 ])
 
@@ -308,7 +333,7 @@ def exportar_excel(resultado: ResultadoCalculo, caminho_arquivo: str) -> None:
         "Data Pagamento", "Historico", "Forma Imputacao", "Saldo Anterior",
         "Valor Abatido", "Saldo Posterior", "Mes Quitacao", "Saldo Remanescente"
     ]
-    ws_abat.append(["Data Pagamento", "Histórico", "Forma Imputação", "Saldo Anterior", "Valor Abatido", "Saldo Posterior"])
+    ws_abat.append(["Data Pagamento", "Descrição", "Forma Imputação", "Saldo Anterior", "Valor Abatido", "Saldo Posterior"])
     ws_abat.cell(row=1, column=7, value=headers_abatimentos[6])
     ws_abat.cell(row=1, column=8, value=headers_abatimentos[7])
     for ab in resultado.memorias_abatimento:
@@ -330,14 +355,14 @@ def exportar_excel(resultado: ResultadoCalculo, caminho_arquivo: str) -> None:
     res = resultado.resumo
     ws_res.append(["Principal Original", float(res.principal_original)])
     ws_res.append(["(-) Pago na Data", float(res.valor_pago_na_data_parcelas)])
-    ws_res.append(["Principal Apurado", float(res.principal_apurado)])
+    ws_res.append(["Principal", float(res.principal_apurado)])
     ws_res.append(["(+) Correção Monetária", float(res.correcao_monetaria)])
     ws_res.append(["(+) Juros de Mora", float(res.juros_mora)])
     ws_res.append(["(+) Multas/Astreintes", float(res.multas)])
     ws_res.append(["(+) Honorários Advocatícios", float(res.honorarios)])
     ws_res.append(["(+) Custas Processuais", float(res.custas)])
     ws_res.append(["(+) Despesas", float(res.despesas)])
-    ws_res.append(["(-) Abatimentos Posteriores", float(res.abatimentos)])
+    ws_res.append(["(-) Descontos", float(res.abatimentos)])
     ws_res.append(["TOTAL ATUALIZADO DO DÉBITO", float(res.total_atualizado)])
 
     if resultado.premissas.get("selecao_descontos"):
@@ -347,7 +372,7 @@ def exportar_excel(resultado: ResultadoCalculo, caminho_arquivo: str) -> None:
     if resultado.descontos:
         descontos = resultado.descontos
         ws_desc = wb.create_sheet("Descontos")
-        ws_desc.append(["Nº", "Data do desconto", "Descrição", "Valor informado", "Atualizado", "Abatido", "Excedente"])
+        ws_desc.append(["Nº", "Data", "Descrição", "Valor", "Atualizado", "Abatido", "Excedente"])
         for p, ab in zip(descontos.parcelas, resultado.memorias_abatimento):
             ws_desc.append([p.numero, str(p.data_vencimento), p.historico, float(p.valor_bruto), float(p.total_parcela), float(ab.valor_abatido), float(ab.saldo_remanescente)])
         ws_desc_indices = wb.create_sheet("Índices descontos")
@@ -356,7 +381,7 @@ def exportar_excel(resultado: ResultadoCalculo, caminho_arquivo: str) -> None:
         ws_desc_mem = wb.create_sheet("Memória descontos")
         ws_desc_mem.append(["Nº", "Competência", "Base", "Índice", "Fator", "Atualizado", "Juros", "Observação"])
         for m in descontos.memoria_mensal:
-            ws_desc_mem.append([m.parcela, m.competencia, float(m.valor_base), m.indice_aplicado, float(m.fator_aplicado), float(m.valor_corrigido), float(m.juros_periodo), m.observacao])
+            ws_desc_mem.append([m.parcela, m.competencia, float(m.valor_base), indice_memoria(m.indice_aplicado), float(m.fator_aplicado), float(m.valor_corrigido), float(m.juros_periodo), m.observacao])
         ws_desc_prem = wb.create_sheet("Critérios descontos")
         ws_desc_prem.append(["Premissa", "Valor"])
         for chave, valor in descontos.premissas.items():
@@ -366,7 +391,7 @@ def exportar_excel(resultado: ResultadoCalculo, caminho_arquivo: str) -> None:
     if resultado.premissas.get("perfil") in (
         "fazenda_publica_1_v1", "fazenda_publica_2_v1",
         "selic_ipcae_poupanca_v1", "selic_ipcae_2aa_v1", "selic_cjf_v1",
-        "ipcae_1am_simples_v1", "ipca_taxa_legal_v1", "civil_2_v1",
+        "ipcae_1am_simples_v1", "ipca_taxa_legal_v1", "civil_2_v1", "civil_3_v1", "civil_4_temporario_v1", "civil_5_taxa_legal_reconstruida_v1", "civil_6_v1",
     ):
         ws_indices = wb.create_sheet("Índices por parcela")
         for linha in linhas_indices(resultado):
@@ -377,14 +402,17 @@ def exportar_excel(resultado: ResultadoCalculo, caminho_arquivo: str) -> None:
                     cell.value = float(cell.value)
                     cell.number_format = '#,##0.00' if cell.column == 9 else '0.000000' if cell.column == 8 and 'Taxa Legal' in str(row[1].value) else '0.0000'
         ws_parc.delete_rows(1, ws_parc.max_row)
-        cabecalho = ["Nº", "Correção desde" if resultado.premissas.get("perfil") in ("ipca_taxa_legal_v1", "civil_2_v1") else "Vencimento", "Histórico", "Valor bruto", "Pago no vencimento", "Principal apurado"]
-        for _, nome, faixa in colunas_componentes(resultado):
-            cabecalho.extend([f"{nome} ({faixa}) - índice acumulado", f"{nome} - acréscimo (R$)"])
+        colunas_exibidas = colunas_liquidas(colunas_componentes(resultado))
+        totais_exibidos = totais_liquidos(resultado.parcelas)
+        cabecalho = ["Nº", "Correção desde" if resultado.premissas.get("perfil") in ("ipca_taxa_legal_v1", "civil_2_v1", "civil_3_v1", "civil_4_temporario_v1", "civil_5_taxa_legal_reconstruida_v1", "civil_6_v1") else "Vencimento", "Descrição", "Valor bruto", "Pago no vencimento", "Principal"]
+        for _, nome, faixa in colunas_exibidas:
+            cabecalho.extend([f"{cabecalho_componente(nome, faixa).replace(chr(10), ' ')} - índice acumulado", f"{cabecalho_componente(nome, faixa).replace(chr(10), ' ')} - acréscimo (R$)"])
         ws_parc.append([*cabecalho, "Total atualizado"])
         for p in resultado.parcelas:
             linha = [p.numero, str(p.data_vencimento), p.historico, float(p.valor_bruto), float(p.valor_pago_na_data), float(p.valor_apurado)]
-            for chave, _, _ in colunas_componentes(resultado):
-                c = p.componentes[chave]
+            componentes_exibidos = componentes_liquidos(p.componentes)
+            for chave, _, _ in colunas_exibidas:
+                c = componentes_exibidos[chave]
                 indice = "Não incide" if c.data_inicial is None else (
                     f"Fator {c.fator_acumulado:.4f}" if c.fator_acumulado is not None else f"{c.taxa_acumulada_percentual:.6f}%" if chave == "taxa_legal" else f"{c.taxa_acumulada_percentual:.4f}%")
                 linha.extend([indice, float(c.valor)])
@@ -398,9 +426,9 @@ def exportar_excel(resultado: ResultadoCalculo, caminho_arquivo: str) -> None:
         for nome, valor in (
             ("Principal original", res.principal_original),
             ("Pago no vencimento", res.valor_pago_na_data_parcelas),
-            ("Principal apurado", res.principal_apurado),
-            *[(f"{nome} ({faixa})", res.totais_componentes[chave]) for chave, nome, faixa in colunas_componentes(resultado)],
-            *([("(-) Descontos atualizados abatidos", res.abatimentos)] if resultado.descontos else []),
+            ("Principal", res.principal_apurado),
+            *[(cabecalho_componente(nome, faixa).replace(chr(10), ' '), totais_exibidos.get(chave, Decimal("0"))) for chave, nome, faixa in colunas_exibidas],
+            *([("(-) Descontos", res.abatimentos)] if resultado.descontos else []),
             *([("(+) Honorários sucumbenciais", resultado.honorarios_sucumbenciais.valor)] if resultado.honorarios_sucumbenciais else []),
             *([("(+) Multa art. 523", resultado.cumprimento_sentenca.multa)] if resultado.cumprimento_sentenca and resultado.cumprimento_sentenca.aplicar_multa else []),
             *([("(+) Honorários art. 523", resultado.cumprimento_sentenca.honorarios)] if resultado.cumprimento_sentenca and resultado.cumprimento_sentenca.aplicar_honorarios else []),
@@ -460,4 +488,21 @@ def exportar_excel(resultado: ResultadoCalculo, caminho_arquivo: str) -> None:
                     # Valores textuais do processo nunca são fórmulas da planilha.
                     if isinstance(cell.value, str):
                         cell.data_type = "s"
+    # Identidade e legibilidade comuns também para os perfis sem componentes próprios.
+    from openpyxl.styles import Font, PatternFill, Alignment
+    for ws in wb.worksheets:
+        ws.freeze_panes = "A2"
+        ws.auto_filter.ref = ws.dimensions
+        for cell in ws[1]:
+            cell.font = Font(name="Helvetica", size=8, bold=True, color="072F54")
+            cell.fill = PatternFill("solid", fgColor="F7F5F0")
+            cell.alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                cell.font = Font(name="Helvetica", size=8, color="171717")
+                cell.alignment = Alignment(vertical="top", wrap_text=True)
+                if isinstance(cell.value, str):
+                    cell.data_type = "s"
+        for col in ws.columns:
+            ws.column_dimensions[col[0].column_letter].width = min(60, max(16, max(len(str(c.value or "")) for c in col) + 2))
     wb.save(caminho_arquivo)

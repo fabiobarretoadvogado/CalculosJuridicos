@@ -132,40 +132,6 @@ def calcular_juros(
                 observacao=f"Juros SELIC acumulada de {data_ini} a {data_fim}"
             ))
 
-        elif pj.tipo == TipoJuros.TAXA_LEGAL:
-            # Acumula juros pela Taxa Legal (1% ao mês ou IPCA + 6% conforme nova lei/config)
-            indices_tl = carregar_indice("taxa_legal")
-            fator_acum = Decimal("0")
-            ano_corrente = data_ini.year
-            mes_corrente = data_ini.month
-
-            while date(ano_corrente, mes_corrente, 1) < date(data_fim.year, data_fim.month, 1):
-                comp = f"{ano_corrente:04d}-{mes_corrente:02d}"
-                if comp in indices_tl:
-                    fator_acum += indices_tl[comp][0] / Decimal("100")
-                else:
-                    # Fallback para 1% ao mês se não houver
-                    fator_acum += Decimal("0.01")
-                mes_corrente += 1
-                if mes_corrente > 12:
-                    mes_corrente = 1
-                    ano_corrente += 1
-
-            juros_periodo = base_calculo * fator_acum
-            total_juros += juros_periodo
-
-            memoria_mensal.append(MemoriaMensal(
-                competencia=f"{data_ini.year:04d}-{data_ini.month:02d}",
-                valor_base=base_calculo,
-                indice_aplicado="Taxa Legal",
-                fator_aplicado=fator_acum,
-                valor_corrigido=base_calculo,
-                juros_periodo=juros_periodo,
-                juros_acumulados=total_juros,
-                total=base_calculo + total_juros,
-                observacao=f"Juros Taxa Legal acumulada de {data_ini} a {data_fim}"
-            ))
-
         elif pj.tipo == TipoJuros.POUPANCA:
             # Poupança: MVP estruturado (0.5% + TR, usando TR como 0% fictício no MVP)
             meses = contar_meses(data_ini, data_fim, pj.contagem_mes_cheio)

@@ -4,6 +4,7 @@ import re
 from fastapi.testclient import TestClient
 from pypdf import PdfReader
 
+from liquidacao_custom import calculos_salvos
 from liquidacao_custom.api.main import app
 
 
@@ -82,3 +83,33 @@ def test_honorarios_isolados_tambem_podem_ser_recuperados_e_reeditados():
     pdf = client.post("/api/v1/honorarios/isolados/exportar/pdf", json=entrada)
     texto = "\n".join(page.extract_text() or "" for page in PdfReader(io.BytesIO(pdf.content)).pages)
     assert f"Chave de recuperação: {chave}" in texto
+
+
+def test_banco_compartilhado_importa_calculo_criado_no_local_legado(monkeypatch, tmp_path):
+    legado = tmp_path / "legado"
+    compartilhado = tmp_path / "compartilhado"
+
+    monkeypatch.setenv("CALCULOS_JURIDICOS_DATA_DIR", str(legado))
+    chave = calculos_salvos.registrar_calculo(
+        "calculo_principal",
+        entrada_principal("4321.09"),
+        {"total_atualizado": "4321.09"},
+    )
+
+    monkeypatch.setenv("CALCULOS_JURIDICOS_DATA_DIR", str(compartilhado))
+    monkeypatch.setattr(
+        calculos_salvos,
+        "_legacy_db_paths",
+        lambda: [legado / "calculos.sqlite3"],
+    )
+
+    recuperada = calculos_salvos.recuperar_calculo(chave)
+
+    assert recuperada.entrada["parcelas"][0]["valor_bruto"] == "4321.09"
+    assert (compartilhado / "calculos.sqlite3").is_file()
+
+
+def test_diretorio_configurado_nao_importa_bancos_do_perfil(monkeypatch, tmp_path):
+    monkeypatch.setenv("CALCULOS_JURIDICOS_DATA_DIR", str(tmp_path / "isolado"))
+
+    assert calculos_salvos._legacy_db_paths() == []

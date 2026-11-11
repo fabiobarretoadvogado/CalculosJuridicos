@@ -22,6 +22,6 @@ def test_dano_moral_corrigido_desde_arbitramento():
         data_inicial=date(2024, 10, 5),
         data_final=date(2024, 12, 5)
     )
-    # Entre 2024-10 e 2024-12: 2024-10 (1.0056) * 2024-11 (1.0062) = 1.011835
+    # Entre 2024-10 e 2024-12: IPCA oficial de outubro (0,56%) e novembro (0,39%).
     res = calcular_correcao(Decimal("5000.00"), [periodo], date(2025, 6, 1))
-    assert res["valor_corrigido"] == Decimal("5059.18")
+    assert res["valor_corrigido"] == Decimal("5047.61")

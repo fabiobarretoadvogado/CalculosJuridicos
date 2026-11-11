@@ -8,6 +8,7 @@ import { componentesResultado, indiceAcumulado, memoriaExibida } from '../utils/
 import { CustasDespesasResultado } from './CustasDespesasResultado';
 import { DescontosResultado } from './DescontosResultado';
 import { HonorariosPrincipaisResultado } from './HonorariosPrincipaisResultado';
+import { formatarValorOrigem } from '../utils/moedasHistoricas';
 
 export function ResultadoPrincipal() {
   const { state } = useCalculo();
@@ -20,8 +21,13 @@ export function ResultadoPrincipal() {
   }, [r]);
   if (!r) return null;
   const civil1 = r.premissas.entrada.perfil === 'ipca_taxa_legal_v1';
-  const civil2 = r.premissas.entrada.perfil === 'civil_2_v1';
-  const datasIndependentes = civil1 || civil2;
+  const civil5 = r.premissas.entrada.perfil === 'civil_5_taxa_legal_reconstruida_v1';
+  const civil3 = r.premissas.entrada.perfil === 'civil_3_v1';
+  const civil2 = r.premissas.entrada.perfil === 'civil_2_v1' || civil3;
+  const indiceCivil = civil3 ? 'INPC' : 'IPCA';
+  const civil6 = r.premissas.entrada.perfil === 'civil_6_v1';
+  const civil4 = r.premissas.entrada.perfil === 'civil_4_temporario_v1' || civil6;
+  const datasIndependentes = civil1 || civil2 || civil4 || civil5;
   const cjf = r.premissas.entrada.perfil === 'selic_cjf_v1';
   const referenciaSelic = cjf ? r.premissas.data_referencia_selic : undefined;
   const outrasOperacoes = r.custas_despesas.length > 0 || Boolean(r.honorarios_sucumbenciais?.data_protocolo) || Boolean(r.descontos && r.descontos.premissas.entrada?.perfil !== 'selic_cjf_v1');
@@ -45,18 +51,18 @@ export function ResultadoPrincipal() {
       <div className="result-metrics">{[
         ['Principal apurado', r.resumo.principal_apurado],
         ...componentes.map(c => [`${c.nome} · ${c.periodo.toLowerCase()}`, r.resumo.totais_componentes[c.chave]]),
-        ...(r.descontos ? [['Descontos abatidos · atualizados', `-${r.resumo.abatimentos}`]] : []),
+        ...(r.descontos ? [['Descontos', `-${r.resumo.abatimentos}`]] : []),
         ...(r.honorarios_sucumbenciais ? [['Honorários sucumbenciais', r.honorarios_sucumbenciais.valor]] : []),
         ...(r.cumprimento_sentenca?.aplicar_multa ? [['Multa · art. 523', r.cumprimento_sentenca.multa]] : []),
         ...(r.cumprimento_sentenca?.aplicar_honorarios ? [['Honorários · art. 523', r.cumprimento_sentenca.honorarios]] : []),
         ...(r.custas_despesas.length ? [['Custas e despesas · IPCA-E', r.resumo.custas]] : []),
       ].map(([label, valor]) => <div key={label}><p>{label}</p><strong>{formatarMoeda(valor)}</strong></div>)}</div>
-      <p className="result-explanation">{civil1 ? 'Civil 1: IPCA e Taxa Legal oficial em períodos independentes. Juros simples sobre o principal corrigido, sem SELIC integral adicional. Inclui o início e exclui a data-base.' : civil2 ? 'Civil 2: IPCA e juros de mora simples de 1% ao mês em períodos independentes. Os juros incidem sobre o principal corrigido. Inclui o início e exclui a data-base.' : cjf ? 'SELIC mensal simples: a taxa de cada competência é computada no mês seguinte. A data-base SELIC identifica o primeiro dia desse mês; não representa atualização diária até o seu último dia.' : r.premissas.entrada.perfil === 'fazenda_publica_1_v1' ? 'Fazenda Pública 1: IPCA-E e poupança desde 01/07/2009, sem troca de regime.' : r.premissas.entrada.perfil === 'fazenda_publica_2_v1' ? 'Fazenda Pública 2: IPCA-E e poupança até 08/12/2021; SELIC como índice único a partir de 09/12/2021.' : r.premissas.entrada.perfil === 'selic_ipcae_2aa_v1' ? 'Fazenda Pública 4: IPCA-E e poupança até 08/12/2021; SELIC de 09/12/2021 a 09/09/2025; depois IPCA-E com juros simples de 2% ao ano, limitado à SELIC quando inferior.' : 'Fazenda Pública 3: IPCA-E e poupança até 08/12/2021; SELIC de 09/12/2021 a 09/09/2025; depois IPCA-E e poupança.'}{r.custas_despesas.length ? ' As custas e despesas são corrigidas separadamente apenas pelo IPCA-E e somadas ao total final.' : ''}</p>
+      <p className="result-explanation">{civil6 ? 'Civil 6: IPCA e juros simples de 0,5% ao mês até 10/01/2003. Desde 11/01/2003, fases do Civil 4: SELIC integral ou deduzida do IPCA até 29/08/2024; depois IPCA e Taxa Legal sobre a base consolidada. Inclui o início e exclui a data-base.' : civil5 ? 'Civil 5: IPCA e Taxa Legal com termos próprios; juros simples sobre o principal corrigido. Taxa reconstruída até 29/08/2024 e oficial depois.' : civil4 ? 'Civil 4 (temporário): IPCA, SELIC e Taxa Legal em fases com termos próprios. SELIC deduzida do IPCA quando incidem somente juros. Base consolidada na transição; inclui o início e exclui a data-base.' : civil1 ? 'Civil 1: IPCA e Taxa Legal oficial em períodos independentes. Juros simples sobre o principal corrigido, sem SELIC integral adicional. Inclui o início e exclui a data-base.' : civil2 ? `${civil3 ? 'Civil 3' : 'Civil 2'}: ${indiceCivil} e juros de mora simples de 1% ao mês em períodos independentes. Os juros incidem sobre o principal corrigido. Inclui o início e exclui a data-base.` : cjf ? 'SELIC mensal simples: a taxa de cada competência é computada no mês seguinte. A data-base SELIC identifica o primeiro dia desse mês; não representa atualização diária até o seu último dia.' : r.premissas.entrada.perfil === 'fazenda_publica_1_v1' ? 'Fazenda Pública 1: IPCA-E e poupança desde 01/07/2009, sem troca de regime.' : r.premissas.entrada.perfil === 'fazenda_publica_2_v1' ? 'Fazenda Pública 2: IPCA-E e poupança até 08/12/2021; SELIC como índice único a partir de 09/12/2021.' : r.premissas.entrada.perfil === 'selic_ipcae_2aa_v1' ? 'Fazenda Pública 4: IPCA-E e poupança até 08/12/2021; SELIC de 09/12/2021 a 09/09/2025; depois IPCA-E com juros simples de 2% ao ano, limitado à SELIC quando inferior.' : 'Fazenda Pública 3: IPCA-E e poupança até 08/12/2021; SELIC de 09/12/2021 a 09/09/2025; depois IPCA-E e poupança.'}{r.custas_despesas.length ? ' As custas e despesas são corrigidas separadamente apenas pelo IPCA-E e somadas ao total final.' : ''}</p>
     </section>
-    {r.descontos && <p className="result-explanation">Parcelas atualizadas {formatarMoeda(subtotalParcelas)} − descontos abatidos {formatarMoeda(r.resumo.abatimentos)} = crédito líquido {formatarMoeda(subtotalParcelas - Number(r.resumo.abatimentos))}, antes dos honorários, acréscimos do cumprimento e custas.</p>}
+    {r.descontos && <p className="result-explanation">Parcelas atualizadas {formatarMoeda(subtotalParcelas)} − descontos {formatarMoeda(r.resumo.abatimentos)} = crédito líquido {formatarMoeda(subtotalParcelas - Number(r.resumo.abatimentos))}, antes dos honorários, acréscimos do cumprimento e custas.</p>}
     {r.alertas.length > 0 && <div className="feedback-error" role="status">{r.alertas.map(alerta => <p key={alerta}>{alerta}</p>)}</div>}
     <div className="section-heading"><h2>Valores por parcela</h2><span className="count-label">{r.parcelas.length} registro{r.parcelas.length !== 1 ? 's' : ''}</span></div>
-    <p className="component-legend">{civil1 ? 'IPCA: fator multiplicador. Taxa Legal: taxa acumulada simples com seis casas decimais. As datas de cada encargo são exibidas separadamente.' : civil2 ? 'IPCA: fator multiplicador. Juros de 1% ao mês: taxa acumulada simples com seis casas decimais. As datas de cada encargo são exibidas separadamente.' : 'Cada período mostra o índice acumulado e o acréscimo em reais. IPCA-E usa fator multiplicador; SELIC e poupança usam taxa acumulada simples.'} “Não incide” indica um período fora das datas da parcela.</p>
+    <p className="component-legend">{civil5 ? 'IPCA: fator multiplicador. Taxa Legal: taxa acumulada simples com seis casas decimais.' : civil4 ? 'IPCA anterior e posterior: fatores geométricos em faixas distintas. SELIC e Taxa Legal: taxas simples. As datas e bases de cada encargo são exibidas separadamente.' : civil1 ? 'IPCA: fator multiplicador. Taxa Legal: taxa acumulada simples com seis casas decimais. As datas de cada encargo são exibidas separadamente.' : civil2 ? `${indiceCivil}: fator multiplicador. Juros de 1% ao mês: taxa acumulada simples com seis casas decimais. As datas de cada encargo são exibidas separadamente.` : 'Cada período mostra o índice acumulado e o acréscimo em reais. IPCA-E usa fator multiplicador; SELIC e poupança usam taxa acumulada simples.'} “Não incide” indica um período fora das datas da parcela.</p>
     <div className="result-table-wrap" tabIndex={0} role="region" aria-label="Valores e índices por parcela"><table className="result-table component-table"><thead><tr>
       {['Nº', 'Descrição', datasIndependentes ? 'Correção desde' : 'Vencimento', 'Principal'].map(t => <th scope="col" key={t}>{t}</th>)}
       {componentes.map(c => <th scope="col" key={c.chave}>{c.nome}<small>{c.periodo}</small></th>)}
@@ -74,9 +80,9 @@ export function ResultadoPrincipal() {
       </td>; })}
       <td data-label="Total da parcela">{formatarMoeda(p.total_parcela)}</td>
     </tr>)}</tbody><tfoot><tr><td colSpan={3}>Total das parcelas</td>{[r.resumo.principal_apurado, ...componentes.map(c => r.resumo.totais_componentes[c.chave]), subtotalParcelas].map((v,i)=><td key={i}>{formatarMoeda(v)}</td>)}</tr></tfoot></table></div>
-    <p className="component-legend">{datasIndependentes ? `${civil1 ? 'Taxa Legal' : 'Juros de 1% ao mês'} com seis casas decimais; fatores e bases com precisão integral no cálculo.` : 'Índices exibidos com quatro casas decimais.'} O cálculo conserva a precisão integral e concilia os centavos entre as colunas. As bases e os períodos efetivos constam na memória mensal.</p>
+    <p className="component-legend">{datasIndependentes ? `${civil1 || civil4 || civil5 ? 'Taxa Legal' : 'Juros de 1% ao mês'} com seis casas decimais; fatores e bases com precisão integral no cálculo.` : 'Índices exibidos com quatro casas decimais.'} O cálculo conserva a precisão integral e concilia os centavos entre as colunas. As bases e os períodos efetivos constam na memória mensal.</p>
     <DescontosResultado resultado={r.descontos} />
-    {(r.premissas.selecao_descontos || []).filter(item => item.aplicar === false).map(item => <p className="component-legend" key={item.numero}>Não abatido · {item.descricao || `Pagamento ${item.numero}`} · {item.data ? formatarData(item.data) : 'data não informada'} · {item.valor ? formatarMoeda(item.valor) : 'valor não informado'}.</p>)}
+    {(r.premissas.selecao_descontos || []).filter(item => item.aplicar === false).map(item => <p className="component-legend" key={item.numero}>Não abatido · {item.descricao || `Pagamento ${item.numero}`} · {item.data ? formatarData(item.data) : 'data não informada'} · {item.valor ? formatarValorOrigem(Number(item.valor), item.data || '') : 'valor não informado'}.</p>)}
     <HonorariosPrincipaisResultado resultado={r} />
     <CustasDespesasResultado itens={r.custas_despesas} />
     {r.dados_gerais.observacoes && <p className="report-note whitespace-pre-line">{r.dados_gerais.observacoes}</p>}

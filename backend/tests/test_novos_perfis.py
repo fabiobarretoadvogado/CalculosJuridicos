@@ -5,6 +5,9 @@ from decimal import Decimal as D
 
 from pypdf import PdfReader
 
+import pytest
+
+from liquidacao_custom.core.exportadores import linhas_indices
 from liquidacao_custom.core.criterios_simplificados import CalculoSimplificado
 from liquidacao_custom.core.honorarios_principais import BASE_IPCA
 from liquidacao_custom.core.motor_simplificado import criterios_publicos, executar_calculo, moeda
@@ -29,7 +32,7 @@ def entrada(perfil, inicio="2021-12-01", fim="2025-09-30", inicio_juros=None):
     })
 
 
-def test_catalogo_expoe_apenas_os_sete_perfis_novos():
+def test_catalogo_expoe_os_perfis_incluindo_civil_3():
     assert criterios_publicos()["perfis"] == (
         {"id": "fazenda_publica_1_v1", "nome": "Fazenda Pública 1"},
         {"id": "fazenda_publica_2_v1", "nome": "Fazenda Pública 2"},
@@ -38,6 +41,10 @@ def test_catalogo_expoe_apenas_os_sete_perfis_novos():
         {"id": "selic_cjf_v1", "nome": "SELIC"},
         {"id": "ipca_taxa_legal_v1", "nome": "Civil 1"},
         {"id": "civil_2_v1", "nome": "Civil 2"},
+        {"id": "civil_3_v1", "nome": "Civil 3"},
+        {"id": "civil_4_temporario_v1", "nome": "Civil 4 (temporário)"},
+        {"id": "civil_5_taxa_legal_reconstruida_v1", "nome": "Civil 5"},
+        {"id": "civil_6_v1", "nome": "Civil 6"},
     )
 
 
@@ -65,7 +72,7 @@ def test_fazenda_publica_2_usa_selic_oficial_ate_agosto_de_2026():
     resultado = executar_calculo(entrada("fazenda_publica_2_v1", fim="2026-08-31"))
     parcela = resultado.parcelas[0]
 
-    assert criterios["data_base_maxima"] == "2026-08-31"
+    assert criterios["data_base_maxima"] == "2026-10-31"
     assert parcela.componentes["selic"].data_final == date(2026, 8, 31)
     assert any(item.competencia == "2026-08" and item.fator_aplicado == D("1.0109")
                for item in parcela.memoria_correcao)
@@ -118,7 +125,7 @@ def test_civil_2_aceita_primeiro_dia_seguinte_e_fecha_agosto_inteiro():
     )
     parcela = resultado.parcelas[0]
 
-    assert resultado.premissas["data_base_maxima"] == "2026-09-01"
+    assert resultado.premissas["data_base_maxima"] == "2026-10-01"
     assert parcela.componentes["ipca"].data_final == date(2026, 8, 31)
     assert parcela.componentes["ipca"].fator_acumulado == D("0.9968")
     assert parcela.valor_corrigido == D("996.80")
@@ -130,7 +137,27 @@ def test_pdf_nao_deixa_titulo_da_tabela_orfao_apos_observacao_extensa():
     calculo.parcelas[0].historico = "Descrição extensa da parcela para testar a quebra da tabela. " * 30
 
     paginas = [" ".join(pagina.extract_text().split()) for pagina in PdfReader(io.BytesIO(exportar_pdf(executar_calculo(calculo)))).pages]
-    pagina_tabela = next(texto for texto in paginas if "Valores por parcela" in texto)
+    pagina_tabela = next(texto for texto in paginas if "CRÉDITO - ACRÉSCIMO" in texto)
 
-    assert "Parcela / descrição" in pagina_tabela
+    assert "Descrição" in pagina_tabela
     assert "Descrição extensa da parcela" in pagina_tabela
+
+@pytest.mark.parametrize("perfil", ["civil_2_v1", "civil_3_v1"])
+def test_juros_civis_exibem_a_taxa_efetivamente_aplicada(perfil):
+    calculo = entrada(perfil, inicio="2026-03-02", fim="2026-03-02", inicio_juros="2026-03-01")
+    calculo.parcelas[0].valor_bruto = D("1000000.00")
+
+    resultado = executar_calculo(calculo)
+    parcela = resultado.parcelas[0]
+    juros = parcela.componentes["juros_1am"]
+
+    assert juros.taxa_acumulada_percentual == D("0.032300")
+    assert juros.valor == moeda(juros.base_calculo * juros.taxa_acumulada_percentual / 100)
+    assert juros.valor == parcela.juros_mora == resultado.resumo.juros_mora == D("323.00")
+    memoria = parcela.memoria_juros[0]
+    assert memoria.juros_acumulados == juros.valor
+    assert "taxa acumulada 0.032300%" in memoria.observacao
+    linha = next(linha for linha in linhas_indices(resultado) if linha[1] == "Juros simples de 1% a.m.")
+    assert D(linha[7]) == juros.taxa_acumulada_percentual
+    assert D(linha[8]) == juros.valor
+

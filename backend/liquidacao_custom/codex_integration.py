@@ -11,6 +11,13 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from .codex_service.manage import (
+    configure_codex,
+    prepare_shared_service,
+    remove_shared_service,
+    start_shared_service,
+)
+
 
 PLUGIN_NAME = "calculos-juridicos"
 MARKETPLACE_NAME = "personal"
@@ -41,7 +48,7 @@ def _atomic_json(path: Path, dados: Any) -> None:
     temporario.replace(path)
 
 
-def _copiar_plugin(origem: Path, destino: Path, executavel: Path) -> list[str]:
+def _copiar_plugin(origem: Path, destino: Path, executavel: Path, servico: dict) -> list[str]:
     if not origem.is_dir():
         raise FileNotFoundError(f"Modelo do plugin não encontrado: {origem}")
     destino.mkdir(parents=True, exist_ok=True)
@@ -57,8 +64,8 @@ def _copiar_plugin(origem: Path, destino: Path, executavel: Path) -> list[str]:
     config_mcp = {
         "mcpServers": {
             PLUGIN_NAME: {
-                "command": str(executavel.resolve()),
-                "args": ["--mcp"],
+                "url": servico["url"],
+                "headers": servico["headers"],
             }
         }
     }
@@ -152,8 +159,9 @@ def install_codex_plugin(
 ) -> dict[str, Any]:
     base = _home(home)
     executavel = (executable or Path(sys.executable)).resolve()
+    servico = prepare_shared_service(executavel, home=base, install_runtime=activate)
     destino = base / "plugins" / PLUGIN_NAME
-    arquivos = _copiar_plugin(_plugin_source(), destino, executavel)
+    arquivos = _copiar_plugin(_plugin_source(), destino, executavel, servico)
     catalogo = _marketplace(base)
     nome_marketplace = _registrar_marketplace(catalogo)
     resultado: dict[str, Any] = {
@@ -166,9 +174,14 @@ def install_codex_plugin(
         "arquivos": arquivos,
         "ativado": False,
         "reinicio_codex_necessario": True,
+        "transporte": "streamable-http",
+        "servico_compartilhado": True,
+        "pasta_servico": servico["root"],
     }
     if not activate:
         return resultado
+    start_shared_service(home=base)
+    configure_codex(servico, home=base)
     codex = _localizar_codex()
     if codex is None:
         resultado["aviso"] = "Codex não localizado. O plugin está disponível no catálogo pessoal para instalação posterior."
@@ -184,6 +197,7 @@ def install_codex_plugin(
         _executar_codex(codex, ["plugin", "remove", seletor, "--json"])
         instalacao = _executar_codex(codex, ["plugin", "add", seletor, "--json"])
     resultado["ativado"] = instalacao.returncode == 0
+    configure_codex(servico, home=base)
     if instalacao.returncode != 0:
         resultado["aviso"] = (
             instalacao.stderr.strip()
@@ -199,6 +213,7 @@ def uninstall_codex_plugin(
     deactivate: bool = True,
 ) -> dict[str, Any]:
     base = _home(home)
+    remove_shared_service(home=base, stop=deactivate)
     destino = base / "plugins" / PLUGIN_NAME
     catalogo = _marketplace(base)
     marketplace_nome = MARKETPLACE_NAME

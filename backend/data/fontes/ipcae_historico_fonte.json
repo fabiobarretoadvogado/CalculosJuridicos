@@ -1,0 +1,9 @@
+{
+  "serie": 10764,
+  "obtido_em": "2026-10-28",
+  "url_dados": "https://api.bcb.gov.br/dados/serie/bcdata.sgs.10764/dados?formato=json&dataInicial=01%2F01%2F1992&dataFinal=01%2F09%2F2026",
+  "sha256_resposta_oficial": "b33aadaf7ca5ee5122f9da81febcd7f214b968a1d88bf8be8a39602bd812aef4",
+  "primeira_competencia": "1992-01",
+  "ultima_competencia": "2026-09",
+  "arquivo": "bcb_ipcae_1992_2026.json"
+}

@@ -13,6 +13,10 @@ function enumerar(itens: string[]): string {
   return `${itens.slice(0, -1).join(', ')} e ${itens.at(-1)}`;
 }
 
+export function dataBaseMinimaAplicavel(...datas: (string | undefined)[]): string | undefined {
+  return datas.filter(Boolean).sort().at(-1);
+}
+
 export function mensagemCoberturaSelecionada(dataLimite: string, motivos: string[], criterios?: CriteriosPublicos | null): string {
   const base = `Data-base máxima para os critérios selecionados: ${formatarData(dataLimite)}.`;
   const causa = motivos.length ? ` Limite definido por ${enumerar(motivos)}.` : '';
@@ -20,7 +24,7 @@ export function mensagemCoberturaSelecionada(dataLimite: string, motivos: string
   if (criterios.perfil === 'selic_cjf_v1' && criterios.ultima_competencia_selic_disponivel) {
     return `${base}${causa} Última competência SELIC disponível: ${formatarCompetencia(criterios.ultima_competencia_selic_disponivel)}.`;
   }
-  if (['ipca_taxa_legal_v1', 'civil_2_v1'].includes(criterios.perfil)) {
+  if (['ipca_taxa_legal_v1', 'civil_2_v1', 'civil_3_v1', 'civil_4_temporario_v1', 'civil_5_taxa_legal_reconstruida_v1', 'civil_6_v1'].includes(criterios.perfil)) {
     return `${base}${causa} A data-base é excluída do cálculo; os índices são utilizados até ${formatarData(dataAnterior(dataLimite))}.`;
   }
   return `${base}${causa} Todos os índices necessários estão disponíveis até essa data.`;

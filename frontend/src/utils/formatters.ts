@@ -1,3 +1,7 @@
+export function dataAnteriorAoReal(data?: string | null): boolean {
+  return Boolean(data && data < '1994-07-01');
+}
+
 /**
  * Formata um valor numérico para moeda brasileira (R$ 1.234,56).
  */

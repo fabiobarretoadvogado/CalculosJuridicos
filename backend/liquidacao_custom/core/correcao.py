@@ -61,7 +61,6 @@ def calcular_correcao(
             ))
             continue
 
-        # Outros índices (IPCA, INPC, IPCA-E, IGP-M, SELIC, TAXA_LEGAL)
         fator_periodo, alertas_ind = calcular_fator_acumulado(pc.indice.value, data_ini, data_fim)
         alertas.extend(alertas_ind)
 

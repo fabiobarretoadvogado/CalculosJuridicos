@@ -7,7 +7,6 @@ import hashlib
 import json
 from datetime import date, datetime
 from decimal import Decimal as D
-from pathlib import Path
 
 from .criterios_simplificados import DadosSimplificados
 from .models import ComponenteCalculo, DadosGerais, MemoriaMensal, ResultadoCalculo, ResultadoParcela, ResumoGeral
@@ -15,7 +14,9 @@ from .motor_simplificado import moeda, proximo_mes
 from .perfis import PERFIS
 
 PERFIL = "poupanca_deposito_v1"
-PASTA = Path(__file__).resolve().parents[2] / "data" / "fontes"
+from liquidacao_custom.index_data.store import DataPath
+
+PASTA = DataPath("fontes")
 METADADOS = PASTA / "poupanca_depositos_fonte.json"
 
 

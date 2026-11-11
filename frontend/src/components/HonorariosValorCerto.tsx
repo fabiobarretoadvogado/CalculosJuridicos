@@ -1,15 +1,16 @@
 import { Input, Select } from './ui';
-import type { EncargosValorCerto, ResultadoHonorariosIsolados } from '../services/api';
+import type { CoberturaHonorarios, EncargosValorCerto, ResultadoHonorariosIsolados } from '../services/api';
 import { formatarData, formatarMoeda } from '../utils/formatters';
+import { inicioIndice } from '../utils/moedasHistoricas';
 
-export function HonorariosValorCertoCampos({ config, dataBase, onChange }: { config: EncargosValorCerto; dataBase: string; onChange: (c: EncargosValorCerto) => void }) {
+export function HonorariosValorCertoCampos({ config, dataBase, cobertura, onChange }: { config: EncargosValorCerto; dataBase: string; cobertura?: CoberturaHonorarios | null; onChange: (c: EncargosValorCerto) => void }) {
   function mudar<K extends keyof EncargosValorCerto>(campo: K, valor: EncargosValorCerto[K]) { onChange({ ...config, [campo]: valor }); }
   return <>
     <div className="field-grid honorarios-partes-grid mt-4">
-      <Input id="valor-certo-data-fixacao" label="Data da fixação" type="date" min="2009-07-01" max={dataBase || undefined} required value={config.data_fixacao} onChange={e => mudar('data_fixacao', e.target.value)} />
-      <Select id="valor-certo-indice" label="Correção monetária" value={config.indice} options={[{ value: 'ipcae', label: 'IPCA-E · IBGE / SGS 7478' }, { value: 'ipca', label: 'IPCA · IBGE' }]} onChange={e => mudar('indice', e.target.value as EncargosValorCerto['indice'])} />
+      <Input id="valor-certo-data-fixacao" label="Data da fixação" type="date" min={cobertura?.[config.indice].inicio ?? inicioIndice(config.indice)} max={dataBase || undefined} required value={config.data_fixacao} onChange={e => mudar('data_fixacao', e.target.value)} />
+      <Select id="valor-certo-indice" label="Correção monetária" value={config.indice} options={[{ value: 'ipcae', label: 'IPCA-E · IBGE / Banco Central' }, { value: 'ipca', label: 'IPCA · IBGE' }]} onChange={e => mudar('indice', e.target.value as EncargosValorCerto['indice'])} />
       <Select id="valor-certo-regime-juros" label="Juros de mora" value={config.juros} options={[{ value: 'simples', label: 'Percentual mensal simples' }, { value: 'taxa_legal', label: 'Taxa Legal · BCB' }, { value: 'sem_juros', label: 'Não incluir juros' }]} onChange={e => mudar('juros', e.target.value as EncargosValorCerto['juros'])} />
-      {config.juros !== 'sem_juros' && <Input id="valor-certo-data-juros" label="Trânsito em julgado / início dos juros" type="date" min={config.juros === 'taxa_legal' ? [config.data_fixacao, '2024-08-30'].sort().at(-1) : config.data_fixacao || undefined} max={dataBase || undefined} required value={config.data_inicio_juros || ''} onChange={e => mudar('data_inicio_juros', e.target.value || null)} />}
+      {config.juros !== 'sem_juros' && <Input id="valor-certo-data-juros" label="Trânsito em julgado / início dos juros" type="date" min={[config.data_fixacao, config.juros === 'taxa_legal' ? '2024-08-30' : '2009-07-01'].sort().at(-1)} max={dataBase || undefined} required value={config.data_inicio_juros || ''} onChange={e => mudar('data_inicio_juros', e.target.value || null)} />}
       {config.juros === 'simples' && <>
         <Input id="valor-certo-percentual-mensal" label="Juros simples (% ao mês)" type="number" min="0.000001" max="100" step="0.000001" required value={config.percentual_mensal || ''} onChange={e => mudar('percentual_mensal', e.target.value || null)} />
         <Select id="valor-certo-contagem" label="Contagem dos juros simples" value={config.contagem_mes_cheio ? 'inteiros' : 'proporcional'} options={[{ value: 'proporcional', label: 'Dias corridos ÷ 30,4368' }, { value: 'inteiros', label: 'Meses inteiros' }]} onChange={e => mudar('contagem_mes_cheio', e.target.value === 'inteiros')} />

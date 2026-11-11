@@ -122,15 +122,20 @@ def test_api_e_exportacoes_incluem_descontos_indices_memoria_e_totais(perfil_des
     assert response.status_code == 200, response.text
     reader = PdfReader(io.BytesIO(response.content))
     texto = ' '.join(' '.join(page.extract_text() for page in reader.pages).split())
-    assert texto.count('Data do desconto') == 1
+    assert texto.count('Data do desconto') == 0
+    assert texto.count('DÉBITO - DECRÉSCIMO') == 1
+    assert 'Data' in texto.split('DÉBITO - DECRÉSCIMO', 1)[1].split('Pagamento posterior', 1)[0]
     assert 'Pagamento posterior' in texto
     assert 'Crédito posterior' in texto
-    assert 'descontos abatidos' in texto
+    assert '(-) Descontos' in texto and 'descontos:' in texto
+    assert 'Descontos abatidos' not in texto and 'descontos abatidos' not in texto
     for p in r['descontos']['parcelas']:
         assert f"{D(p['total_parcela']):.2f}".replace('.', ',') in texto
     custo_paginas = [page.extract_text() for page in reader.pages if 'Fator IPCA-E' in page.extract_text()]
     assert len(custo_paginas) == 1
-    assert 'Descontos atualizados' not in custo_paginas[0]
+    assert 'CUSTAS E DESPESAS PROCESSUAIS' in custo_paginas[0]
+    if 'DÉBITO - DECRÉSCIMO' in custo_paginas[0]:
+        assert custo_paginas[0].index('DÉBITO - DECRÉSCIMO') < custo_paginas[0].index('CUSTAS E DESPESAS PROCESSUAIS')
     response = client.post('/api/v1/calculo/exportar/excel', json=payload)
     assert response.status_code == 200, response.text
     wb = openpyxl.load_workbook(io.BytesIO(response.content))
@@ -138,7 +143,9 @@ def test_api_e_exportacoes_incluem_descontos_indices_memoria_e_totais(perfil_des
         assert nome in wb.sheetnames
     assert wb['Descontos']['C2'].value == 'Pagamento posterior'
     assert D(str(wb['Descontos']['F2'].value)) == D(r['memorias_abatimento'][0]['valor_abatido'])
-    assert any(row[0] == '(-) Descontos atualizados abatidos' for row in wb['Resumo'].values)
+    descontos_resumo = [row for row in wb['Resumo'].values if row[0] == '(-) Descontos']
+    assert len(descontos_resumo) == 1
+    assert D(str(descontos_resumo[0][1])) == D(r['resumo']['abatimentos'])
     response = client.post('/api/v1/calculo/exportar/csv', json=payload)
     assert response.status_code == 200, response.text
     with zipfile.ZipFile(io.BytesIO(response.content)) as arquivo:
@@ -226,7 +233,7 @@ def test_dados_ativos_e_composicao_invalidos_sao_rejeitados(item):
         calcular(payload)
 
 
-def test_caso_0072089_recalculado_desde_original_e_pagamento_sem_capitalizacao():
+def test_caso_0072089_recalculado_desde_original_e_pagamento_sem_capitalizacao(valores_do_resumo):
     payload = entrada('selic_cjf_v1')
     payload['dados_gerais']['data_base'] = '2026-09-01'
     payload['parcelas'] = [{'numero': 1, 'data_vencimento': '2024-11-14', 'valor_bruto': '5800'}]
@@ -240,12 +247,9 @@ def test_caso_0072089_recalculado_desde_original_e_pagamento_sem_capitalizacao()
     assert r.resumo.total_atualizado == D('764.44')
     from liquidacao_custom.core.relatorio_pdf import exportar_pdf
     reader = PdfReader(io.BytesIO(exportar_pdf(r)))
-    posicoes = []
-    def registrar(texto, cm, tm, fonte, tamanho):
-        if 'R$ 764,44' in texto and tamanho == 14:
-            posicoes.append(cm[4] + tm[4])
-    reader.pages[0].extract_text(visitor_text=registrar)
-    assert posicoes and all(x > 650 for x in posicoes), 'Total deve ocupar a extremidade direita do resumo.'
+    totais = [t for t in valores_do_resumo(reader.pages[0]) if t[0] == 'R$ 764,44' and t[4] == 12]
+    assert len(totais) == 1
+    assert totais[0][1] + totais[0][3] == pytest.approx(float(reader.pages[0].mediabox.width) - 40, abs=.001), 'Total deve ocupar a extremidade direita do resumo.'
     payload['descontos']['itens'][0]['aplicar'] = False
     assert calcular(payload).resumo.total_atualizado == D('7200.70')
 
@@ -259,8 +263,9 @@ def test_exportacoes_conservam_selecao_composicao_e_nao_duplicam_pagamento():
     assert response.status_code == 200, response.text
     reader = PdfReader(io.BytesIO(response.content))
     texto = ' '.join(' '.join(page.extract_text() for page in reader.pages).split())
-    assert texto.count('Data do desconto') == 1
-    assert 'Pagamentos não abatidos' in texto
+    assert texto.count('DÉBITO - DECRÉSCIMO') == 1
+    assert 'Data do desconto' not in texto
+    assert 'PAGAMENTOS NÃO ABATIDOS' in texto
     assert '104,18' in texto and '45,82' in texto
     assert 'sem nova incidência' in texto
     response = client.post('/api/v1/calculo/exportar/excel', json=payload)
@@ -288,8 +293,9 @@ def test_pdf_muitas_parcelas_com_selecao_composicao_e_textos_longos(quantidade, 
     r = calcular(payload)
     reader = PdfReader(io.BytesIO(exportar_pdf(r)))
     texto = ' '.join(page.extract_text() for page in reader.pages)
-    assert texto.count('Data do\ndesconto') == 1
-    assert 'Pagamentos não abatidos' in texto and 'sem nova incidência' in texto
+    assert texto.count('DÉBITO - DECRÉSCIMO') == 1
+    assert 'Data do\ndesconto' not in texto
+    assert 'PAGAMENTOS NÃO ABATIDOS' in texto and 'sem nova incidência' in texto
     assert len(r.descontos.parcelas) == sum(item['aplicar'] for item in payload['descontos']['itens'])
     assert r.resumo.total_atualizado == sum(p.total_parcela for p in r.parcelas) - r.resumo.abatimentos + r.resumo.custas
     for i, pagina in enumerate(reader.pages):

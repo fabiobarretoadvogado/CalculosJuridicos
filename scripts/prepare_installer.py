@@ -24,6 +24,8 @@ def main() -> None:
     executable = payload / EXECUTABLE_NAME
     if not executable.is_file():
         raise FileNotFoundError(f"Executável ausente: {executable}")
+    if not (payload / "codex-service/runtime/pythonw.exe").is_file():
+        raise FileNotFoundError("O ambiente independente do serviço MCP está ausente.")
     identity = {
         "app_id": APP_ID,
         "name": APP_NAME,
@@ -31,6 +33,8 @@ def main() -> None:
         "display_version": APP_DISPLAY_VERSION,
         "executable": EXECUTABLE_NAME,
         "distribution": "installed",
+        "mcp_transport": "streamable-http",
+        "mcp_service": "codex-service",
     }
     (payload / "app-info.json").write_text(
         json.dumps(identity, ensure_ascii=False, indent=2) + "\n",
@@ -42,9 +46,11 @@ def main() -> None:
         "Os critérios de cada cálculo, as fontes e a memória ficam disponíveis "
         "na interface e nos arquivos exportados. O aplicativo consulta o GitHub "
         "somente para verificar atualizações assinadas.\n\n"
-        "Quando a integração com o Codex é selecionada no instalador, o próprio "
-        "executável fornece ferramentas locais de cálculo e geração de PDF, sem "
-        "abrir a interface e sem enviar os dados do cálculo a um serviço do aplicativo.\n",
+        "Quando a integração com o Codex é selecionada no instalador, um único "
+        "serviço local atende todos os chats, sem abrir a interface e sem criar "
+        "uma cópia do programa por conversa. O ambiente independente acompanha "
+        "a instalação. A conexão é autenticada e limitada ao próprio computador; "
+        "os dados dos cálculos não são enviados a um serviço do aplicativo.\n",
         encoding="utf-8",
     )
     print(f"Pacote preparado: {payload}")

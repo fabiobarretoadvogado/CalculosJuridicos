@@ -1,22 +1,24 @@
 import { Plus, ReceiptText, Trash2 } from 'lucide-react';
 import { Button, Input, Select } from './ui';
-import type { HonorariosPrincipais, CumprimentoSentenca } from '../services/api';
+import type { CoberturaHonorarios, HonorariosPrincipais, CumprimentoSentenca } from '../services/api';
+import { inicioIndice, simboloMoeda, notaMoeda } from '../utils/moedasHistoricas';
 
-export function HonorariosCausaCampos({ config, dataBase, onChange, className = '' }: {
+export function HonorariosCausaCampos({ config, dataBase, cobertura, onChange, className = '' }: {
   config: Pick<HonorariosPrincipais, 'valor_causa' | 'data_protocolo' | 'indice'>;
   dataBase: string;
+  cobertura?: CoberturaHonorarios | null;
   className?: string;
   onChange: (config: Pick<HonorariosPrincipais, 'valor_causa' | 'data_protocolo' | 'indice'>) => void;
 }) {
   return <div className={`field-grid fees-causa-grid ${className}`}>
-    <Input id="honorarios-valor-causa" label="Valor da causa no protocolo (R$)" type="number" min="0.01" step="0.01" required value={config.valor_causa || ''} onChange={e => onChange({ ...config, valor_causa: e.target.value || null })} />
-    <Input id="honorarios-protocolo" label="Data do protocolo" type="date" min="2009-07-01" max={dataBase || undefined} required value={config.data_protocolo || ''} onChange={e => onChange({ ...config, data_protocolo: e.target.value || null })} />
-    <Select id="honorarios-indice" label="Correção monetária" value={config.indice} onChange={e => onChange({ ...config, indice: e.target.value as HonorariosPrincipais['indice'] })} options={[{ value: 'ipcae', label: 'IPCA-E · IBGE / SGS 7478' }, { value: 'ipca', label: 'IPCA · IBGE / Banco Central' }]} />
+    <Input id="honorarios-valor-causa" label={`Valor da causa no protocolo (${simboloMoeda(config.data_protocolo)})`} hint={notaMoeda(config.data_protocolo)} type="number" min="0.01" step="0.01" required value={config.valor_causa || ''} onChange={e => onChange({ ...config, valor_causa: e.target.value || null })} />
+    <Input id="honorarios-protocolo" label="Data do protocolo" type="date" min={cobertura?.[config.indice].inicio ?? inicioIndice(config.indice)} max={dataBase || undefined} required value={config.data_protocolo || ''} onChange={e => onChange({ ...config, data_protocolo: e.target.value || null })} />
+    <Select id="honorarios-indice" label="Correção monetária" value={config.indice} onChange={e => onChange({ ...config, indice: e.target.value as HonorariosPrincipais['indice'] })} options={[{ value: 'ipcae', label: 'IPCA-E · IBGE / Banco Central' }, { value: 'ipca', label: 'IPCA · IBGE / Banco Central' }]} />
   </div>;
 }
 
-export function HonorariosPrincipaisForm({ config, dataBase, onChange }: {
-  config: HonorariosPrincipais; dataBase: string; onChange: (config: HonorariosPrincipais) => void;
+export function HonorariosPrincipaisForm({ config, dataBase, cobertura, onChange }: {
+  config: HonorariosPrincipais; dataBase: string; cobertura?: CoberturaHonorarios | null; onChange: (config: HonorariosPrincipais) => void;
 }) {
   const causa = config.base === 'valor_causa';
   const certo = config.base === 'valor_certo';
@@ -33,7 +35,7 @@ export function HonorariosPrincipaisForm({ config, dataBase, onChange }: {
         {certo ? <Input id="honorarios-valor-certo" label="Valor certo na data-base (R$)" type="number" min="0.01" step="0.01" required value={config.valor_certo || ''} onChange={e => onChange({ ...config, valor_certo: e.target.value || null })} />
           : <Input id="honorarios-percentual" label="Percentual fixado (%)" type="number" min="0.0001" max="100" step="0.0001" required value={config.percentual || ''} onChange={e => onChange({ ...config, percentual: e.target.value || null })} />}
       </div>
-      {causa && <HonorariosCausaCampos config={config} dataBase={dataBase} onChange={campos => onChange({ ...config, ...campos })} />}
+      {causa && <HonorariosCausaCampos config={config} dataBase={dataBase} cobertura={cobertura} onChange={campos => onChange({ ...config, ...campos })} />}
       <p className="fees-note">{causa ? 'Correção desde o protocolo até a data-base, sem juros. Depois, aplica-se o percentual fixado.' : certo ? 'Informe o valor dos honorários já na data-base. Não recebe nova correção automática.' : 'Base: total atualizado das parcelas, incluindo a multa individual, após descontos e sem custas ou despesas.'}</p>
     </div>}
     <Button type="button" variant="ghost" size="sm" className="cost-add" aria-expanded={config.aplicar} aria-controls={config.aplicar ? 'honorarios-principais-campos' : undefined} onClick={() => onChange({ ...config, aplicar: !config.aplicar })}>

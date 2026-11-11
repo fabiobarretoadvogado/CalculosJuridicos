@@ -31,6 +31,7 @@ async def validar(executavel: Path, pasta_temporaria: Path) -> dict:
         command=str(executavel),
         args=["--mcp"],
         cwd=executavel.parent,
+        env={"CALCULOS_JURIDICOS_DATA_DIR": str(pasta_temporaria / "dados")},
     )
     async with stdio_client(parametros) as (leitura, escrita):
         async with ClientSession(leitura, escrita) as sessao:

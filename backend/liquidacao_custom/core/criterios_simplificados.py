@@ -4,10 +4,34 @@ from decimal import Decimal
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from .moedas_historicas import INICIO_IPCA, INICIO_IPCAE, validar_origem, validar_data_base_real
+from .perfis import CIVIL_2, CIVIL_4, CIVIL_5, CIVIL_6, PERFIS_FAZENDA
 
 INICIO = date(2021, 12, 9)
 INICIO_TEMA_905 = date(2009, 7, 1)
 TRANSICAO = date(2025, 9, 10)
+
+
+PERFIS_IPCA_HISTORICO = {"ipca_taxa_legal_v1", CIVIL_2, CIVIL_4, CIVIL_5, CIVIL_6}
+PERFIS_DATA_BASE_REAL = PERFIS_IPCA_HISTORICO.union(PERFIS_FAZENDA)
+
+
+def inicio_correcao_perfil(perfil):
+    if perfil in PERFIS_IPCA_HISTORICO:
+        return INICIO_IPCA
+    if perfil in PERFIS_FAZENDA:
+        return INICIO_IPCAE
+    return INICIO_TEMA_905
+
+DESCRICAO_OBSERVACOES = (
+    "Campo opcional reproduzido literalmente no relatório de cálculos. "
+    "Preencha somente com notas objetivas e estritamente necessárias à compreensão do demonstrativo. "
+    "Deixe vazio quando não houver observação necessária. "
+    "Mantenha no chat explicações ao usuário, dúvidas, pendências, recomendações, "
+    "raciocínio do agente e anotações internas. "
+    "Não repita critérios, metodologia ou alertas que o programa já apresenta. "
+    "Preserve observações expressamente solicitadas pelo usuário para o relatório."
+)
 
 
 class DadosSimplificados(BaseModel):
@@ -19,7 +43,7 @@ class DadosSimplificados(BaseModel):
     requerido: str = ""
     comarca: str = ""
     vara: str = ""
-    observacoes: str = ""
+    observacoes: str = Field(default="", description=DESCRICAO_OBSERVACOES)
     criterio_inicio_juros: Literal["vencimento", "citacao", "data_fixa", "por_parcela"] = "por_parcela"
     data_inicial_juros: date | None = None
 
@@ -82,7 +106,7 @@ class OperacaoDescontos(BaseModel):
         "fazenda_publica_1_v1", "fazenda_publica_2_v1",
         "selic_ipcae_poupanca_v1", "selic_ipcae_2aa_v1",
         "selic_cjf_v1", "ipcae_1am_simples_v1",
-        "ipca_taxa_legal_v1", "civil_2_v1", "poupanca_deposito_v1",
+        "ipca_taxa_legal_v1", "civil_2_v1", "civil_3_v1", "civil_4_temporario_v1", "civil_5_taxa_legal_reconstruida_v1", "civil_6_v1", "poupanca_deposito_v1",
     ] | None = None
     criterio_inicio_juros: Literal["vencimento", "citacao", "data_fixa"] = "vencimento"
     data_inicial_juros: date | None = None
@@ -149,7 +173,7 @@ class CalculoSimplificado(BaseModel):
         "selic_cjf_v1",
         "ipcae_1am_simples_v1",
         "ipca_taxa_legal_v1",
-        "civil_2_v1",
+        "civil_2_v1", "civil_3_v1", "civil_4_temporario_v1", "civil_5_taxa_legal_reconstruida_v1", "civil_6_v1",
     ] = "selic_ipcae_poupanca_v1"
     dados_gerais: DadosSimplificados
     parcelas: list[ParcelaSimplificada] = Field(min_length=1, max_length=2000)
@@ -160,7 +184,7 @@ class CalculoSimplificado(BaseModel):
 
     def inicio_juros_parcela(self, parcela):
         criterio = self.dados_gerais.criterio_inicio_juros
-        if self.perfil in ("ipca_taxa_legal_v1", "civil_2_v1"):
+        if self.perfil in ("ipca_taxa_legal_v1", "civil_2_v1", "civil_3_v1", "civil_4_temporario_v1", "civil_5_taxa_legal_reconstruida_v1", "civil_6_v1"):
             if criterio in ("citacao", "data_fixa"):
                 return self.dados_gerais.data_inicial_juros
             if criterio == "por_parcela":
@@ -176,11 +200,12 @@ class CalculoSimplificado(BaseModel):
     def validar(self):
         honorarios = self.honorarios_sucumbenciais
         if honorarios.aplicar and honorarios.base == "valor_causa":
-            if honorarios.data_protocolo < INICIO_TEMA_905:
-                raise ValueError("Valor da causa: a série oficial disponível começa em 01/07/2009.")
+            validar_origem(honorarios.data_protocolo, honorarios.indice, "Valor da causa")
             if honorarios.data_protocolo > self.dados_gerais.data_base:
                 raise ValueError("Valor da causa: data do protocolo posterior à data-base.")
-        if self.perfil != "selic_cjf_v1" and self.dados_gerais.data_base < INICIO_TEMA_905:
+        if self.perfil in PERFIS_DATA_BASE_REAL:
+            validar_data_base_real(self.dados_gerais.data_base)
+        elif self.perfil != "selic_cjf_v1" and self.dados_gerais.data_base < INICIO_TEMA_905:
             raise ValueError("A data-base deve ser igual ou posterior a 01/07/2009.")
         numeros = [p.numero for p in self.parcelas]
         if len(set(numeros)) != len(numeros):
@@ -189,14 +214,18 @@ class CalculoSimplificado(BaseModel):
         if len(set(numeros_custas)) != len(numeros_custas):
             raise ValueError("As custas e despesas devem ter números distintos.")
         for p in self.parcelas:
-            if self.perfil != "selic_cjf_v1" and p.data_vencimento < INICIO_TEMA_905:
-                raise ValueError("Informe um vencimento a partir de 01/07/2009. As faixas anteriores do Tema 905 não estão incluídas neste perfil.")
+            if self.perfil != "selic_cjf_v1" and p.data_vencimento < inicio_correcao_perfil(self.perfil):
+                raise ValueError(f"Início da correção: informe uma data a partir de {inicio_correcao_perfil(self.perfil):%d/%m/%Y}.")
+            if self.perfil in ("fazenda_publica_1_v1", "fazenda_publica_2_v1", "selic_ipcae_poupanca_v1", "selic_ipcae_2aa_v1") and self.inicio_juros_parcela(p) < INICIO_TEMA_905:
+                raise ValueError("Juros da Fazenda Pública: informe termo inicial a partir de 01/07/2009; o histórico do IPCA-E amplia somente a correção.")
             if p.data_vencimento > self.dados_gerais.data_base:
                 raise ValueError(f"Parcela {p.numero}: vencimento posterior à data-base.")
+        if self.custas_despesas:
+            validar_data_base_real(self.dados_gerais.data_base)
         for item in self.custas_despesas:
-            if item.data < INICIO_TEMA_905:
+            if item.data < INICIO_IPCAE:
                 raise ValueError(
-                    f"Custa ou despesa {item.numero}: informe uma data a partir de 01/07/2009, "
+                    f"Custa ou despesa {item.numero}: informe uma data a partir de 01/01/1992, "
                     "início da série IPCA-E disponível neste aplicativo."
                 )
             if item.data > self.dados_gerais.data_base:
@@ -208,8 +237,13 @@ class CalculoSimplificado(BaseModel):
         for item in self.descontos.itens:
             if not item.aplicar:
                 continue
-            if (self.descontos.perfil or self.perfil) != "selic_cjf_v1" and item.data < INICIO_TEMA_905:
-                raise ValueError(f"Desconto {item.numero}: informe uma data a partir de 01/07/2009.")
+            if (self.descontos.perfil or self.perfil) != "selic_cjf_v1" and item.data < inicio_correcao_perfil(self.descontos.perfil or self.perfil):
+                raise ValueError(f"Desconto {item.numero}: data anterior à cobertura da correção selecionada.")
             if item.data > self.dados_gerais.data_base:
                 raise ValueError(f"Desconto {item.numero}: data posterior à data-base.")
+            perfil_desconto = self.descontos.perfil or self.perfil
+            if perfil_desconto in ("fazenda_publica_1_v1", "fazenda_publica_2_v1", "selic_ipcae_poupanca_v1", "selic_ipcae_2aa_v1"):
+                inicio_juros = max(item.data, self.descontos.data_inicial_juros) if self.descontos.criterio_inicio_juros != "vencimento" else item.data
+                if inicio_juros < INICIO_TEMA_905:
+                    raise ValueError(f"Desconto {item.numero}: os juros da Fazenda Pública começam em 01/07/2009; informe termo próprio.")
         return self

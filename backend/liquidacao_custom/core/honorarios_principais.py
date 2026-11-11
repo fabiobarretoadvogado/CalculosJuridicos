@@ -3,7 +3,9 @@ import hashlib
 import json
 from datetime import date, timedelta
 from decimal import Decimal, ROUND_HALF_UP, localcontext
-from pathlib import Path
+from types import SimpleNamespace
+from .moedas_historicas import (conversao_monetaria, nota_conversao, registrar_conversoes,
+    validar_origem, validar_data_base_real)
 
 from .acessorios import calcular_honorarios, calcular_multa_cpc523
 from .criterios_simplificados import CustaDespesaProcessual
@@ -12,12 +14,14 @@ from .models import (
     ResultadoHonorariosPrincipais, ResultadoCumprimentoSentenca, ResultadoDestaqueContratuais,
 )
 
-BASE_IPCA = Path(__file__).resolve().parents[2] / "data" / "ipca_oficial.json"
+from liquidacao_custom.index_data.store import DataPath
+
+BASE_IPCA = DataPath("ipca_oficial.json")
 CPC = "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13105.htm"
 
 
 def criterios_correcao_honorarios():
-    from .motor_simplificado import ultima_data_ipcae, proximo_mes, carregar_base
+    from .motor_simplificado import ultima_data_ipcae, proximo_mes, carregar_base, dados_fonte_ipcae
     dados = json.loads(BASE_IPCA.read_text(encoding="utf-8"))
     comp = max(dados["ipca"])
     fim = proximo_mes(date.fromisoformat(comp + "-01")) - timedelta(days=1)
@@ -25,14 +29,15 @@ def criterios_correcao_honorarios():
     legal = json.loads(BASE_TAXA_LEGAL.read_text(encoding="utf-8"))
     fim_legal = proximo_mes(date.fromisoformat(max(legal["taxa_legal"]) + "-01")) - timedelta(days=1)
     return {
-        "inicio": "2009-07-01",
-        "ipcae": {"data_base_maxima": ultima_data_ipcae().isoformat(), "fonte": carregar_base()["fontes"]["ipcae"]},
-        "ipca": {"data_base_maxima": fim.isoformat(), "fonte": dados["fontes"]["ipca"]},
+        "inicio": max(min(dados["ipca"]), min(carregar_base()["ipcae_taxas"])) + "-01",
+        "data_base_minima": "1994-07-01",
+        "ipcae": {"inicio": min(carregar_base()["ipcae_taxas"]) + "-01", "data_base_maxima": ultima_data_ipcae().isoformat(), "fonte": dados_fonte_ipcae()},
+        "ipca": {"inicio": min(dados["ipca"]) + "-01", "data_base_maxima": fim.isoformat(), "fonte": dados["fontes"]["ipca"]},
         "taxa_legal": {"inicio": "2024-08-30", "data_base_maxima": fim_legal.isoformat(), "fonte": legal["fonte_publica"]},
     }
 
 
-def corrigir_valor_causa(config, data_base):
+def corrigir_valor_causa(config, data_base, *, valor_em_reais=False):
     from .motor_simplificado import (
         calcular_custas_despesas_ipcae,
         moeda,
@@ -41,33 +46,51 @@ def corrigir_valor_causa(config, data_base):
         dados_fonte_ipcae,
         proximo_mes,
     )
+    validar_origem(config.data_protocolo, config.indice, "Correção")
+    # Nos perfis civis, o último dia de incidência pode anteceder a data-base validada.
+    if not valor_em_reais:
+        validar_data_base_real(data_base)
+    if config.data_protocolo > data_base:
+        raise ValueError("Correção: data de origem posterior à data-base.")
+    original, conversao = (config.valor_causa, None) if valor_em_reais else conversao_monetaria(config.valor_causa, config.data_protocolo, "Valor da causa / valor fixado")
     if config.indice == "ipcae":
         item = calcular_custas_despesas_ipcae([
-            CustaDespesaProcessual(numero=1, nome="Valor da causa no protocolo", data=config.data_protocolo, valor=config.valor_causa)
-        ], data_base)[0]
+            SimpleNamespace(numero=1, nome="Valor da causa no protocolo", data=config.data_protocolo, valor=original)
+        ], data_base, valor_em_reais=True)[0]
         memoria = [m.model_copy(update={"indice_aplicado": "Valor da causa - IPCA-E"}) for m in item.memoria]
+        if conversao and memoria:
+            memoria[0].observacao += " " + nota_conversao(conversao)
         return item.valor_atualizado, item.fator_ipcae, memoria, dados_fonte_ipcae(), None
-    dados = json.loads(BASE_IPCA.read_text(encoding="utf-8"))
+    if config.indice == "inpc":
+        from .motor_civil_2 import dados_inpc, BASE_INPC
+        dados, base_indice = dados_inpc(), BASE_INPC
+    else:
+        dados, base_indice = json.loads(BASE_IPCA.read_text(encoding="utf-8")), BASE_IPCA
+    indice = config.indice
+    nome_indice = indice.upper()
+    serie = "188" if indice == "inpc" else "433"
     # A cobertura do IPCA depende apenas da própria série. Não carregue
     # IPCA-E ou Taxa Legal para validar um cálculo que usa somente IPCA.
-    ultima_competencia_ipca = max(dados["ipca"])
+    ultima_competencia_ipca = max(dados[indice])
     limite_ipca = proximo_mes(date.fromisoformat(ultima_competencia_ipca + "-01")) - timedelta(days=1)
     if data_base > limite_ipca:
-        raise ValueError("Valor da causa: data-base além da cobertura oficial do IPCA.")
-    saldo, acumulado, memoria = config.valor_causa, Decimal(1), []
+        raise ValueError(f"Valor da causa: data-base além da cobertura oficial do {nome_indice}.")
+    saldo, acumulado, memoria = original, Decimal(1), []
     for ini, fim, fracao in trechos(config.data_protocolo, data_base):
         comp = ini.strftime("%Y-%m")
-        taxa = consultar(dados, "ipca", comp)
+        taxa = consultar(dados, indice, comp)
         fator = (1 + taxa / 100) ** fracao
         anterior = saldo
         saldo *= fator
         acumulado *= fator
         memoria.append(MemoriaMensal(
-            parcela=1, competencia=comp, indice_aplicado="Valor da causa - IPCA (SGS 433)",
+            parcela=1, competencia=comp, indice_aplicado=f"Valor da causa - {nome_indice} (SGS {serie})",
             valor_base=anterior, fator_aplicado=fator, valor_corrigido=saldo, total=saldo,
             observacao=f"{ini} a {fim}; taxa mensal {taxa}%; fator (1 + taxa / 100) ^ {fracao}; sem juros.",
         ))
-    return moeda(saldo), acumulado, memoria, dados["fontes"]["ipca"], hashlib.sha256(BASE_IPCA.read_bytes()).hexdigest()
+    if conversao and memoria:
+        memoria[0].observacao += " " + nota_conversao(conversao)
+    return moeda(saldo), acumulado, memoria, dados["fontes"][indice], hashlib.sha256(base_indice.read_bytes()).hexdigest()
 
 
 def incorporar_honorarios_principais(resultado, calculo):
@@ -84,6 +107,9 @@ def incorporar_honorarios_principais(resultado, calculo):
         if config.base == "valor_causa":
             original = config.valor_causa
             base, fator, memoria, fonte, sha = corrigir_valor_causa(config, calculo.dados_gerais.data_base)
+            original, conversao = conversao_monetaria(original, config.data_protocolo, "Valor da causa")
+            registrar_conversoes(resultado, [conversao])
+            original = moeda(original)
             correcao = moeda(base - original)
         elif config.base == "valor_certo":
             original = base = config.valor_certo

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useIndicesVersion } from '../utils/useIndicesVersion';
 import { useLocation } from 'react-router-dom';
 import { Calculator, Download, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { Button, Input, Select, Textarea } from '../components/ui';
@@ -32,12 +33,13 @@ import { CustasDespesasResultado } from '../components/CustasDespesasResultado';
 import { EscalonamentoFazendaForm, EscalonamentoFazendaResultado } from '../components/EscalonamentoFazendaHonorarios';
 import { escalonamentoInicial, fixacaoHonorarios } from '../utils/honorariosFazenda';
 import { detalhesLimiteHonorariosAutonomos, montarHonorariosIsolados, encargosValorCertoIniciais } from '../utils/honorariosIsolados';
-import { mensagemCoberturaSelecionada } from '../utils/coberturaIndices';
+import { dataBaseMinimaAplicavel, mensagemCoberturaSelecionada } from '../utils/coberturaIndices';
 import { HonorariosCausaCampos } from '../components/HonorariosPrincipaisForm';
 import { HonorariosPrincipaisResultado } from '../components/HonorariosPrincipaisResultado';
 import { HonorariosValorCertoCampos, HonorariosValorCertoResultado } from '../components/HonorariosValorCerto';
 import { opcoesPerfisCalculo } from '../utils/perfisCalculo';
 import { prepararOperacaoDivida } from '../utils/honorariosProveito';
+import { simboloMoeda, notaMoeda } from '../utils/moedasHistoricas';
 
 const JUROS: { value: CriterioInicioJuros; label: string }[] = [
   { value: 'vencimento', label: 'Data de origem de cada item' },
@@ -98,7 +100,7 @@ function OperacaoForm({
 }) {
   const extinta = permiteExtincao && operacao.extincao_integral === true;
   const cjf = operacao.perfil === 'selic_cjf_v1';
-  const datasIndependentes = ['ipca_taxa_legal_v1', 'civil_2_v1'].includes(operacao.perfil);
+  const datasIndependentes = ['ipca_taxa_legal_v1', 'civil_2_v1', 'civil_3_v1', 'civil_4_temporario_v1', 'civil_5_taxa_legal_reconstruida_v1', 'civil_6_v1'].includes(operacao.perfil);
   const exigeDataJuros = ['citacao', 'data_fixa'].includes(operacao.criterio_inicio_juros);
   const quantidade = extinta ? 0 : operacao.parcelas.length;
   const limiteData = dataBase || criterios?.data_base_maxima;
@@ -119,7 +121,7 @@ function OperacaoForm({
     <div className="field-grid debt-settings">
       <Select id={`${prefixo}-perfil`} label="Padrão de encargos" value={operacao.perfil} options={perfis} onChange={e => onChange('perfil', e.target.value)} />
       {cjf ? <div className="field-note"><strong>Início dos encargos</strong><span>A SELIC é aplicada por competência desde a data de origem de cada item, conforme o padrão CJF.</span></div> : <Select id={`${prefixo}-juros`} label="Início dos juros" value={operacao.criterio_inicio_juros} options={JUROS} onChange={e => onChange('criterio_inicio_juros', e.target.value)} />}
-      {!cjf && exigeDataJuros && <Input id={`${prefixo}-data-juros`} label={operacao.criterio_inicio_juros === 'citacao' ? 'Data da citação' : 'Data de início dos juros'} type="date" max={limiteData} required value={operacao.data_inicial_juros || ''} onChange={e => onChange('data_inicial_juros', e.target.value || null)} />}
+      {!cjf && exigeDataJuros && <Input id={`${prefixo}-data-juros`} label={operacao.criterio_inicio_juros === 'citacao' ? 'Data da citação' : 'Data de início dos juros'} type="date" min={criterios?.inicio_juros} required value={operacao.data_inicial_juros || ''} onChange={e => onChange('data_inicial_juros', e.target.value || null)} />}
       <Input id={`${prefixo}-multa`} label="Multa moratória (%)" type="number" min="0" max="100" step="0.01" value={operacao.multa_moratoria_percentual} onChange={e => onChange('multa_moratoria_percentual', e.target.value)} hint="Use zero quando não houver multa." />
     </div>
 
@@ -132,13 +134,13 @@ function OperacaoForm({
           <button type="button" className="icon-button honorarios-remove" aria-label={`Remover item ${indice + 1}`} title={`Remover item ${indice + 1}`} disabled={quantidade === 1} onClick={() => onRemover(indice)}><Trash2 size={16} /></button>
         </div>
         <div className="honorarios-item-values">
-          <Input id={`${prefixo}-data-${indice}`} label={datasIndependentes ? 'Início da correção' : 'Data de origem'} type="date" min={criterios?.inicio} max={limiteData} required value={parcela.data_origem} onChange={e => onParcelaChange(indice, 'data_origem', e.target.value)} />
-          <Input id={`${prefixo}-valor-${indice}`} label="Valor na origem (R$)" type="number" min="0.01" step="0.01" required value={parcela.valor} onChange={e => onParcelaChange(indice, 'valor', e.target.value)} />
+          <Input id={`${prefixo}-data-${indice}`} label={datasIndependentes ? 'Início da correção' : 'Data de origem'} type="date" min={criterios?.inicio_correcao || criterios?.inicio} max={limiteData} required value={parcela.data_origem} onChange={e => onParcelaChange(indice, 'data_origem', e.target.value)} />
+          <Input id={`${prefixo}-valor-${indice}`} label={`Valor na origem (${simboloMoeda(parcela.data_origem)})`} hint={notaMoeda(parcela.data_origem)} type="number" min="0.01" step="0.01" required value={parcela.valor} onChange={e => onParcelaChange(indice, 'valor', e.target.value)} />
         </div>
       </div>)}
     </div>
     <Button type="button" variant="ghost" size="sm" className="debt-item-add" onClick={onAdicionar}><Plus size={15} />Adicionar item</Button>
-    {criterios && <p className="criteria-summary">Cobertura disponível desde {formatarData(criterios.inicio)}. {criterios.contagem}</p>}
+    {criterios && <p className="criteria-summary">Correção disponível desde {formatarData(criterios.inicio_correcao || criterios.inicio)}.{criterios.inicio_juros && ` Juros disponíveis desde ${formatarData(criterios.inicio_juros)}.`} {criterios.contagem}</p>}
     </>}
   </section>;
 }
@@ -147,7 +149,7 @@ function ResultadoOperacao({ operacao }: { operacao: ResultadoOperacaoDivida }) 
   return <div className="debt-result-card">
     <div><p>{operacao.rotulo}</p><strong>{formatarMoeda(operacao.valor_atualizado)}</strong></div>
     <dl>
-      <div><dt>Valor informado</dt><dd>{formatarMoeda(operacao.valor_informado)}</dd></div>
+      <div><dt>Valor</dt><dd>{formatarMoeda(operacao.valor_informado)}</dd></div>
       <div><dt>Encargos apurados</dt><dd>{formatarMoeda(operacao.encargos_apurados)}</dd></div>
       <div><dt>Quantidade</dt><dd>{operacao.quantidade_parcelas} {operacao.quantidade_parcelas === 1 ? 'item' : 'itens'}</dd></div>
       <div><dt>Padrão aplicado</dt><dd>{operacao.nome_perfil}</dd></div>
@@ -179,7 +181,8 @@ function AuditoriaOperacao({ operacao }: { operacao: ResultadoOperacaoDivida }) 
 
 export function HonorariosSucumbenciais({ baseInicial = 'proveito_economico' }: { baseInicial?: BaseHonorariosAutonomos } = {}) {
   const location = useLocation();
-  const ultimaChaveCarregada = useRef('');
+  const indicesVersion = useIndicesVersion();
+  const ultimaNavegacaoRecuperada = useRef<string | null>(null);
   const [base, setBase] = useState<BaseHonorariosAutonomos>(baseInicial);
   const [camposBase, setCamposBase] = useState<Pick<HonorariosPrincipais, 'valor_causa' | 'data_protocolo' | 'indice' | 'valor_certo'>>({ valor_causa: null, data_protocolo: null, indice: 'ipcae', valor_certo: null });
   const [cobertura, setCobertura] = useState<CoberturaHonorarios | null>(null);
@@ -199,11 +202,12 @@ export function HonorariosSucumbenciais({ baseInicial = 'proveito_economico' }: 
   const [carregando, setCarregando] = useState(false);
   const [gerandoRelatorio, setGerandoRelatorio] = useState(false);
   const [erroRelatorio, setErroRelatorio] = useState('');
+  useEffect(() => { setResultado(null); }, [indicesVersion]);
 
   useEffect(() => {
     const recuperado = (location.state as { calculoRecuperado?: CalculoRecuperado } | null)?.calculoRecuperado;
-    if (!recuperado || recuperado.categoria === 'calculo_principal' || ultimaChaveCarregada.current === recuperado.chave_recuperacao) return;
-    ultimaChaveCarregada.current = recuperado.chave_recuperacao;
+    if (!recuperado || recuperado.categoria === 'calculo_principal' || ultimaNavegacaoRecuperada.current === location.key) return;
+    ultimaNavegacaoRecuperada.current = location.key;
     if (recuperado.categoria === 'honorarios_sucumbenciais_proveito_economico') {
       const entrada = recuperado.entrada as CalculoHonorariosProveito;
       setBase('proveito_economico');
@@ -235,7 +239,7 @@ export function HonorariosSucumbenciais({ baseInicial = 'proveito_economico' }: 
     setErro('');
     setErroRelatorio('');
     window.scrollTo(0, 0);
-  }, [location.state]);
+  }, [location.key, location.state]);
 
   useEffect(() => {
     if (base !== 'proveito_economico') return;
@@ -244,19 +248,25 @@ export function HonorariosSucumbenciais({ baseInicial = 'proveito_economico' }: 
       .then(([a, b]) => { if (ativo) { setCriteriosOriginal(a); setCriteriosCorreta(b); setErro(''); } })
       .catch(async e => { if (ativo) setErro(await mensagemErro(e)); });
     return () => { ativo = false; };
-  }, [base, original.perfil, correta.perfil]);
+  }, [base, original.perfil, correta.perfil, indicesVersion]);
 
+  const consultarCoberturaHonorarios = custasDespesas.length > 0 || base === 'valor_causa' || (base === 'valor_certo' && atualizarValorCerto);
   useEffect(() => {
-    if (base === 'proveito_economico' || (base === 'valor_certo' && !atualizarValorCerto && !custasDespesas.length)) return;
+    if (!consultarCoberturaHonorarios) return;
     let ativo = true;
     obterCoberturaHonorarios().then(c => { if (ativo) setCobertura(c); })
       .catch(async e => { if (ativo) setErro(await mensagemErro(e)); });
     return () => { ativo = false; };
-  }, [base, atualizarValorCerto, custasDespesas.length]);
+  }, [consultarCoberturaHonorarios, indicesVersion]);
 
   const catalogo = criteriosOriginal?.perfis || criteriosCorreta?.perfis;
   const perfis = opcoesPerfisCalculo(catalogo);
   const criteriosCorretaAplicaveis = correta.extincao_integral ? null : criteriosCorreta;
+  const dataBaseMinima = dataBaseMinimaAplicavel(
+    base === 'proveito_economico' ? criteriosOriginal?.data_base_minima : undefined,
+    base === 'proveito_economico' ? criteriosCorretaAplicaveis?.data_base_minima : undefined,
+    consultarCoberturaHonorarios ? cobertura?.data_base_minima : undefined,
+  );
   const limiteHonorarios = detalhesLimiteHonorariosAutonomos(base, camposBase.indice, cobertura, criteriosOriginal, criteriosCorretaAplicaveis, custasDespesas.length > 0, atualizarValorCerto ? encargosValorCerto : null);
   const dataBaseMaxima = limiteHonorarios.data;
   const criterioLimite = base === 'proveito_economico'
@@ -331,14 +341,18 @@ export function HonorariosSucumbenciais({ baseInicial = 'proveito_economico' }: 
     evento.preventDefault();
     setErro('');
     setErroRelatorio('');
+    const navegacaoRecuperada = ultimaNavegacaoRecuperada.current;
     setCarregando(true);
     setResultado(null);
     try {
       const entrada = montarCalculo();
-      setResultado(entrada.categoria === 'honorarios_sucumbenciais_proveito_economico'
-        ? await executarHonorariosProveito(entrada) : await executarHonorariosIsolados(entrada));
+      const resultado = entrada.categoria === 'honorarios_sucumbenciais_proveito_economico'
+        ? await executarHonorariosProveito(entrada) : await executarHonorariosIsolados(entrada);
+      if (navegacaoRecuperada === ultimaNavegacaoRecuperada.current) setResultado(resultado);
+    } catch (e) {
+      const mensagem = await mensagemErro(e);
+      if (navegacaoRecuperada === ultimaNavegacaoRecuperada.current) setErro(mensagem);
     }
-    catch (e) { setErro(await mensagemErro(e)); }
     finally { setCarregando(false); }
   }
 
@@ -347,8 +361,9 @@ export function HonorariosSucumbenciais({ baseInicial = 'proveito_economico' }: 
     setErroRelatorio('');
     try {
       const entrada = montarCalculo();
+      const baseIndices = resultado && (resultado.categoria === "honorarios_sucumbenciais_isolados" ? resultado.premissas.base_indices?.sha256 : resultado.base_indices?.sha256);
       const arquivo = entrada.categoria === 'honorarios_sucumbenciais_proveito_economico'
-        ? await exportarPdfHonorarios(entrada) : await exportarPdfHonorariosIsolados(entrada);
+        ? await exportarPdfHonorarios(entrada, baseIndices || undefined) : await exportarPdfHonorariosIsolados(entrada, baseIndices || undefined);
       downloadBlob(arquivo, 'relatorio_honorarios_sucumbenciais.pdf');
     } catch (e) {
       setErroRelatorio(await mensagemErro(e));
@@ -393,15 +408,15 @@ export function HonorariosSucumbenciais({ baseInicial = 'proveito_economico' }: 
           </div>
           <div className="mt-4">
           <div className="field-grid honorarios-partes-grid">
-            <Input id="honorarios-data-base" label="Data-base" type="date" max={dataBaseMaxima} required value={dados.data_base} onChange={e => atualizarDados('data_base', e.target.value)} hint={dataBaseMaxima ? mensagemCoberturaSelecionada(dataBaseMaxima, limiteHonorarios.motivos, criterioLimite) : coberturaPronta ? undefined : 'Consultando a cobertura dos índices…'} />
+            <Input id="honorarios-data-base" label="Data-base" type="date" min={dataBaseMinima} max={dataBaseMaxima} required value={dados.data_base} onChange={e => atualizarDados('data_base', e.target.value)} hint={dataBaseMaxima ? mensagemCoberturaSelecionada(dataBaseMaxima, limiteHonorarios.motivos, criterioLimite) : coberturaPronta ? undefined : 'Consultando a cobertura dos índices…'} />
             {base !== 'valor_certo' && <Select id="honorarios-fixacao" label="Forma de fixação" value={escalonarFazenda ? 'fazenda' : 'percentual'} options={[{ value: 'percentual', label: 'Percentual único' }, { value: 'fazenda', label: 'Faixas · Fazenda Pública (art. 85)' }]} onChange={e => { setEscalonarFazenda(e.target.value === 'fazenda'); setResultado(null); setErroRelatorio(''); }} />}
             {base !== 'valor_certo' && !escalonarFazenda && <Input id="honorarios-percentual" label="Percentual fixado na sentença (%)" type="number" min="0.0001" max="100" step="0.0001" required value={percentual} onChange={e => { setPercentual(e.target.value); setResultado(null); }} />}
-            {base === 'valor_certo' && <Input id="honorarios-valor-certo" label={atualizarValorCerto ? 'Valor fixado dos honorários (R$)' : 'Valor certo na data-base (R$)'} type="number" min="0.01" step="0.01" required value={camposBase.valor_certo || ''} onChange={e => { setCamposBase(c => ({ ...c, valor_certo: e.target.value || null })); setResultado(null); }} />}
+            {base === 'valor_certo' && <Input id="honorarios-valor-certo" label={atualizarValorCerto ? `Valor fixado dos honorários (${simboloMoeda(encargosValorCerto.data_fixacao)})` : 'Valor certo na data-base (R$)'} hint={atualizarValorCerto ? notaMoeda(encargosValorCerto.data_fixacao) : undefined} type="number" min="0.01" step="0.01" required value={camposBase.valor_certo || ''} onChange={e => { setCamposBase(c => ({ ...c, valor_certo: e.target.value || null })); setResultado(null); }} />}
             {base === 'valor_certo' && <Select id="honorarios-valor-certo-situacao" label="Situação do valor" value={atualizarValorCerto ? 'fixado' : 'atualizado'} options={[{ value: 'fixado', label: 'Atualizar desde a fixação' }, { value: 'atualizado', label: 'Valor já na data-base' }]} onChange={e => { setAtualizarValorCerto(e.target.value === 'fixado'); setResultado(null); setErro(''); setErroRelatorio(''); }} />}
           </div>
           </div>
-          {base === 'valor_causa' && <div className="mt-4"><HonorariosCausaCampos className="honorarios-partes-grid" config={camposBase} dataBase={dados.data_base} onChange={campos => { setCamposBase(c => ({ ...c, ...campos })); setResultado(null); }} /></div>}
-          {base === 'valor_certo' && (atualizarValorCerto ? <HonorariosValorCertoCampos config={encargosValorCerto} dataBase={dados.data_base} onChange={config => { setEncargosValorCerto(config); setResultado(null); setErroRelatorio(''); }} /> : <p className="criteria-summary">Valor informado já na data-base: não aplicar os encargos novamente. O programa não arbitra o valor judicial.</p>)}
+          {base === 'valor_causa' && <div className="mt-4"><HonorariosCausaCampos className="honorarios-partes-grid" config={camposBase} dataBase={dados.data_base} cobertura={cobertura} onChange={campos => { setCamposBase(c => ({ ...c, ...campos })); setResultado(null); }} /></div>}
+          {base === 'valor_certo' && (atualizarValorCerto ? <HonorariosValorCertoCampos config={encargosValorCerto} dataBase={dados.data_base} cobertura={cobertura} onChange={config => { setEncargosValorCerto(config); setResultado(null); setErroRelatorio(''); }} /> : <p className="criteria-summary">Valor já na data-base: não aplicar os encargos novamente. O programa não arbitra o valor judicial.</p>)}
           {base === 'valor_causa' && <p className="criteria-summary">Correção exclusiva por IPCA-E ou IPCA desde o protocolo, sem juros. O valor da causa não é somado aos honorários.</p>}
           {base !== 'valor_certo' && escalonarFazenda && <EscalonamentoFazendaForm config={escalonamento} onChange={config => { setEscalonamento(config); setResultado(null); setErroRelatorio(''); }} />}
         </section>
@@ -409,6 +424,7 @@ export function HonorariosSucumbenciais({ baseInicial = 'proveito_economico' }: 
           idPrefix="honorarios"
           itens={custasDespesas}
           dataBase={dados.data_base}
+          cobertura={cobertura}
           onChange={itens => { setCustasDespesas(itens); setResultado(null); }}
         />
         {base === 'proveito_economico' && <div className="debt-grid">

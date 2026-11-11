@@ -1,0 +1,2986 @@
+{
+  "obtido_em": "2026-10-06",
+  "metodologia": "cmn_5171_selic1178_ipca15_7478_mes_anterior_nbr5891_v1",
+  "series": {
+    "selic": 1178,
+    "ipca15": 7478
+  },
+  "fontes": {
+    "selic_diaria_anualizada": "https://www3.bcb.gov.br/sgspub/consultarvalores/consultarValoresSeries.do?method=consultarSeries&series=1178",
+    "ipca15_reconstrucao": "https://www3.bcb.gov.br/sgspub/consultarvalores/consultarValoresSeries.do?method=consultarSeries&series=7478"
+  },
+  "urls_consultadas": {
+    "fontes/bcb_selic_anual_civil5_2000_2009.json": "https://api.bcb.gov.br/dados/serie/bcdata.sgs.1178/dados?formato=json&dataInicial=01%2F05%2F2000&dataFinal=31%2F12%2F2009",
+    "fontes/bcb_selic_anual_civil5_2010_2019.json": "https://api.bcb.gov.br/dados/serie/bcdata.sgs.1178/dados?formato=json&dataInicial=01%2F01%2F2010&dataFinal=31%2F12%2F2019",
+    "fontes/bcb_selic_anual_civil5_2020_2024.json": "https://api.bcb.gov.br/dados/serie/bcdata.sgs.1178/dados?formato=json&dataInicial=01%2F01%2F2020&dataFinal=30%2F11%2F2024",
+    "fontes/bcb_ipca15_civil5_2000_2024.json": "https://api.bcb.gov.br/dados/serie/bcdata.sgs.7478/dados?formato=json&dataInicial=01%2F05%2F2000&dataFinal=30%2F11%2F2024"
+  },
+  "sha256_fontes": {
+    "fontes/bcb_selic_anual_civil5_2000_2009.json": "568ddeecd49cd8843dc0bd75244fc5e9ddfa955bc804a53f42b4a3e2544ca60b",
+    "fontes/bcb_selic_anual_civil5_2010_2019.json": "7dd16f1592462e71ffaf571d9200eedcf020f425f2da8aaaa092ae9e042d92aa",
+    "fontes/bcb_selic_anual_civil5_2020_2024.json": "97dfbc86a9227e8c05517703b939c5d03ce50db70a24af026f2704fcae80e65b",
+    "fontes/bcb_ipca15_civil5_2000_2024.json": "daab3252814f1a8afc9100513d118e7fb529acaa6934aa5fa617a4cdf9645cb3"
+  },
+  "taxa_legal": {
+    "2000-06": "1.402601",
+    "2000-07": "1.310699",
+    "2000-08": "0.521929",
+    "2000-09": "0.000000",
+    "2000-10": "0.770156",
+    "2000-11": "1.105791",
+    "2000-12": "1.048115",
+    "2001-01": "0.594599",
+    "2001-02": "0.631093",
+    "2001-03": "0.513269",
+    "2001-04": "0.894634",
+    "2001-05": "0.682958",
+    "2001-06": "0.842641",
+    "2001-07": "0.889934",
+    "2001-08": "0.552786",
+    "2001-09": "0.415103",
+    "2001-10": "0.940736",
+    "2001-11": "1.160644",
+    "2001-12": "0.399483",
+    "2002-01": "0.838928",
+    "2002-02": "0.908327",
+    "2002-03": "0.804674",
+    "2002-04": "0.967463",
+    "2002-05": "0.698122",
+    "2002-06": "0.990828",
+    "2002-07": "0.995747",
+    "2002-08": "0.759586",
+    "2002-09": "0.439014",
+    "2002-10": "0.756575",
+    "2002-11": "0.739272",
+    "2002-12": "0.000000",
+    "2003-01": "0.000000",
+    "2003-02": "0.000000",
+    "2003-03": "0.000000",
+    "2003-04": "0.629839",
+    "2003-05": "0.723349",
+    "2003-06": "1.105951",
+    "2003-07": "1.633086",
+    "2003-08": "2.268330",
+    "2003-09": "1.500210",
+    "2003-10": "1.103221",
+    "2003-11": "0.975621",
+    "2003-12": "1.171539",
+    "2004-01": "0.909068",
+    "2004-02": "0.583583",
+    "2004-03": "0.182749",
+    "2004-04": "0.975222",
+    "2004-05": "0.969813",
+    "2004-06": "0.684111",
+    "2004-07": "0.666159",
+    "2004-08": "0.353601",
+    "2004-09": "0.499639",
+    "2004-10": "0.757615",
+    "2004-11": "0.890375",
+    "2004-12": "0.617098",
+    "2005-01": "0.637468",
+    "2005-02": "0.699128",
+    "2005-03": "0.474673",
+    "2005-04": "1.174069",
+    "2005-05": "0.666596",
+    "2005-06": "0.667525",
+    "2005-07": "1.463846",
+    "2005-08": "1.399805",
+    "2005-09": "1.374634",
+    "2005-10": "1.340990",
+    "2005-11": "0.842446",
+    "2005-12": "0.596389",
+    "2006-01": "1.089432",
+    "2006-02": "0.914652",
+    "2006-03": "0.621829",
+    "2006-04": "1.048423",
+    "2006-05": "0.906337",
+    "2006-06": "1.008643",
+    "2006-07": "1.336399",
+    "2006-08": "1.190204",
+    "2006-09": "1.064243",
+    "2006-10": "1.006807",
+    "2006-11": "0.801918",
+    "2006-12": "0.648207",
+    "2007-01": "0.635661",
+    "2007-02": "0.559892",
+    "2007-03": "0.410595",
+    "2007-04": "0.639601",
+    "2007-05": "0.723232",
+    "2007-06": "0.766085",
+    "2007-07": "0.613849",
+    "2007-08": "0.730879",
+    "2007-09": "0.570240",
+    "2007-10": "0.513472",
+    "2007-11": "0.687842",
+    "2007-12": "0.613260",
+    "2008-01": "0.143664",
+    "2008-02": "0.227789",
+    "2008-03": "0.161200",
+    "2008-04": "0.613188",
+    "2008-05": "0.309599",
+    "2008-06": "0.315019",
+    "2008-07": "0.055096",
+    "2008-08": "0.436918",
+    "2008-09": "0.665328",
+    "2008-10": "0.840905",
+    "2008-11": "0.873257",
+    "2008-12": "0.527385",
+    "2009-01": "0.831681",
+    "2009-02": "0.645226",
+    "2009-03": "0.223677",
+    "2009-04": "0.859938",
+    "2009-05": "0.477847",
+    "2009-06": "0.179832",
+    "2009-07": "0.380735",
+    "2009-08": "0.568891",
+    "2009-09": "0.462685",
+    "2009-10": "0.502794",
+    "2009-11": "0.512826",
+    "2009-12": "0.219638",
+    "2010-01": "0.345554",
+    "2010-02": "0.139840",
+    "2010-03": "0.000000",
+    "2010-04": "0.208921",
+    "2010-05": "0.185025",
+    "2010-06": "0.120604",
+    "2010-07": "0.601433",
+    "2010-08": "0.951887",
+    "2010-09": "0.938679",
+    "2010-10": "0.536004",
+    "2010-11": "0.185985",
+    "2010-12": "0.000000",
+    "2011-01": "0.237242",
+    "2011-02": "0.101548",
+    "2011-03": "0.000000",
+    "2011-04": "0.318547",
+    "2011-05": "0.069619",
+    "2011-06": "0.285983",
+    "2011-07": "0.724609",
+    "2011-08": "0.867018",
+    "2011-09": "0.801898",
+    "2011-10": "0.409590",
+    "2011-11": "0.460023",
+    "2011-12": "0.398643",
+    "2012-01": "0.345394",
+    "2012-02": "0.239460",
+    "2012-03": "0.217620",
+    "2012-04": "0.569715",
+    "2012-05": "0.280669",
+    "2012-06": "0.233533",
+    "2012-07": "0.460674",
+    "2012-08": "0.348814",
+    "2012-09": "0.300639",
+    "2012-10": "0.058713",
+    "2012-11": "0.000000",
+    "2012-12": "0.008798",
+    "2013-01": "0.000000",
+    "2013-02": "0.000000",
+    "2013-03": "0.000000",
+    "2013-04": "0.059114",
+    "2013-05": "0.103120",
+    "2013-06": "0.137902",
+    "2013-07": "0.224420",
+    "2013-08": "0.653634",
+    "2013-09": "0.549436",
+    "2013-10": "0.441836",
+    "2013-11": "0.328931",
+    "2013-12": "0.148362",
+    "2014-01": "0.039450",
+    "2014-02": "0.178150",
+    "2014-03": "0.089519",
+    "2014-04": "0.035696",
+    "2014-05": "0.042338",
+    "2014-06": "0.284224",
+    "2014-07": "0.352814",
+    "2014-08": "0.777405",
+    "2014-09": "0.724967",
+    "2014-10": "0.515282",
+    "2014-11": "0.468284",
+    "2014-12": "0.460742",
+    "2015-01": "0.169952",
+    "2015-02": "0.044677",
+    "2015-03": "0.000000",
+    "2015-04": "0.000000",
+    "2015-05": "0.000000",
+    "2015-06": "0.383024",
+    "2015-07": "0.075924",
+    "2015-08": "0.584748",
+    "2015-09": "0.676058",
+    "2015-10": "0.716172",
+    "2015-11": "0.446021",
+    "2015-12": "0.204145",
+    "2016-01": "0.000000",
+    "2016-02": "0.134641",
+    "2016-03": "0.000000",
+    "2016-04": "0.728945",
+    "2016-05": "0.543110",
+    "2016-06": "0.246842",
+    "2016-07": "0.759043",
+    "2016-08": "0.565909",
+    "2016-09": "0.761792",
+    "2016-10": "0.876948",
+    "2016-11": "0.857213",
+    "2016-12": "0.776268",
+    "2017-01": "0.931545",
+    "2017-02": "0.773721",
+    "2017-03": "0.323338",
+    "2017-04": "0.900705",
+    "2017-05": "0.575373",
+    "2017-06": "0.685487",
+    "2017-07": "0.647832",
+    "2017-08": "0.979686",
+    "2017-09": "0.450712",
+    "2017-10": "0.527879",
+    "2017-11": "0.302900",
+    "2017-12": "0.247396",
+    "2018-01": "0.187743",
+    "2018-02": "0.193451",
+    "2018-03": "0.085278",
+    "2018-04": "0.431913",
+    "2018-05": "0.307649",
+    "2018-06": "0.377766",
+    "2018-07": "0.000000",
+    "2018-08": "0.000000",
+    "2018-09": "0.437228",
+    "2018-10": "0.378477",
+    "2018-11": "0.000000",
+    "2018-12": "0.302977",
+    "2019-01": "0.654600",
+    "2019-02": "0.242315",
+    "2019-03": "0.153033",
+    "2019-04": "0.000000",
+    "2019-05": "0.000000",
+    "2019-06": "0.192369",
+    "2019-07": "0.408573",
+    "2019-08": "0.477366",
+    "2019-09": "0.421382",
+    "2019-10": "0.373424",
+    "2019-11": "0.388914",
+    "2019-12": "0.240050",
+    "2020-01": "0.000000",
+    "2020-02": "0.000000",
+    "2020-03": "0.073567",
+    "2020-04": "0.318305",
+    "2020-05": "0.294954",
+    "2020-06": "0.830711",
+    "2020-07": "0.192294",
+    "2020-08": "0.000000",
+    "2020-09": "0.000000",
+    "2020-10": "0.000000",
+    "2020-11": "0.000000",
+    "2020-12": "0.000000",
+    "2021-01": "0.000000",
+    "2021-02": "0.000000",
+    "2021-03": "0.000000",
+    "2021-04": "0.000000",
+    "2021-05": "0.000000",
+    "2021-06": "0.000000",
+    "2021-07": "0.000000",
+    "2021-08": "0.000000",
+    "2021-09": "0.000000",
+    "2021-10": "0.000000",
+    "2021-11": "0.000000",
+    "2021-12": "0.000000",
+    "2022-01": "0.000000",
+    "2022-02": "0.151392",
+    "2022-03": "0.000000",
+    "2022-04": "0.000000",
+    "2022-05": "0.000000",
+    "2022-06": "0.441984",
+    "2022-07": "0.323087",
+    "2022-08": "0.903667",
+    "2022-09": "1.913328",
+    "2022-10": "1.447337",
+    "2022-11": "0.859301",
+    "2022-12": "0.488089",
+    "2023-01": "0.600194",
+    "2023-02": "0.570179",
+    "2023-03": "0.156948",
+    "2023-04": "0.481352",
+    "2023-05": "0.346168",
+    "2023-06": "0.610203",
+    "2023-07": "1.031569",
+    "2023-08": "1.142782",
+    "2023-09": "0.855102",
+    "2023-10": "0.620729",
+    "2023-11": "0.785917",
+    "2023-12": "0.584061",
+    "2024-01": "0.492555",
+    "2024-02": "0.654661",
+    "2024-03": "0.020044",
+    "2024-04": "0.469982",
+    "2024-05": "0.676013",
+    "2024-06": "0.390723",
+    "2024-07": "0.396790",
+    "2024-08": "0.605306"
+  },
+  "memoria_formacao": {
+    "2000-06": {
+      "competencia_insumos": "2000-05",
+      "dias_uteis": 22,
+      "fator_selic": "1.01493863",
+      "ipca15_percentual": "0.09",
+      "fator_ipca15": "1.0009",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.402601"
+    },
+    "2000-07": {
+      "competencia_insumos": "2000-06",
+      "dias_uteis": 21,
+      "fator_selic": "1.01391748",
+      "ipca15_percentual": "0.08",
+      "fator_ipca15": "1.0008",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.310699"
+    },
+    "2000-08": {
+      "competencia_insumos": "2000-07",
+      "dias_uteis": 21,
+      "fator_selic": "1.01306000",
+      "ipca15_percentual": "0.78",
+      "fator_ipca15": "1.0078",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.521929"
+    },
+    "2000-09": {
+      "competencia_insumos": "2000-08",
+      "dias_uteis": 23,
+      "fator_selic": "1.01405437",
+      "ipca15_percentual": "1.99",
+      "fator_ipca15": "1.0199",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2000-10": {
+      "competencia_insumos": "2000-09",
+      "dias_uteis": 20,
+      "fator_selic": "1.01223622",
+      "ipca15_percentual": "0.45",
+      "fator_ipca15": "1.0045",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.770156"
+    },
+    "2000-11": {
+      "competencia_insumos": "2000-10",
+      "dias_uteis": 21,
+      "fator_selic": "1.01287781",
+      "ipca15_percentual": "0.18",
+      "fator_ipca15": "1.0018",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.105791"
+    },
+    "2000-12": {
+      "competencia_insumos": "2000-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.01219897",
+      "ipca15_percentual": "0.17",
+      "fator_ipca15": "1.0017",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.048115"
+    },
+    "2001-01": {
+      "competencia_insumos": "2000-12",
+      "dias_uteis": 20,
+      "fator_selic": "1.01198167",
+      "ipca15_percentual": "0.60",
+      "fator_ipca15": "1.0060",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.594599"
+    },
+    "2001-02": {
+      "competencia_insumos": "2001-01",
+      "dias_uteis": 22,
+      "fator_selic": "1.01265069",
+      "ipca15_percentual": "0.63",
+      "fator_ipca15": "1.0063",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.631093"
+    },
+    "2001-03": {
+      "competencia_insumos": "2001-02",
+      "dias_uteis": 18,
+      "fator_selic": "1.01015835",
+      "ipca15_percentual": "0.50",
+      "fator_ipca15": "1.0050",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.513269"
+    },
+    "2001-04": {
+      "competencia_insumos": "2001-03",
+      "dias_uteis": 22,
+      "fator_selic": "1.01257855",
+      "ipca15_percentual": "0.36",
+      "fator_ipca15": "1.0036",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.894634"
+    },
+    "2001-05": {
+      "competencia_insumos": "2001-04",
+      "dias_uteis": 20,
+      "fator_selic": "1.01186373",
+      "ipca15_percentual": "0.50",
+      "fator_ipca15": "1.0050",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.682958"
+    },
+    "2001-06": {
+      "competencia_insumos": "2001-05",
+      "dias_uteis": 22,
+      "fator_selic": "1.01336770",
+      "ipca15_percentual": "0.49",
+      "fator_ipca15": "1.0049",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.842641"
+    },
+    "2001-07": {
+      "competencia_insumos": "2001-06",
+      "dias_uteis": 20,
+      "fator_selic": "1.01273316",
+      "ipca15_percentual": "0.38",
+      "fator_ipca15": "1.0038",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.889934"
+    },
+    "2001-08": {
+      "competencia_insumos": "2001-07",
+      "dias_uteis": 22,
+      "fator_selic": "1.01497982",
+      "ipca15_percentual": "0.94",
+      "fator_ipca15": "1.0094",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.552786"
+    },
+    "2001-09": {
+      "competencia_insumos": "2001-08",
+      "dias_uteis": 23,
+      "fator_selic": "1.01600001",
+      "ipca15_percentual": "1.18",
+      "fator_ipca15": "1.0118",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.415103"
+    },
+    "2001-10": {
+      "competencia_insumos": "2001-09",
+      "dias_uteis": 19,
+      "fator_selic": "1.01324311",
+      "ipca15_percentual": "0.38",
+      "fator_ipca15": "1.0038",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.940736"
+    },
+    "2001-11": {
+      "competencia_insumos": "2001-10",
+      "dias_uteis": 22,
+      "fator_selic": "1.01534938",
+      "ipca15_percentual": "0.37",
+      "fator_ipca15": "1.0037",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.160644"
+    },
+    "2001-12": {
+      "competencia_insumos": "2001-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.01393438",
+      "ipca15_percentual": "0.99",
+      "fator_ipca15": "1.0099",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.399483"
+    },
+    "2002-01": {
+      "competencia_insumos": "2001-12",
+      "dias_uteis": 20,
+      "fator_selic": "1.01393542",
+      "ipca15_percentual": "0.55",
+      "fator_ipca15": "1.0055",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.838928"
+    },
+    "2002-02": {
+      "competencia_insumos": "2002-01",
+      "dias_uteis": 22,
+      "fator_selic": "1.01533959",
+      "ipca15_percentual": "0.62",
+      "fator_ipca15": "1.0062",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.908327"
+    },
+    "2002-03": {
+      "competencia_insumos": "2002-02",
+      "dias_uteis": 18,
+      "fator_selic": "1.01248215",
+      "ipca15_percentual": "0.44",
+      "fator_ipca15": "1.0044",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.804674"
+    },
+    "2002-04": {
+      "competencia_insumos": "2002-03",
+      "dias_uteis": 20,
+      "fator_selic": "1.01371333",
+      "ipca15_percentual": "0.40",
+      "fator_ipca15": "1.0040",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.967463"
+    },
+    "2002-05": {
+      "competencia_insumos": "2002-04",
+      "dias_uteis": 22,
+      "fator_selic": "1.01483567",
+      "ipca15_percentual": "0.78",
+      "fator_ipca15": "1.0078",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.698122"
+    },
+    "2002-06": {
+      "competencia_insumos": "2002-05",
+      "dias_uteis": 21,
+      "fator_selic": "1.01414989",
+      "ipca15_percentual": "0.42",
+      "fator_ipca15": "1.0042",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.990828"
+    },
+    "2002-07": {
+      "competencia_insumos": "2002-06",
+      "dias_uteis": 20,
+      "fator_selic": "1.01329033",
+      "ipca15_percentual": "0.33",
+      "fator_ipca15": "1.0033",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.995747"
+    },
+    "2002-08": {
+      "competencia_insumos": "2002-07",
+      "dias_uteis": 23,
+      "fator_selic": "1.01535435",
+      "ipca15_percentual": "0.77",
+      "fator_ipca15": "1.0077",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.759586"
+    },
+    "2002-09": {
+      "competencia_insumos": "2002-08",
+      "dias_uteis": 22,
+      "fator_selic": "1.01443404",
+      "ipca15_percentual": "1.00",
+      "fator_ipca15": "1.0100",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.439014"
+    },
+    "2002-10": {
+      "competencia_insumos": "2002-09",
+      "dias_uteis": 21,
+      "fator_selic": "1.01381266",
+      "ipca15_percentual": "0.62",
+      "fator_ipca15": "1.0062",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.756575"
+    },
+    "2002-11": {
+      "competencia_insumos": "2002-10",
+      "dias_uteis": 23,
+      "fator_selic": "1.01645925",
+      "ipca15_percentual": "0.90",
+      "fator_ipca15": "1.0090",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.739272"
+    },
+    "2002-12": {
+      "competencia_insumos": "2002-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.01540931",
+      "ipca15_percentual": "2.08",
+      "fator_ipca15": "1.0208",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2003-01": {
+      "competencia_insumos": "2002-12",
+      "dias_uteis": 21,
+      "fator_selic": "1.01742449",
+      "ipca15_percentual": "3.05",
+      "fator_ipca15": "1.0305",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2003-02": {
+      "competencia_insumos": "2003-01",
+      "dias_uteis": 22,
+      "fator_selic": "1.01971266",
+      "ipca15_percentual": "1.98",
+      "fator_ipca15": "1.0198",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2003-03": {
+      "competencia_insumos": "2003-02",
+      "dias_uteis": 20,
+      "fator_selic": "1.01830380",
+      "ipca15_percentual": "2.19",
+      "fator_ipca15": "1.0219",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2003-04": {
+      "competencia_insumos": "2003-03",
+      "dias_uteis": 19,
+      "fator_selic": "1.01777019",
+      "ipca15_percentual": "1.14",
+      "fator_ipca15": "1.0114",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.629839"
+    },
+    "2003-05": {
+      "competencia_insumos": "2003-04",
+      "dias_uteis": 20,
+      "fator_selic": "1.01871595",
+      "ipca15_percentual": "1.14",
+      "fator_ipca15": "1.0114",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.723349"
+    },
+    "2003-06": {
+      "competencia_insumos": "2003-05",
+      "dias_uteis": 21,
+      "fator_selic": "1.01965352",
+      "ipca15_percentual": "0.85",
+      "fator_ipca15": "1.0085",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.105951"
+    },
+    "2003-07": {
+      "competencia_insumos": "2003-06",
+      "dias_uteis": 20,
+      "fator_selic": "1.01856679",
+      "ipca15_percentual": "0.22",
+      "fator_ipca15": "1.0022",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.633086"
+    },
+    "2003-08": {
+      "competencia_insumos": "2003-07",
+      "dias_uteis": 23,
+      "fator_selic": "1.02084247",
+      "ipca15_percentual": "-0.18",
+      "fator_ipca15": "0.9982",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "2.268330"
+    },
+    "2003-09": {
+      "competencia_insumos": "2003-08",
+      "dias_uteis": 21,
+      "fator_selic": "1.01774261",
+      "ipca15_percentual": "0.27",
+      "fator_ipca15": "1.0027",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.500210"
+    },
+    "2003-10": {
+      "competencia_insumos": "2003-09",
+      "dias_uteis": 22,
+      "fator_selic": "1.01679509",
+      "ipca15_percentual": "0.57",
+      "fator_ipca15": "1.0057",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.103221"
+    },
+    "2003-11": {
+      "competencia_insumos": "2003-10",
+      "dias_uteis": 23,
+      "fator_selic": "1.01642060",
+      "ipca15_percentual": "0.66",
+      "fator_ipca15": "1.0066",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.975621"
+    },
+    "2003-12": {
+      "competencia_insumos": "2003-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.01343531",
+      "ipca15_percentual": "0.17",
+      "fator_ipca15": "1.0017",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.171539"
+    },
+    "2004-01": {
+      "competencia_insumos": "2003-12",
+      "dias_uteis": 22,
+      "fator_selic": "1.01373250",
+      "ipca15_percentual": "0.46",
+      "fator_ipca15": "1.0046",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.909068"
+    },
+    "2004-02": {
+      "competencia_insumos": "2004-01",
+      "dias_uteis": 21,
+      "fator_selic": "1.01267551",
+      "ipca15_percentual": "0.68",
+      "fator_ipca15": "1.0068",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.583583"
+    },
+    "2004-03": {
+      "competencia_insumos": "2004-02",
+      "dias_uteis": 18,
+      "fator_selic": "1.01084394",
+      "ipca15_percentual": "0.90",
+      "fator_ipca15": "1.0090",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.182749"
+    },
+    "2004-04": {
+      "competencia_insumos": "2004-03",
+      "dias_uteis": 23,
+      "fator_selic": "1.01379123",
+      "ipca15_percentual": "0.40",
+      "fator_ipca15": "1.0040",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.975222"
+    },
+    "2004-05": {
+      "competencia_insumos": "2004-04",
+      "dias_uteis": 20,
+      "fator_selic": "1.01181850",
+      "ipca15_percentual": "0.21",
+      "fator_ipca15": "1.0021",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.969813"
+    },
+    "2004-06": {
+      "competencia_insumos": "2004-05",
+      "dias_uteis": 21,
+      "fator_selic": "1.01227805",
+      "ipca15_percentual": "0.54",
+      "fator_ipca15": "1.0054",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.684111"
+    },
+    "2004-07": {
+      "competencia_insumos": "2004-06",
+      "dias_uteis": 21,
+      "fator_selic": "1.01229889",
+      "ipca15_percentual": "0.56",
+      "fator_ipca15": "1.0056",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.666159"
+    },
+    "2004-08": {
+      "competencia_insumos": "2004-07",
+      "dias_uteis": 22,
+      "fator_selic": "1.01286889",
+      "ipca15_percentual": "0.93",
+      "fator_ipca15": "1.0093",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.353601"
+    },
+    "2004-09": {
+      "competencia_insumos": "2004-08",
+      "dias_uteis": 22,
+      "fator_selic": "1.01293586",
+      "ipca15_percentual": "0.79",
+      "fator_ipca15": "1.0079",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.499639"
+    },
+    "2004-10": {
+      "competencia_insumos": "2004-09",
+      "dias_uteis": 21,
+      "fator_selic": "1.01251327",
+      "ipca15_percentual": "0.49",
+      "fator_ipca15": "1.0049",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.757615"
+    },
+    "2004-11": {
+      "competencia_insumos": "2004-10",
+      "dias_uteis": 20,
+      "fator_selic": "1.01213224",
+      "ipca15_percentual": "0.32",
+      "fator_ipca15": "1.0032",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.890375"
+    },
+    "2004-12": {
+      "competencia_insumos": "2004-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.01250986",
+      "ipca15_percentual": "0.63",
+      "fator_ipca15": "1.0063",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.617098"
+    },
+    "2005-01": {
+      "competencia_insumos": "2004-12",
+      "dias_uteis": 23,
+      "fator_selic": "1.01482823",
+      "ipca15_percentual": "0.84",
+      "fator_ipca15": "1.0084",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.637468"
+    },
+    "2005-02": {
+      "competencia_insumos": "2005-01",
+      "dias_uteis": 21,
+      "fator_selic": "1.01383882",
+      "ipca15_percentual": "0.68",
+      "fator_ipca15": "1.0068",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.699128"
+    },
+    "2005-03": {
+      "competencia_insumos": "2005-02",
+      "dias_uteis": 18,
+      "fator_selic": "1.01218186",
+      "ipca15_percentual": "0.74",
+      "fator_ipca15": "1.0074",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.474673"
+    },
+    "2005-04": {
+      "competencia_insumos": "2005-03",
+      "dias_uteis": 22,
+      "fator_selic": "1.01528178",
+      "ipca15_percentual": "0.35",
+      "fator_ipca15": "1.0035",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.174069"
+    },
+    "2005-05": {
+      "competencia_insumos": "2005-04",
+      "dias_uteis": 20,
+      "fator_selic": "1.01411529",
+      "ipca15_percentual": "0.74",
+      "fator_ipca15": "1.0074",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.666596"
+    },
+    "2005-06": {
+      "competencia_insumos": "2005-05",
+      "dias_uteis": 21,
+      "fator_selic": "1.01503065",
+      "ipca15_percentual": "0.83",
+      "fator_ipca15": "1.0083",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.667525"
+    },
+    "2005-07": {
+      "competencia_insumos": "2005-06",
+      "dias_uteis": 22,
+      "fator_selic": "1.01585603",
+      "ipca15_percentual": "0.12",
+      "fator_ipca15": "1.0012",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.463846"
+    },
+    "2005-08": {
+      "competencia_insumos": "2005-07",
+      "dias_uteis": 21,
+      "fator_selic": "1.01511345",
+      "ipca15_percentual": "0.11",
+      "fator_ipca15": "1.0011",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.399805"
+    },
+    "2005-09": {
+      "competencia_insumos": "2005-08",
+      "dias_uteis": 23,
+      "fator_selic": "1.01658483",
+      "ipca15_percentual": "0.28",
+      "fator_ipca15": "1.0028",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.374634"
+    },
+    "2005-10": {
+      "competencia_insumos": "2005-09",
+      "dias_uteis": 21,
+      "fator_selic": "1.01503136",
+      "ipca15_percentual": "0.16",
+      "fator_ipca15": "1.0016",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.340990"
+    },
+    "2005-11": {
+      "competencia_insumos": "2005-10",
+      "dias_uteis": 20,
+      "fator_selic": "1.01407164",
+      "ipca15_percentual": "0.56",
+      "fator_ipca15": "1.0056",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.842446"
+    },
+    "2005-12": {
+      "competencia_insumos": "2005-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.01381041",
+      "ipca15_percentual": "0.78",
+      "fator_ipca15": "1.0078",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.596389"
+    },
+    "2006-01": {
+      "competencia_insumos": "2005-12",
+      "dias_uteis": 22,
+      "fator_selic": "1.01473572",
+      "ipca15_percentual": "0.38",
+      "fator_ipca15": "1.0038",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.089432"
+    },
+    "2006-02": {
+      "competencia_insumos": "2006-01",
+      "dias_uteis": 22,
+      "fator_selic": "1.01429317",
+      "ipca15_percentual": "0.51",
+      "fator_ipca15": "1.0051",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.914652"
+    },
+    "2006-03": {
+      "competencia_insumos": "2006-02",
+      "dias_uteis": 18,
+      "fator_selic": "1.01145063",
+      "ipca15_percentual": "0.52",
+      "fator_ipca15": "1.0052",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.621829"
+    },
+    "2006-04": {
+      "competencia_insumos": "2006-03",
+      "dias_uteis": 23,
+      "fator_selic": "1.01422302",
+      "ipca15_percentual": "0.37",
+      "fator_ipca15": "1.0037",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.048423"
+    },
+    "2006-05": {
+      "competencia_insumos": "2006-04",
+      "dias_uteis": 18,
+      "fator_selic": "1.01077878",
+      "ipca15_percentual": "0.17",
+      "fator_ipca15": "1.0017",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.906337"
+    },
+    "2006-06": {
+      "competencia_insumos": "2006-05",
+      "dias_uteis": 22,
+      "fator_selic": "1.01281366",
+      "ipca15_percentual": "0.27",
+      "fator_ipca15": "1.0027",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.008643"
+    },
+    "2006-07": {
+      "competencia_insumos": "2006-06",
+      "dias_uteis": 21,
+      "fator_selic": "1.01184394",
+      "ipca15_percentual": "-0.15",
+      "fator_ipca15": "0.9985",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.336399"
+    },
+    "2006-08": {
+      "competencia_insumos": "2006-07",
+      "dias_uteis": 21,
+      "fator_selic": "1.01169966",
+      "ipca15_percentual": "-0.02",
+      "fator_ipca15": "0.9998",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.190204"
+    },
+    "2006-09": {
+      "competencia_insumos": "2006-08",
+      "dias_uteis": 23,
+      "fator_selic": "1.01256265",
+      "ipca15_percentual": "0.19",
+      "fator_ipca15": "1.0019",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.064243"
+    },
+    "2006-10": {
+      "competencia_insumos": "2006-09",
+      "dias_uteis": 20,
+      "fator_selic": "1.01057310",
+      "ipca15_percentual": "0.05",
+      "fator_ipca15": "1.0005",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.006807"
+    },
+    "2006-11": {
+      "competencia_insumos": "2006-10",
+      "dias_uteis": 21,
+      "fator_selic": "1.01094244",
+      "ipca15_percentual": "0.29",
+      "fator_ipca15": "1.0029",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.801918"
+    },
+    "2006-12": {
+      "competencia_insumos": "2006-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.01020605",
+      "ipca15_percentual": "0.37",
+      "fator_ipca15": "1.0037",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.648207"
+    },
+    "2007-01": {
+      "competencia_insumos": "2006-12",
+      "dias_uteis": 20,
+      "fator_selic": "1.00987886",
+      "ipca15_percentual": "0.35",
+      "fator_ipca15": "1.0035",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.635661"
+    },
+    "2007-02": {
+      "competencia_insumos": "2007-01",
+      "dias_uteis": 22,
+      "fator_selic": "1.01082803",
+      "ipca15_percentual": "0.52",
+      "fator_ipca15": "1.0052",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.559892"
+    },
+    "2007-03": {
+      "competencia_insumos": "2007-02",
+      "dias_uteis": 18,
+      "fator_selic": "1.00872484",
+      "ipca15_percentual": "0.46",
+      "fator_ipca15": "1.0046",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.410595"
+    },
+    "2007-04": {
+      "competencia_insumos": "2007-03",
+      "dias_uteis": 22,
+      "fator_selic": "1.01052223",
+      "ipca15_percentual": "0.41",
+      "fator_ipca15": "1.0041",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.639601"
+    },
+    "2007-05": {
+      "competencia_insumos": "2007-04",
+      "dias_uteis": 20,
+      "fator_selic": "1.00944823",
+      "ipca15_percentual": "0.22",
+      "fator_ipca15": "1.0022",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.723232"
+    },
+    "2007-06": {
+      "competencia_insumos": "2007-05",
+      "dias_uteis": 22,
+      "fator_selic": "1.01028077",
+      "ipca15_percentual": "0.26",
+      "fator_ipca15": "1.0026",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.766085"
+    },
+    "2007-07": {
+      "competencia_insumos": "2007-06",
+      "dias_uteis": 20,
+      "fator_selic": "1.00905629",
+      "ipca15_percentual": "0.29",
+      "fator_ipca15": "1.0029",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.613849"
+    },
+    "2007-08": {
+      "competencia_insumos": "2007-07",
+      "dias_uteis": 22,
+      "fator_selic": "1.00972633",
+      "ipca15_percentual": "0.24",
+      "fator_ipca15": "1.0024",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.730879"
+    },
+    "2007-09": {
+      "competencia_insumos": "2007-08",
+      "dias_uteis": 23,
+      "fator_selic": "1.00992635",
+      "ipca15_percentual": "0.42",
+      "fator_ipca15": "1.0042",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.570240"
+    },
+    "2007-10": {
+      "competencia_insumos": "2007-09",
+      "dias_uteis": 19,
+      "fator_selic": "1.00804961",
+      "ipca15_percentual": "0.29",
+      "fator_ipca15": "1.0029",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.513472"
+    },
+    "2007-11": {
+      "competencia_insumos": "2007-10",
+      "dias_uteis": 22,
+      "fator_selic": "1.00929493",
+      "ipca15_percentual": "0.24",
+      "fator_ipca15": "1.0024",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.687842"
+    },
+    "2007-12": {
+      "competencia_insumos": "2007-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.00844670",
+      "ipca15_percentual": "0.23",
+      "fator_ipca15": "1.0023",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.613260"
+    },
+    "2008-01": {
+      "competencia_insumos": "2007-12",
+      "dias_uteis": 20,
+      "fator_selic": "1.00844670",
+      "ipca15_percentual": "0.70",
+      "fator_ipca15": "1.0070",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.143664"
+    },
+    "2008-02": {
+      "competencia_insumos": "2008-01",
+      "dias_uteis": 22,
+      "fator_selic": "1.00929384",
+      "ipca15_percentual": "0.70",
+      "fator_ipca15": "1.0070",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.227789"
+    },
+    "2008-03": {
+      "competencia_insumos": "2008-02",
+      "dias_uteis": 19,
+      "fator_selic": "1.00802232",
+      "ipca15_percentual": "0.64",
+      "fator_ipca15": "1.0064",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.161200"
+    },
+    "2008-04": {
+      "competencia_insumos": "2008-03",
+      "dias_uteis": 20,
+      "fator_selic": "1.00844598",
+      "ipca15_percentual": "0.23",
+      "fator_ipca15": "1.0023",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.613188"
+    },
+    "2008-05": {
+      "competencia_insumos": "2008-04",
+      "dias_uteis": 21,
+      "fator_selic": "1.00901426",
+      "ipca15_percentual": "0.59",
+      "fator_ipca15": "1.0059",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.309599"
+    },
+    "2008-06": {
+      "competencia_insumos": "2008-05",
+      "dias_uteis": 20,
+      "fator_selic": "1.00876783",
+      "ipca15_percentual": "0.56",
+      "fator_ipca15": "1.0056",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.315019"
+    },
+    "2008-07": {
+      "competencia_insumos": "2008-06",
+      "dias_uteis": 21,
+      "fator_selic": "1.00955592",
+      "ipca15_percentual": "0.90",
+      "fator_ipca15": "1.0090",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.055096"
+    },
+    "2008-08": {
+      "competencia_insumos": "2008-07",
+      "dias_uteis": 23,
+      "fator_selic": "1.01069671",
+      "ipca15_percentual": "0.63",
+      "fator_ipca15": "1.0063",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.436918"
+    },
+    "2008-09": {
+      "competencia_insumos": "2008-08",
+      "dias_uteis": 21,
+      "fator_selic": "1.01017657",
+      "ipca15_percentual": "0.35",
+      "fator_ipca15": "1.0035",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.665328"
+    },
+    "2008-10": {
+      "competencia_insumos": "2008-09",
+      "dias_uteis": 22,
+      "fator_selic": "1.01103091",
+      "ipca15_percentual": "0.26",
+      "fator_ipca15": "1.0026",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.840905"
+    },
+    "2008-11": {
+      "competencia_insumos": "2008-10",
+      "dias_uteis": 23,
+      "fator_selic": "1.01175877",
+      "ipca15_percentual": "0.30",
+      "fator_ipca15": "1.0030",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.873257"
+    },
+    "2008-12": {
+      "competencia_insumos": "2008-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.01019969",
+      "ipca15_percentual": "0.49",
+      "fator_ipca15": "1.0049",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.527385"
+    },
+    "2009-01": {
+      "competencia_insumos": "2008-12",
+      "dias_uteis": 22,
+      "fator_selic": "1.01124093",
+      "ipca15_percentual": "0.29",
+      "fator_ipca15": "1.0029",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.831681"
+    },
+    "2009-02": {
+      "competencia_insumos": "2009-01",
+      "dias_uteis": 21,
+      "fator_selic": "1.01047807",
+      "ipca15_percentual": "0.40",
+      "fator_ipca15": "1.0040",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.645226"
+    },
+    "2009-03": {
+      "competencia_insumos": "2009-02",
+      "dias_uteis": 18,
+      "fator_selic": "1.00855086",
+      "ipca15_percentual": "0.63",
+      "fator_ipca15": "1.0063",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.223677"
+    },
+    "2009-04": {
+      "competencia_insumos": "2009-03",
+      "dias_uteis": 22,
+      "fator_selic": "1.00970884",
+      "ipca15_percentual": "0.11",
+      "fator_ipca15": "1.0011",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.859938"
+    },
+    "2009-05": {
+      "competencia_insumos": "2009-04",
+      "dias_uteis": 20,
+      "fator_selic": "1.00839567",
+      "ipca15_percentual": "0.36",
+      "fator_ipca15": "1.0036",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.477847"
+    },
+    "2009-06": {
+      "competencia_insumos": "2009-05",
+      "dias_uteis": 20,
+      "fator_selic": "1.00770893",
+      "ipca15_percentual": "0.59",
+      "fator_ipca15": "1.0059",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.179832"
+    },
+    "2009-07": {
+      "competencia_insumos": "2009-06",
+      "dias_uteis": 21,
+      "fator_selic": "1.00762182",
+      "ipca15_percentual": "0.38",
+      "fator_ipca15": "1.0038",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.380735"
+    },
+    "2009-08": {
+      "competencia_insumos": "2009-07",
+      "dias_uteis": 23,
+      "fator_selic": "1.00790143",
+      "ipca15_percentual": "0.22",
+      "fator_ipca15": "1.0022",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.568891"
+    },
+    "2009-09": {
+      "competencia_insumos": "2009-08",
+      "dias_uteis": 21,
+      "fator_selic": "1.00693749",
+      "ipca15_percentual": "0.23",
+      "fator_ipca15": "1.0023",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.462685"
+    },
+    "2009-10": {
+      "competencia_insumos": "2009-09",
+      "dias_uteis": 21,
+      "fator_selic": "1.00693749",
+      "ipca15_percentual": "0.19",
+      "fator_ipca15": "1.0019",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.502794"
+    },
+    "2009-11": {
+      "competencia_insumos": "2009-10",
+      "dias_uteis": 21,
+      "fator_selic": "1.00693749",
+      "ipca15_percentual": "0.18",
+      "fator_ipca15": "1.0018",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.512826"
+    },
+    "2009-12": {
+      "competencia_insumos": "2009-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.00660604",
+      "ipca15_percentual": "0.44",
+      "fator_ipca15": "1.0044",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.219638"
+    },
+    "2010-01": {
+      "competencia_insumos": "2009-12",
+      "dias_uteis": 22,
+      "fator_selic": "1.00726867",
+      "ipca15_percentual": "0.38",
+      "fator_ipca15": "1.0038",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.345554"
+    },
+    "2010-02": {
+      "competencia_insumos": "2010-01",
+      "dias_uteis": 20,
+      "fator_selic": "1.00660567",
+      "ipca15_percentual": "0.52",
+      "fator_ipca15": "1.0052",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.139840"
+    },
+    "2010-03": {
+      "competencia_insumos": "2010-02",
+      "dias_uteis": 18,
+      "fator_selic": "1.00594348",
+      "ipca15_percentual": "0.94",
+      "fator_ipca15": "1.0094",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2010-04": {
+      "competencia_insumos": "2010-03",
+      "dias_uteis": 23,
+      "fator_selic": "1.00760070",
+      "ipca15_percentual": "0.55",
+      "fator_ipca15": "1.0055",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.208921"
+    },
+    "2010-05": {
+      "competencia_insumos": "2010-04",
+      "dias_uteis": 20,
+      "fator_selic": "1.00665913",
+      "ipca15_percentual": "0.48",
+      "fator_ipca15": "1.0048",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.185025"
+    },
+    "2010-06": {
+      "competencia_insumos": "2010-05",
+      "dias_uteis": 21,
+      "fator_selic": "1.00751364",
+      "ipca15_percentual": "0.63",
+      "fator_ipca15": "1.0063",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.120604"
+    },
+    "2010-07": {
+      "competencia_insumos": "2010-06",
+      "dias_uteis": 21,
+      "fator_selic": "1.00792576",
+      "ipca15_percentual": "0.19",
+      "fator_ipca15": "1.0019",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.601433"
+    },
+    "2010-08": {
+      "competencia_insumos": "2010-07",
+      "dias_uteis": 22,
+      "fator_selic": "1.00861030",
+      "ipca15_percentual": "-0.09",
+      "fator_ipca15": "0.9991",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.951887"
+    },
+    "2010-09": {
+      "competencia_insumos": "2010-08",
+      "dias_uteis": 22,
+      "fator_selic": "1.00888210",
+      "ipca15_percentual": "-0.05",
+      "fator_ipca15": "0.9995",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.938679"
+    },
+    "2010-10": {
+      "competencia_insumos": "2010-09",
+      "dias_uteis": 21,
+      "fator_selic": "1.00847666",
+      "ipca15_percentual": "0.31",
+      "fator_ipca15": "1.0031",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.536004"
+    },
+    "2010-11": {
+      "competencia_insumos": "2010-10",
+      "dias_uteis": 20,
+      "fator_selic": "1.00807138",
+      "ipca15_percentual": "0.62",
+      "fator_ipca15": "1.0062",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.185985"
+    },
+    "2010-12": {
+      "competencia_insumos": "2010-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.00807138",
+      "ipca15_percentual": "0.86",
+      "fator_ipca15": "1.0086",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2011-01": {
+      "competencia_insumos": "2010-12",
+      "dias_uteis": 23,
+      "fator_selic": "1.00928879",
+      "ipca15_percentual": "0.69",
+      "fator_ipca15": "1.0069",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.237242"
+    },
+    "2011-02": {
+      "competencia_insumos": "2011-01",
+      "dias_uteis": 21,
+      "fator_selic": "1.00862320",
+      "ipca15_percentual": "0.76",
+      "fator_ipca15": "1.0076",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.101548"
+    },
+    "2011-03": {
+      "competencia_insumos": "2011-02",
+      "dias_uteis": 20,
+      "fator_selic": "1.00843908",
+      "ipca15_percentual": "0.97",
+      "fator_ipca15": "1.0097",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2011-04": {
+      "competencia_insumos": "2011-03",
+      "dias_uteis": 21,
+      "fator_selic": "1.00920458",
+      "ipca15_percentual": "0.60",
+      "fator_ipca15": "1.0060",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.318547"
+    },
+    "2011-05": {
+      "competencia_insumos": "2011-04",
+      "dias_uteis": 19,
+      "fator_selic": "1.00840155",
+      "ipca15_percentual": "0.77",
+      "fator_ipca15": "1.0077",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.069619"
+    },
+    "2011-06": {
+      "competencia_insumos": "2011-05",
+      "dias_uteis": 22,
+      "fator_selic": "1.00987985",
+      "ipca15_percentual": "0.70",
+      "fator_ipca15": "1.0070",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.285983"
+    },
+    "2011-07": {
+      "competencia_insumos": "2011-06",
+      "dias_uteis": 21,
+      "fator_selic": "1.00956276",
+      "ipca15_percentual": "0.23",
+      "fator_ipca15": "1.0023",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.724609"
+    },
+    "2011-08": {
+      "competencia_insumos": "2011-07",
+      "dias_uteis": 21,
+      "fator_selic": "1.00967885",
+      "ipca15_percentual": "0.10",
+      "fator_ipca15": "1.0010",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.867018"
+    },
+    "2011-09": {
+      "competencia_insumos": "2011-08",
+      "dias_uteis": 23,
+      "fator_selic": "1.01074063",
+      "ipca15_percentual": "0.27",
+      "fator_ipca15": "1.0027",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.801898"
+    },
+    "2011-10": {
+      "competencia_insumos": "2011-09",
+      "dias_uteis": 21,
+      "fator_selic": "1.00941761",
+      "ipca15_percentual": "0.53",
+      "fator_ipca15": "1.0053",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.409590"
+    },
+    "2011-11": {
+      "competencia_insumos": "2011-10",
+      "dias_uteis": 20,
+      "fator_selic": "1.00881955",
+      "ipca15_percentual": "0.42",
+      "fator_ipca15": "1.0042",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.460023"
+    },
+    "2011-12": {
+      "competencia_insumos": "2011-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.00860477",
+      "ipca15_percentual": "0.46",
+      "fator_ipca15": "1.0046",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.398643"
+    },
+    "2012-01": {
+      "competencia_insumos": "2011-12",
+      "dias_uteis": 22,
+      "fator_selic": "1.00907328",
+      "ipca15_percentual": "0.56",
+      "fator_ipca15": "1.0056",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.345394"
+    },
+    "2012-02": {
+      "competencia_insumos": "2012-01",
+      "dias_uteis": 22,
+      "fator_selic": "1.00891016",
+      "ipca15_percentual": "0.65",
+      "fator_ipca15": "1.0065",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.239460"
+    },
+    "2012-03": {
+      "competencia_insumos": "2012-02",
+      "dias_uteis": 19,
+      "fator_selic": "1.00748773",
+      "ipca15_percentual": "0.53",
+      "fator_ipca15": "1.0053",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.217620"
+    },
+    "2012-04": {
+      "competencia_insumos": "2012-03",
+      "dias_uteis": 22,
+      "fator_selic": "1.00821139",
+      "ipca15_percentual": "0.25",
+      "fator_ipca15": "1.0025",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.569715"
+    },
+    "2012-05": {
+      "competencia_insumos": "2012-04",
+      "dias_uteis": 20,
+      "fator_selic": "1.00711876",
+      "ipca15_percentual": "0.43",
+      "fator_ipca15": "1.0043",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.280669"
+    },
+    "2012-06": {
+      "competencia_insumos": "2012-05",
+      "dias_uteis": 22,
+      "fator_selic": "1.00744724",
+      "ipca15_percentual": "0.51",
+      "fator_ipca15": "1.0051",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.233533"
+    },
+    "2012-07": {
+      "competencia_insumos": "2012-06",
+      "dias_uteis": 20,
+      "fator_selic": "1.00641503",
+      "ipca15_percentual": "0.18",
+      "fator_ipca15": "1.0018",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.460674"
+    },
+    "2012-08": {
+      "competencia_insumos": "2012-07",
+      "dias_uteis": 22,
+      "fator_selic": "1.00679965",
+      "ipca15_percentual": "0.33",
+      "fator_ipca15": "1.0033",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.348814"
+    },
+    "2012-09": {
+      "competencia_insumos": "2012-08",
+      "dias_uteis": 23,
+      "fator_selic": "1.00691811",
+      "ipca15_percentual": "0.39",
+      "fator_ipca15": "1.0039",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.300639"
+    },
+    "2012-10": {
+      "competencia_insumos": "2012-09",
+      "dias_uteis": 19,
+      "fator_selic": "1.00538995",
+      "ipca15_percentual": "0.48",
+      "fator_ipca15": "1.0048",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.058713"
+    },
+    "2012-11": {
+      "competencia_insumos": "2012-10",
+      "dias_uteis": 22,
+      "fator_selic": "1.00611339",
+      "ipca15_percentual": "0.65",
+      "fator_ipca15": "1.0065",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2012-12": {
+      "competencia_insumos": "2012-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.00548846",
+      "ipca15_percentual": "0.54",
+      "fator_ipca15": "1.0054",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.008798"
+    },
+    "2013-01": {
+      "competencia_insumos": "2012-12",
+      "dias_uteis": 20,
+      "fator_selic": "1.00550152",
+      "ipca15_percentual": "0.69",
+      "fator_ipca15": "1.0069",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2013-02": {
+      "competencia_insumos": "2013-01",
+      "dias_uteis": 22,
+      "fator_selic": "1.00601440",
+      "ipca15_percentual": "0.88",
+      "fator_ipca15": "1.0088",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2013-03": {
+      "competencia_insumos": "2013-02",
+      "dias_uteis": 18,
+      "fator_selic": "1.00492750",
+      "ipca15_percentual": "0.68",
+      "fator_ipca15": "1.0068",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2013-04": {
+      "competencia_insumos": "2013-03",
+      "dias_uteis": 20,
+      "fator_selic": "1.00549404",
+      "ipca15_percentual": "0.49",
+      "fator_ipca15": "1.0049",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.059114"
+    },
+    "2013-05": {
+      "competencia_insumos": "2013-04",
+      "dias_uteis": 22,
+      "fator_selic": "1.00613646",
+      "ipca15_percentual": "0.51",
+      "fator_ipca15": "1.0051",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.103120"
+    },
+    "2013-06": {
+      "competencia_insumos": "2013-05",
+      "dias_uteis": 21,
+      "fator_selic": "1.00598536",
+      "ipca15_percentual": "0.46",
+      "fator_ipca15": "1.0046",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.137902"
+    },
+    "2013-07": {
+      "competencia_insumos": "2013-06",
+      "dias_uteis": 20,
+      "fator_selic": "1.00605273",
+      "ipca15_percentual": "0.38",
+      "fator_ipca15": "1.0038",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.224420"
+    },
+    "2013-08": {
+      "competencia_insumos": "2013-07",
+      "dias_uteis": 23,
+      "fator_selic": "1.00724092",
+      "ipca15_percentual": "0.07",
+      "fator_ipca15": "1.0007",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.653634"
+    },
+    "2013-09": {
+      "competencia_insumos": "2013-08",
+      "dias_uteis": 22,
+      "fator_selic": "1.00710315",
+      "ipca15_percentual": "0.16",
+      "fator_ipca15": "1.0016",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.549436"
+    },
+    "2013-10": {
+      "competencia_insumos": "2013-09",
+      "dias_uteis": 21,
+      "fator_selic": "1.00713029",
+      "ipca15_percentual": "0.27",
+      "fator_ipca15": "1.0027",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.441836"
+    },
+    "2013-11": {
+      "competencia_insumos": "2013-10",
+      "dias_uteis": 23,
+      "fator_selic": "1.00810510",
+      "ipca15_percentual": "0.48",
+      "fator_ipca15": "1.0048",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.328931"
+    },
+    "2013-12": {
+      "competencia_insumos": "2013-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.00719208",
+      "ipca15_percentual": "0.57",
+      "fator_ipca15": "1.0057",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.148362"
+    },
+    "2014-01": {
+      "competencia_insumos": "2013-12",
+      "dias_uteis": 21,
+      "fator_selic": "1.00789746",
+      "ipca15_percentual": "0.75",
+      "fator_ipca15": "1.0075",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.039450"
+    },
+    "2014-02": {
+      "competencia_insumos": "2014-01",
+      "dias_uteis": 22,
+      "fator_selic": "1.00849344",
+      "ipca15_percentual": "0.67",
+      "fator_ipca15": "1.0067",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.178150"
+    },
+    "2014-03": {
+      "competencia_insumos": "2014-02",
+      "dias_uteis": 20,
+      "fator_selic": "1.00790146",
+      "ipca15_percentual": "0.70",
+      "fator_ipca15": "1.0070",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.089519"
+    },
+    "2014-04": {
+      "competencia_insumos": "2014-03",
+      "dias_uteis": 19,
+      "fator_selic": "1.00765957",
+      "ipca15_percentual": "0.73",
+      "fator_ipca15": "1.0073",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.035696"
+    },
+    "2014-05": {
+      "competencia_insumos": "2014-04",
+      "dias_uteis": 20,
+      "fator_selic": "1.00822668",
+      "ipca15_percentual": "0.78",
+      "fator_ipca15": "1.0078",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.042338"
+    },
+    "2014-06": {
+      "competencia_insumos": "2014-05",
+      "dias_uteis": 21,
+      "fator_selic": "1.00865873",
+      "ipca15_percentual": "0.58",
+      "fator_ipca15": "1.0058",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.284224"
+    },
+    "2014-07": {
+      "competencia_insumos": "2014-06",
+      "dias_uteis": 20,
+      "fator_selic": "1.00824472",
+      "ipca15_percentual": "0.47",
+      "fator_ipca15": "1.0047",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.352814"
+    },
+    "2014-08": {
+      "competencia_insumos": "2014-07",
+      "dias_uteis": 23,
+      "fator_selic": "1.00948727",
+      "ipca15_percentual": "0.17",
+      "fator_ipca15": "1.0017",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.777405"
+    },
+    "2014-09": {
+      "competencia_insumos": "2014-08",
+      "dias_uteis": 21,
+      "fator_selic": "1.00865982",
+      "ipca15_percentual": "0.14",
+      "fator_ipca15": "1.0014",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.724967"
+    },
+    "2014-10": {
+      "competencia_insumos": "2014-09",
+      "dias_uteis": 22,
+      "fator_selic": "1.00907292",
+      "ipca15_percentual": "0.39",
+      "fator_ipca15": "1.0039",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.515282"
+    },
+    "2014-11": {
+      "competencia_insumos": "2014-10",
+      "dias_uteis": 23,
+      "fator_selic": "1.00950532",
+      "ipca15_percentual": "0.48",
+      "fator_ipca15": "1.0048",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.468284"
+    },
+    "2014-12": {
+      "competencia_insumos": "2014-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.00842493",
+      "ipca15_percentual": "0.38",
+      "fator_ipca15": "1.0038",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.460742"
+    },
+    "2015-01": {
+      "competencia_insumos": "2014-12",
+      "dias_uteis": 22,
+      "fator_selic": "1.00961295",
+      "ipca15_percentual": "0.79",
+      "fator_ipca15": "1.0079",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.169952"
+    },
+    "2015-02": {
+      "competencia_insumos": "2015-01",
+      "dias_uteis": 21,
+      "fator_selic": "1.00935075",
+      "ipca15_percentual": "0.89",
+      "fator_ipca15": "1.0089",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.044677"
+    },
+    "2015-03": {
+      "competencia_insumos": "2015-02",
+      "dias_uteis": 18,
+      "fator_selic": "1.00822411",
+      "ipca15_percentual": "1.33",
+      "fator_ipca15": "1.0133",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2015-04": {
+      "competencia_insumos": "2015-03",
+      "dias_uteis": 22,
+      "fator_selic": "1.01039967",
+      "ipca15_percentual": "1.24",
+      "fator_ipca15": "1.0124",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2015-05": {
+      "competencia_insumos": "2015-04",
+      "dias_uteis": 20,
+      "fator_selic": "1.00951792",
+      "ipca15_percentual": "1.07",
+      "fator_ipca15": "1.0107",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2015-06": {
+      "competencia_insumos": "2015-05",
+      "dias_uteis": 20,
+      "fator_selic": "1.00985322",
+      "ipca15_percentual": "0.60",
+      "fator_ipca15": "1.0060",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.383024"
+    },
+    "2015-07": {
+      "competencia_insumos": "2015-06",
+      "dias_uteis": 21,
+      "fator_selic": "1.01066676",
+      "ipca15_percentual": "0.99",
+      "fator_ipca15": "1.0099",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.075924"
+    },
+    "2015-08": {
+      "competencia_insumos": "2015-07",
+      "dias_uteis": 23,
+      "fator_selic": "1.01178198",
+      "ipca15_percentual": "0.59",
+      "fator_ipca15": "1.0059",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.584748"
+    },
+    "2015-09": {
+      "competencia_insumos": "2015-08",
+      "dias_uteis": 21,
+      "fator_selic": "1.01108965",
+      "ipca15_percentual": "0.43",
+      "fator_ipca15": "1.0043",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.676058"
+    },
+    "2015-10": {
+      "competencia_insumos": "2015-09",
+      "dias_uteis": 21,
+      "fator_selic": "1.01108965",
+      "ipca15_percentual": "0.39",
+      "fator_ipca15": "1.0039",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.716172"
+    },
+    "2015-11": {
+      "competencia_insumos": "2015-10",
+      "dias_uteis": 21,
+      "fator_selic": "1.01108965",
+      "ipca15_percentual": "0.66",
+      "fator_ipca15": "1.0066",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.446021"
+    },
+    "2015-12": {
+      "competencia_insumos": "2015-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.01055880",
+      "ipca15_percentual": "0.85",
+      "fator_ipca15": "1.0085",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.204145"
+    },
+    "2016-01": {
+      "competencia_insumos": "2015-12",
+      "dias_uteis": 22,
+      "fator_selic": "1.01162079",
+      "ipca15_percentual": "1.18",
+      "fator_ipca15": "1.0118",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2016-02": {
+      "competencia_insumos": "2016-01",
+      "dias_uteis": 20,
+      "fator_selic": "1.01055880",
+      "ipca15_percentual": "0.92",
+      "fator_ipca15": "1.0092",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.134641"
+    },
+    "2016-03": {
+      "competencia_insumos": "2016-02",
+      "dias_uteis": 19,
+      "fator_selic": "1.01002822",
+      "ipca15_percentual": "1.42",
+      "fator_ipca15": "1.0142",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2016-04": {
+      "competencia_insumos": "2016-03",
+      "dias_uteis": 22,
+      "fator_selic": "1.01162079",
+      "ipca15_percentual": "0.43",
+      "fator_ipca15": "1.0043",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.728945"
+    },
+    "2016-05": {
+      "competencia_insumos": "2016-04",
+      "dias_uteis": 20,
+      "fator_selic": "1.01055880",
+      "ipca15_percentual": "0.51",
+      "fator_ipca15": "1.0051",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.543110"
+    },
+    "2016-06": {
+      "competencia_insumos": "2016-05",
+      "dias_uteis": 21,
+      "fator_selic": "1.01108965",
+      "ipca15_percentual": "0.86",
+      "fator_ipca15": "1.0086",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.246842"
+    },
+    "2016-07": {
+      "competencia_insumos": "2016-06",
+      "dias_uteis": 22,
+      "fator_selic": "1.01162079",
+      "ipca15_percentual": "0.40",
+      "fator_ipca15": "1.0040",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.759043"
+    },
+    "2016-08": {
+      "competencia_insumos": "2016-07",
+      "dias_uteis": 21,
+      "fator_selic": "1.01108965",
+      "ipca15_percentual": "0.54",
+      "fator_ipca15": "1.0054",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.565909"
+    },
+    "2016-09": {
+      "competencia_insumos": "2016-08",
+      "dias_uteis": 23,
+      "fator_selic": "1.01215220",
+      "ipca15_percentual": "0.45",
+      "fator_ipca15": "1.0045",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.761792"
+    },
+    "2016-10": {
+      "competencia_insumos": "2016-09",
+      "dias_uteis": 21,
+      "fator_selic": "1.01108965",
+      "ipca15_percentual": "0.23",
+      "fator_ipca15": "1.0023",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.876948"
+    },
+    "2016-11": {
+      "competencia_insumos": "2016-10",
+      "dias_uteis": 20,
+      "fator_selic": "1.01048842",
+      "ipca15_percentual": "0.19",
+      "fator_ipca15": "1.0019",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.857213"
+    },
+    "2016-12": {
+      "competencia_insumos": "2016-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.01038286",
+      "ipca15_percentual": "0.26",
+      "fator_ipca15": "1.0026",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.776268"
+    },
+    "2017-01": {
+      "competencia_insumos": "2016-12",
+      "dias_uteis": 22,
+      "fator_selic": "1.01123315",
+      "ipca15_percentual": "0.19",
+      "fator_ipca15": "1.0019",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.931545"
+    },
+    "2017-02": {
+      "competencia_insumos": "2017-01",
+      "dias_uteis": 22,
+      "fator_selic": "1.01086120",
+      "ipca15_percentual": "0.31",
+      "fator_ipca15": "1.0031",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.773721"
+    },
+    "2017-03": {
+      "competencia_insumos": "2017-02",
+      "dias_uteis": 18,
+      "fator_selic": "1.00865084",
+      "ipca15_percentual": "0.54",
+      "fator_ipca15": "1.0054",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.323338"
+    },
+    "2017-04": {
+      "competencia_insumos": "2017-03",
+      "dias_uteis": 23,
+      "fator_selic": "1.01052056",
+      "ipca15_percentual": "0.15",
+      "fator_ipca15": "1.0015",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.900705"
+    },
+    "2017-05": {
+      "competencia_insumos": "2017-04",
+      "dias_uteis": 18,
+      "fator_selic": "1.00786581",
+      "ipca15_percentual": "0.21",
+      "fator_ipca15": "1.0021",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.575373"
+    },
+    "2017-06": {
+      "competencia_insumos": "2017-05",
+      "dias_uteis": 22,
+      "fator_selic": "1.00927132",
+      "ipca15_percentual": "0.24",
+      "fator_ipca15": "1.0024",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.685487"
+    },
+    "2017-07": {
+      "competencia_insumos": "2017-06",
+      "dias_uteis": 21,
+      "fator_selic": "1.00808869",
+      "ipca15_percentual": "0.16",
+      "fator_ipca15": "1.0016",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.647832"
+    },
+    "2017-08": {
+      "competencia_insumos": "2017-07",
+      "dias_uteis": 21,
+      "fator_selic": "1.00797923",
+      "ipca15_percentual": "-0.18",
+      "fator_ipca15": "0.9982",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.979686"
+    },
+    "2017-09": {
+      "competencia_insumos": "2017-08",
+      "dias_uteis": 23,
+      "fator_selic": "1.00802289",
+      "ipca15_percentual": "0.35",
+      "fator_ipca15": "1.0035",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.450712"
+    },
+    "2017-10": {
+      "competencia_insumos": "2017-09",
+      "dias_uteis": 20,
+      "fator_selic": "1.00638460",
+      "ipca15_percentual": "0.11",
+      "fator_ipca15": "1.0011",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.527879"
+    },
+    "2017-11": {
+      "competencia_insumos": "2017-10",
+      "dias_uteis": 21,
+      "fator_selic": "1.00643930",
+      "ipca15_percentual": "0.34",
+      "fator_ipca15": "1.0034",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.302900"
+    },
+    "2017-12": {
+      "competencia_insumos": "2017-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.00568188",
+      "ipca15_percentual": "0.32",
+      "fator_ipca15": "1.0032",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.247396"
+    },
+    "2018-01": {
+      "competencia_insumos": "2017-12",
+      "dias_uteis": 20,
+      "fator_selic": "1.00538400",
+      "ipca15_percentual": "0.35",
+      "fator_ipca15": "1.0035",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.187743"
+    },
+    "2018-02": {
+      "competencia_insumos": "2018-01",
+      "dias_uteis": 22,
+      "fator_selic": "1.00584205",
+      "ipca15_percentual": "0.39",
+      "fator_ipca15": "1.0039",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.193451"
+    },
+    "2018-03": {
+      "competencia_insumos": "2018-02",
+      "dias_uteis": 18,
+      "fator_selic": "1.00465602",
+      "ipca15_percentual": "0.38",
+      "fator_ipca15": "1.0038",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.085278"
+    },
+    "2018-04": {
+      "competencia_insumos": "2018-03",
+      "dias_uteis": 21,
+      "fator_selic": "1.00532345",
+      "ipca15_percentual": "0.10",
+      "fator_ipca15": "1.0010",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.431913"
+    },
+    "2018-05": {
+      "competencia_insumos": "2018-04",
+      "dias_uteis": 21,
+      "fator_selic": "1.00518295",
+      "ipca15_percentual": "0.21",
+      "fator_ipca15": "1.0021",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.307649"
+    },
+    "2018-06": {
+      "competencia_insumos": "2018-05",
+      "dias_uteis": 21,
+      "fator_selic": "1.00518295",
+      "ipca15_percentual": "0.14",
+      "fator_ipca15": "1.0014",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.377766"
+    },
+    "2018-07": {
+      "competencia_insumos": "2018-06",
+      "dias_uteis": 21,
+      "fator_selic": "1.00518295",
+      "ipca15_percentual": "1.11",
+      "fator_ipca15": "1.0111",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2018-08": {
+      "competencia_insumos": "2018-07",
+      "dias_uteis": 22,
+      "fator_selic": "1.00543042",
+      "ipca15_percentual": "0.64",
+      "fator_ipca15": "1.0064",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2018-09": {
+      "competencia_insumos": "2018-08",
+      "dias_uteis": 23,
+      "fator_selic": "1.00567796",
+      "ipca15_percentual": "0.13",
+      "fator_ipca15": "1.0013",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.437228"
+    },
+    "2018-10": {
+      "competencia_insumos": "2018-09",
+      "dias_uteis": 19,
+      "fator_selic": "1.00468818",
+      "ipca15_percentual": "0.09",
+      "fator_ipca15": "1.0009",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.378477"
+    },
+    "2018-11": {
+      "competencia_insumos": "2018-10",
+      "dias_uteis": 22,
+      "fator_selic": "1.00543042",
+      "ipca15_percentual": "0.58",
+      "fator_ipca15": "1.0058",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2018-12": {
+      "competencia_insumos": "2018-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.00493553",
+      "ipca15_percentual": "0.19",
+      "fator_ipca15": "1.0019",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.302977"
+    },
+    "2019-01": {
+      "competencia_insumos": "2018-12",
+      "dias_uteis": 20,
+      "fator_selic": "1.00493553",
+      "ipca15_percentual": "-0.16",
+      "fator_ipca15": "0.9984",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.654600"
+    },
+    "2019-02": {
+      "competencia_insumos": "2019-01",
+      "dias_uteis": 22,
+      "fator_selic": "1.00543042",
+      "ipca15_percentual": "0.30",
+      "fator_ipca15": "1.0030",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.242315"
+    },
+    "2019-03": {
+      "competencia_insumos": "2019-02",
+      "dias_uteis": 20,
+      "fator_selic": "1.00493553",
+      "ipca15_percentual": "0.34",
+      "fator_ipca15": "1.0034",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.153033"
+    },
+    "2019-04": {
+      "competencia_insumos": "2019-03",
+      "dias_uteis": 19,
+      "fator_selic": "1.00468818",
+      "ipca15_percentual": "0.54",
+      "fator_ipca15": "1.0054",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2019-05": {
+      "competencia_insumos": "2019-04",
+      "dias_uteis": 21,
+      "fator_selic": "1.00518295",
+      "ipca15_percentual": "0.72",
+      "fator_ipca15": "1.0072",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2019-06": {
+      "competencia_insumos": "2019-05",
+      "dias_uteis": 22,
+      "fator_selic": "1.00543042",
+      "ipca15_percentual": "0.35",
+      "fator_ipca15": "1.0035",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.192369"
+    },
+    "2019-07": {
+      "competencia_insumos": "2019-06",
+      "dias_uteis": 19,
+      "fator_selic": "1.00468818",
+      "ipca15_percentual": "0.06",
+      "fator_ipca15": "1.0006",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.408573"
+    },
+    "2019-08": {
+      "competencia_insumos": "2019-07",
+      "dias_uteis": 23,
+      "fator_selic": "1.00567796",
+      "ipca15_percentual": "0.09",
+      "fator_ipca15": "1.0009",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.477366"
+    },
+    "2019-09": {
+      "competencia_insumos": "2019-08",
+      "dias_uteis": 22,
+      "fator_selic": "1.00501719",
+      "ipca15_percentual": "0.08",
+      "fator_ipca15": "1.0008",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.421382"
+    },
+    "2019-10": {
+      "competencia_insumos": "2019-09",
+      "dias_uteis": 21,
+      "fator_selic": "1.00463760",
+      "ipca15_percentual": "0.09",
+      "fator_ipca15": "1.0009",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.373424"
+    },
+    "2019-11": {
+      "competencia_insumos": "2019-10",
+      "dias_uteis": 23,
+      "fator_selic": "1.00479264",
+      "ipca15_percentual": "0.09",
+      "fator_ipca15": "1.0009",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.388914"
+    },
+    "2019-12": {
+      "competencia_insumos": "2019-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.00380386",
+      "ipca15_percentual": "0.14",
+      "fator_ipca15": "1.0014",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.240050"
+    },
+    "2020-01": {
+      "competencia_insumos": "2019-12",
+      "dias_uteis": 21,
+      "fator_selic": "1.00374704",
+      "ipca15_percentual": "1.05",
+      "fator_ipca15": "1.0105",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2020-02": {
+      "competencia_insumos": "2020-01",
+      "dias_uteis": 22,
+      "fator_selic": "1.00376633",
+      "ipca15_percentual": "0.71",
+      "fator_ipca15": "1.0071",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2020-03": {
+      "competencia_insumos": "2020-02",
+      "dias_uteis": 18,
+      "fator_selic": "1.00293729",
+      "ipca15_percentual": "0.22",
+      "fator_ipca15": "1.0022",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.073567"
+    },
+    "2020-04": {
+      "competencia_insumos": "2020-03",
+      "dias_uteis": 22,
+      "fator_selic": "1.00338369",
+      "ipca15_percentual": "0.02",
+      "fator_ipca15": "1.0002",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.318305"
+    },
+    "2020-05": {
+      "competencia_insumos": "2020-04",
+      "dias_uteis": 20,
+      "fator_selic": "1.00284925",
+      "ipca15_percentual": "-0.01",
+      "fator_ipca15": "0.9999",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.294954"
+    },
+    "2020-06": {
+      "competencia_insumos": "2020-05",
+      "dias_uteis": 20,
+      "fator_selic": "1.00235810",
+      "ipca15_percentual": "-0.59",
+      "fator_ipca15": "0.9941",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.830711"
+    },
+    "2020-07": {
+      "competencia_insumos": "2020-06",
+      "dias_uteis": 21,
+      "fator_selic": "1.00212332",
+      "ipca15_percentual": "0.02",
+      "fator_ipca15": "1.0002",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.192294"
+    },
+    "2020-08": {
+      "competencia_insumos": "2020-07",
+      "dias_uteis": 23,
+      "fator_selic": "1.00194346",
+      "ipca15_percentual": "0.30",
+      "fator_ipca15": "1.0030",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2020-09": {
+      "competencia_insumos": "2020-08",
+      "dias_uteis": 21,
+      "fator_selic": "1.00159890",
+      "ipca15_percentual": "0.23",
+      "fator_ipca15": "1.0023",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2020-10": {
+      "competencia_insumos": "2020-09",
+      "dias_uteis": 21,
+      "fator_selic": "1.00156966",
+      "ipca15_percentual": "0.45",
+      "fator_ipca15": "1.0045",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2020-11": {
+      "competencia_insumos": "2020-10",
+      "dias_uteis": 21,
+      "fator_selic": "1.00156966",
+      "ipca15_percentual": "0.94",
+      "fator_ipca15": "1.0094",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2020-12": {
+      "competencia_insumos": "2020-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.00149486",
+      "ipca15_percentual": "0.81",
+      "fator_ipca15": "1.0081",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2021-01": {
+      "competencia_insumos": "2020-12",
+      "dias_uteis": 22,
+      "fator_selic": "1.00164447",
+      "ipca15_percentual": "1.06",
+      "fator_ipca15": "1.0106",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2021-02": {
+      "competencia_insumos": "2021-01",
+      "dias_uteis": 20,
+      "fator_selic": "1.00149486",
+      "ipca15_percentual": "0.78",
+      "fator_ipca15": "1.0078",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2021-03": {
+      "competencia_insumos": "2021-02",
+      "dias_uteis": 18,
+      "fator_selic": "1.00134527",
+      "ipca15_percentual": "0.48",
+      "fator_ipca15": "1.0048",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2021-04": {
+      "competencia_insumos": "2021-03",
+      "dias_uteis": 23,
+      "fator_selic": "1.00201080",
+      "ipca15_percentual": "0.93",
+      "fator_ipca15": "1.0093",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2021-05": {
+      "competencia_insumos": "2021-04",
+      "dias_uteis": 20,
+      "fator_selic": "1.00207785",
+      "ipca15_percentual": "0.60",
+      "fator_ipca15": "1.0060",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2021-06": {
+      "competencia_insumos": "2021-05",
+      "dias_uteis": 21,
+      "fator_selic": "1.00270326",
+      "ipca15_percentual": "0.44",
+      "fator_ipca15": "1.0044",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2021-07": {
+      "competencia_insumos": "2021-06",
+      "dias_uteis": 21,
+      "fator_selic": "1.00307779",
+      "ipca15_percentual": "0.83",
+      "fator_ipca15": "1.0083",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2021-08": {
+      "competencia_insumos": "2021-07",
+      "dias_uteis": 22,
+      "fator_selic": "1.00355616",
+      "ipca15_percentual": "0.72",
+      "fator_ipca15": "1.0072",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2021-09": {
+      "competencia_insumos": "2021-08",
+      "dias_uteis": 22,
+      "fator_selic": "1.00427952",
+      "ipca15_percentual": "0.89",
+      "fator_ipca15": "1.0089",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2021-10": {
+      "competencia_insumos": "2021-09",
+      "dias_uteis": 21,
+      "fator_selic": "1.00441999",
+      "ipca15_percentual": "1.14",
+      "fator_ipca15": "1.0114",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2021-11": {
+      "competencia_insumos": "2021-10",
+      "dias_uteis": 20,
+      "fator_selic": "1.00485996",
+      "ipca15_percentual": "1.20",
+      "fator_ipca15": "1.0120",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2021-12": {
+      "competencia_insumos": "2021-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.00586749",
+      "ipca15_percentual": "1.17",
+      "fator_ipca15": "1.0117",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2022-01": {
+      "competencia_insumos": "2021-12",
+      "dias_uteis": 23,
+      "fator_selic": "1.00769083",
+      "ipca15_percentual": "0.78",
+      "fator_ipca15": "1.0078",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2022-02": {
+      "competencia_insumos": "2022-01",
+      "dias_uteis": 21,
+      "fator_selic": "1.00732270",
+      "ipca15_percentual": "0.58",
+      "fator_ipca15": "1.0058",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.151392"
+    },
+    "2022-03": {
+      "competencia_insumos": "2022-02",
+      "dias_uteis": 19,
+      "fator_selic": "1.00755041",
+      "ipca15_percentual": "0.99",
+      "fator_ipca15": "1.0099",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2022-04": {
+      "competencia_insumos": "2022-03",
+      "dias_uteis": 22,
+      "fator_selic": "1.00927054",
+      "ipca15_percentual": "0.95",
+      "fator_ipca15": "1.0095",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2022-05": {
+      "competencia_insumos": "2022-04",
+      "dias_uteis": 19,
+      "fator_selic": "1.00834321",
+      "ipca15_percentual": "1.73",
+      "fator_ipca15": "1.0173",
+      "piso_zero_aplicado": true,
+      "taxa_mensal": "0.000000"
+    },
+    "2022-06": {
+      "competencia_insumos": "2022-05",
+      "dias_uteis": 22,
+      "fator_selic": "1.01034592",
+      "ipca15_percentual": "0.59",
+      "fator_ipca15": "1.0059",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.441984"
+    },
+    "2022-07": {
+      "competencia_insumos": "2022-06",
+      "dias_uteis": 21,
+      "fator_selic": "1.01015316",
+      "ipca15_percentual": "0.69",
+      "fator_ipca15": "1.0069",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.323087"
+    },
+    "2022-08": {
+      "competencia_insumos": "2022-07",
+      "dias_uteis": 21,
+      "fator_selic": "1.01034842",
+      "ipca15_percentual": "0.13",
+      "fator_ipca15": "1.0013",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.903667"
+    },
+    "2022-09": {
+      "competencia_insumos": "2022-08",
+      "dias_uteis": 23,
+      "fator_selic": "1.01169361",
+      "ipca15_percentual": "-0.73",
+      "fator_ipca15": "0.9927",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.913328"
+    },
+    "2022-10": {
+      "competencia_insumos": "2022-09",
+      "dias_uteis": 21,
+      "fator_selic": "1.01071982",
+      "ipca15_percentual": "-0.37",
+      "fator_ipca15": "0.9963",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.447337"
+    },
+    "2022-11": {
+      "competencia_insumos": "2022-10",
+      "dias_uteis": 20,
+      "fator_selic": "1.01020676",
+      "ipca15_percentual": "0.16",
+      "fator_ipca15": "1.0016",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.859301"
+    },
+    "2022-12": {
+      "competencia_insumos": "2022-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.01020676",
+      "ipca15_percentual": "0.53",
+      "fator_ipca15": "1.0053",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.488089"
+    },
+    "2023-01": {
+      "competencia_insumos": "2022-12",
+      "dias_uteis": 22,
+      "fator_selic": "1.01123315",
+      "ipca15_percentual": "0.52",
+      "fator_ipca15": "1.0052",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.600194"
+    },
+    "2023-02": {
+      "competencia_insumos": "2023-01",
+      "dias_uteis": 22,
+      "fator_selic": "1.01123315",
+      "ipca15_percentual": "0.55",
+      "fator_ipca15": "1.0055",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.570179"
+    },
+    "2023-03": {
+      "competencia_insumos": "2023-02",
+      "dias_uteis": 18,
+      "fator_selic": "1.00918141",
+      "ipca15_percentual": "0.76",
+      "fator_ipca15": "1.0076",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.156948"
+    },
+    "2023-04": {
+      "competencia_insumos": "2023-03",
+      "dias_uteis": 23,
+      "fator_selic": "1.01174673",
+      "ipca15_percentual": "0.69",
+      "fator_ipca15": "1.0069",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.481352"
+    },
+    "2023-05": {
+      "competencia_insumos": "2023-04",
+      "dias_uteis": 18,
+      "fator_selic": "1.00918141",
+      "ipca15_percentual": "0.57",
+      "fator_ipca15": "1.0057",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.346168"
+    },
+    "2023-06": {
+      "competencia_insumos": "2023-05",
+      "dias_uteis": 22,
+      "fator_selic": "1.01123315",
+      "ipca15_percentual": "0.51",
+      "fator_ipca15": "1.0051",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.610203"
+    },
+    "2023-07": {
+      "competencia_insumos": "2023-06",
+      "dias_uteis": 21,
+      "fator_selic": "1.01071982",
+      "ipca15_percentual": "0.04",
+      "fator_ipca15": "1.0004",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.031569"
+    },
+    "2023-08": {
+      "competencia_insumos": "2023-07",
+      "dias_uteis": 21,
+      "fator_selic": "1.01071982",
+      "ipca15_percentual": "-0.07",
+      "fator_ipca15": "0.9993",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "1.142782"
+    },
+    "2023-09": {
+      "competencia_insumos": "2023-08",
+      "dias_uteis": 23,
+      "fator_selic": "1.01137496",
+      "ipca15_percentual": "0.28",
+      "fator_ipca15": "1.0028",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.855102"
+    },
+    "2023-10": {
+      "competencia_insumos": "2023-09",
+      "dias_uteis": 20,
+      "fator_selic": "1.00972902",
+      "ipca15_percentual": "0.35",
+      "fator_ipca15": "1.0035",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.620729"
+    },
+    "2023-11": {
+      "competencia_insumos": "2023-10",
+      "dias_uteis": 21,
+      "fator_selic": "1.00997567",
+      "ipca15_percentual": "0.21",
+      "fator_ipca15": "1.0021",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.785917"
+    },
+    "2023-12": {
+      "competencia_insumos": "2023-11",
+      "dias_uteis": 20,
+      "fator_selic": "1.00915988",
+      "ipca15_percentual": "0.33",
+      "fator_ipca15": "1.0033",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.584061"
+    },
+    "2024-01": {
+      "competencia_insumos": "2023-12",
+      "dias_uteis": 20,
+      "fator_selic": "1.00894525",
+      "ipca15_percentual": "0.40",
+      "fator_ipca15": "1.0040",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.492555"
+    },
+    "2024-02": {
+      "competencia_insumos": "2024-01",
+      "dias_uteis": 22,
+      "fator_selic": "1.00966690",
+      "ipca15_percentual": "0.31",
+      "fator_ipca15": "1.0031",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.654661"
+    },
+    "2024-03": {
+      "competencia_insumos": "2024-02",
+      "dias_uteis": 19,
+      "fator_selic": "1.00800200",
+      "ipca15_percentual": "0.78",
+      "fator_ipca15": "1.0078",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.020044"
+    },
+    "2024-04": {
+      "competencia_insumos": "2024-03",
+      "dias_uteis": 20,
+      "fator_selic": "1.00831674",
+      "ipca15_percentual": "0.36",
+      "fator_ipca15": "1.0036",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.469982"
+    },
+    "2024-05": {
+      "competencia_insumos": "2024-04",
+      "dias_uteis": 22,
+      "fator_selic": "1.00887433",
+      "ipca15_percentual": "0.21",
+      "fator_ipca15": "1.0021",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.676013"
+    },
+    "2024-06": {
+      "competencia_insumos": "2024-05",
+      "dias_uteis": 21,
+      "fator_selic": "1.00832442",
+      "ipca15_percentual": "0.44",
+      "fator_ipca15": "1.0044",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.390723"
+    },
+    "2024-07": {
+      "competencia_insumos": "2024-06",
+      "dias_uteis": 20,
+      "fator_selic": "1.00788337",
+      "ipca15_percentual": "0.39",
+      "fator_ipca15": "1.0039",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.396790"
+    },
+    "2024-08": {
+      "competencia_insumos": "2024-07",
+      "dias_uteis": 23,
+      "fator_selic": "1.00907122",
+      "ipca15_percentual": "0.30",
+      "fator_ipca15": "1.0030",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.605306"
+    }
+  },
+  "verificacao_publicada": {
+    "2024-08": {
+      "competencia_insumos": "2024-07",
+      "dias_uteis": 23,
+      "fator_selic": "1.00907122",
+      "ipca15_percentual": "0.30",
+      "fator_ipca15": "1.0030",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.605306"
+    },
+    "2024-09": {
+      "competencia_insumos": "2024-08",
+      "dias_uteis": 22,
+      "fator_selic": "1.00867512",
+      "ipca15_percentual": "0.19",
+      "fator_ipca15": "1.0019",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.676227"
+    },
+    "2024-10": {
+      "competencia_insumos": "2024-09",
+      "dias_uteis": 21,
+      "fator_selic": "1.00835157",
+      "ipca15_percentual": "0.13",
+      "fator_ipca15": "1.0013",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.704241"
+    },
+    "2024-11": {
+      "competencia_insumos": "2024-10",
+      "dias_uteis": 23,
+      "fator_selic": "1.00927958",
+      "ipca15_percentual": "0.54",
+      "fator_ipca15": "1.0054",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.385874"
+    },
+    "2024-12": {
+      "competencia_insumos": "2024-11",
+      "dias_uteis": 19,
+      "fator_selic": "1.00792990",
+      "ipca15_percentual": "0.62",
+      "fator_ipca15": "1.0062",
+      "piso_zero_aplicado": false,
+      "taxa_mensal": "0.171924"
+    }
+  },
+  "observacao": "Taxa Legal reconstruída até 29/08/2024. Não representa taxa publicada nem altera o início da vigência normativa."
+}

@@ -51,9 +51,9 @@ def test_pdf_citacao_no_inicio_dos_criterios_sem_repetir_em_parcelas():
     dados['dados_gerais'].update(criterio_inicio_juros='citacao', data_inicial_juros='2026-03-23')
     response = TestClient(app).post('/api/v1/calculo/exportar/pdf', json=dados)
     assert response.status_code == 200
-    texto = '\n'.join(p.extract_text() for p in PdfReader(io.BytesIO(response.content)).pages)
+    texto = ' '.join(' '.join(p.extract_text() for p in PdfReader(io.BytesIO(response.content)).pages).split())
     assert texto.count('23/03/2026') == 1
-    assert texto.index('Critérios do cálculo') < texto.index('Início dos juros: 23/03/2026 (citação).') < texto.index('Tema 905')
+    assert texto.index('CRITÉRIOS E METODOLOGIA') < texto.index('Início dos juros: 23/03/2026 (citação).') < texto.index('Tema 905')
     assert 'Início informado dos juros' not in texto
 
 
@@ -62,7 +62,7 @@ def test_pdf_preserva_datas_diferentes_nos_criterios():
     dados['parcelas'][1]['data_inicial_juros'] = '2026-06-01'
     response = TestClient(app).post('/api/v1/calculo/exportar/pdf', json=dados)
     assert response.status_code == 200
-    texto = '\n'.join(p.extract_text() for p in PdfReader(io.BytesIO(response.content)).pages)
+    texto = ' '.join(' '.join(p.extract_text() for p in PdfReader(io.BytesIO(response.content)).pages).split())
     assert 'Parcelas 1: 23/03/2026' in texto
     assert 'Parcelas 2: 01/06/2026' in texto
-    assert texto.index('01/06/2026') < texto.index('Valores por parcela')
+    assert texto.index('CRÉDITO - ACRÉSCIMO') < texto.index('CRITÉRIOS E METODOLOGIA') < texto.index('01/06/2026')

@@ -4,7 +4,8 @@ import json
 from calendar import monthrange
 from datetime import date, timedelta
 from decimal import Decimal, ROUND_HALF_UP
-from pathlib import Path
+from .moedas_historicas import (conversao_monetaria, nota_conversao,
+    parcelas_em_reais, registrar_conversoes, validar_origem, validar_data_base_real)
 
 from .criterios_simplificados import (
     CalculoSimplificado,
@@ -27,7 +28,7 @@ from .models import (
 )
 from .perfis import (
     ATUAL,
-    CIVIL_2,
+    CIVIL_2, CIVIL_3, CIVIL_4, CIVIL_5, CIVIL_6,
     EC136,
     FAZENDA_1,
     FAZENDA_2,
@@ -38,7 +39,9 @@ from .perfis import (
     PERFIS_FAZENDA,
 )
 
-BASE = Path(__file__).resolve().parents[2] / "data" / "indices_simplificados.json"
+from liquidacao_custom.index_data.store import DataPath, with_index_dataset
+
+BASE = DataPath("indices_simplificados.json")
 BASE_EC136 = BASE.with_name("indices_ec136.json")
 BASE_SELIC_HISTORICA = BASE.with_name("selic_historica.json")
 D = Decimal
@@ -186,7 +189,7 @@ def ultima_data_ipcae(dados=None):
     for competencia in sorted(dados["ipcae_taxas"]):
         inicio = date.fromisoformat(competencia + "-01")
         fim = proximo_mes(inicio) - timedelta(days=1)
-        if inicio >= INICIO_TEMA_905 and fim < obtido_em:
+        if fim < obtido_em:
             limites.append(fim)
     if not limites:
         raise ValueError("Não há mês fechado com taxas IPCA-15 do IBGE disponíveis para as custas e despesas.")
@@ -197,11 +200,13 @@ def calcular_custas_despesas_ipcae(
     itens: list[CustaDespesaProcessual],
     data_base: date,
     dados=None,
+    *, valor_em_reais=False,
 ) -> list[ResultadoCustaDespesaProcessual]:
     """Atualiza cada lançamento pelo IPCA-E, sem juros ou cumulação com outro encargo."""
     if not itens:
         return []
     dados = dados or carregar_base()
+    validar_data_base_real(data_base)
     limite = ultima_data_ipcae(dados)
     if data_base > limite:
         raise ValueError(
@@ -210,7 +215,11 @@ def calcular_custas_despesas_ipcae(
         )
     resultados = []
     for item in itens:
-        saldo = item.valor
+        validar_origem(item.data, "ipcae", f"Custa ou despesa {item.numero}")
+        if item.data > data_base:
+            raise ValueError("Custa ou despesa: data posterior à data-base.")
+        original, conversao = (item.valor, None) if valor_em_reais else conversao_monetaria(item.valor, item.data, f"Custa ou despesa {item.numero}")
+        saldo = original
         fator_total = D(1)
         memoria = []
         for ini, ate, fracao in trechos(item.data, data_base):
@@ -229,7 +238,7 @@ def calcular_custas_despesas_ipcae(
                 valor_corrigido=moeda(saldo),
                 total=moeda(saldo),
                 observacao=(
-                    f"{ini} a {ate}; taxa IPCA-15 {taxa}%; "
+                    f"{ini} a {ate}; taxa mensal IPCA-E {taxa}%; "
                     f"(1 + taxa / 100) ^ {fracao}; atualização exclusiva pelo IPCA-E, sem juros."
                 ),
             ))
@@ -238,12 +247,15 @@ def calcular_custas_despesas_ipcae(
             numero=item.numero,
             nome=item.nome,
             data=item.data,
-            valor_original=item.valor,
+            valor_original=moeda(original),
             fator_ipcae=fator_total,
-            correcao_monetaria=moeda(valor_atualizado - item.valor),
+            correcao_monetaria=valor_atualizado - moeda(original),
             valor_atualizado=valor_atualizado,
             memoria=memoria,
+            conversao_monetaria=conversao,
         ))
+        if conversao and memoria:
+            memoria[0].observacao += " " + nota_conversao(conversao)
     return resultados
 
 
@@ -273,9 +285,10 @@ def incorporar_descontos(resultado: ResultadoCalculo, calculo: CalculoSimplifica
     # A operação de índices recebe somente a base ainda atualizável. A parcela
     # nominal expressamente excluída retorna ao abatimento sem novos encargos.
     for item, pago in zip(descontos.parcelas, selecionados):
-        nominal = pago.encargos_sem_atualizacao
+        nominal_exato, _ = conversao_monetaria(pago.encargos_sem_atualizacao, pago.data)
+        nominal = moeda(nominal_exato)
         item.valor_pago_na_data = D(0)
-        item.valor_apurado = pago.valor
+        item.valor_apurado = item.valor_bruto
         item.valor_corrigido += nominal
         item.total_parcela += nominal
         if nominal:
@@ -285,7 +298,9 @@ def incorporar_descontos(resultado: ResultadoCalculo, calculo: CalculoSimplifica
     descontos.resumo.valor_pago_na_data_parcelas = D(0)
     descontos.resumo.principal_apurado = descontos.resumo.principal_original
     descontos.resumo.total_atualizado = sum((item.total_parcela for item in descontos.parcelas), D(0))
-    descontos.premissas["composicao_pagamentos"] = [item.model_dump(mode="json") for item in selecionados]
+    descontos.premissas["composicao_pagamentos"] = [{**item.model_dump(mode="json"),
+        "valor": str(moeda(conversao_monetaria(item.valor, item.data)[0])),
+        "encargos_sem_atualizacao": str(moeda(conversao_monetaria(item.encargos_sem_atualizacao, item.data)[0]))} for item in selecionados]
     resultado.descontos = descontos
     saldo = resultado.resumo.total_atualizado
     for item in descontos.parcelas:
@@ -335,6 +350,7 @@ def incorporar_custas_despesas(
     )
     total = sum((item.valor_atualizado for item in itens), D(0))
     resultado.custas_despesas = itens
+    registrar_conversoes(resultado, [item.conversao_monetaria for item in itens])
     resultado.resumo.custas = total
     resultado.resumo.total_atualizado = moeda(resultado.resumo.total_atualizado + total)
     resultado.premissas["custas_despesas"] = {
@@ -359,7 +375,8 @@ def incorporar_custas_despesas(
 
 
 def dados_fonte_ipcae():
-    return carregar_base().get("fontes", {}).get("ipcae", "")
+    fontes = carregar_base().get("fontes", {})
+    return fontes.get("ipcae_historico", fontes.get("ipcae", ""))
 
 
 def criterios_publicos(dados=None, perfil=ATUAL):
@@ -371,9 +388,19 @@ def criterios_publicos(dados=None, perfil=ATUAL):
         criterios = criterios_ipca_taxa_legal()
         criterios["data_base_maxima_ipcae"] = ultima_data_ipcae().isoformat()
         return criterios
-    if perfil == CIVIL_2:
+    if perfil == CIVIL_5:
+        from .motor_civil_5 import criterios_civil_5
+        criterios = criterios_civil_5()
+        criterios["data_base_maxima_ipcae"] = ultima_data_ipcae().isoformat()
+        return criterios
+    if perfil in (CIVIL_4, CIVIL_6):
+        from .motor_civil_4 import criterios_civil_4
+        criterios = criterios_civil_4(perfil)
+        criterios["data_base_maxima_ipcae"] = ultima_data_ipcae().isoformat()
+        return criterios
+    if perfil in (CIVIL_2, CIVIL_3):
         from .motor_civil_2 import criterios_civil_2
-        criterios = criterios_civil_2()
+        criterios = criterios_civil_2(perfil)
         criterios["data_base_maxima_ipcae"] = ultima_data_ipcae().isoformat()
         return criterios
     if perfil == "selic_cjf_v1":
@@ -418,6 +445,8 @@ def criterios_publicos(dados=None, perfil=ATUAL):
         "perfil": perfil, "perfis": PERFIS,
         "versao_metodologia": configuracao["versao"],
         "inicio": INICIO_TEMA_905.isoformat(),
+        "inicio_correcao": min(dados["ipcae_taxas"]) + "-01",
+        "inicio_juros": INICIO_TEMA_905.isoformat(),
         "inicio_selic": configuracao["inicio_selic"],
         "transicao": configuracao["transicao"],
         "data_base_maxima": ultima_data_disponivel(dados, perfil).isoformat(),
@@ -427,11 +456,18 @@ def criterios_publicos(dados=None, perfil=ATUAL):
     }
 
 
+@with_index_dataset
 def executar_calculo(calculo: CalculoSimplificado) -> ResultadoCalculo:
     if calculo.perfil == "ipca_taxa_legal_v1":
         from .motor_ipca_taxa_legal import executar_ipca_taxa_legal
         return incorporar_custas_despesas(executar_ipca_taxa_legal(calculo), calculo)
-    if calculo.perfil == CIVIL_2:
+    if calculo.perfil == CIVIL_5:
+        from .motor_civil_5 import executar_civil_5
+        return incorporar_custas_despesas(executar_civil_5(calculo), calculo)
+    if calculo.perfil in (CIVIL_4, CIVIL_6):
+        from .motor_civil_4 import executar_civil_4
+        return incorporar_custas_despesas(executar_civil_4(calculo), calculo)
+    if calculo.perfil in (CIVIL_2, CIVIL_3):
         from .motor_civil_2 import executar_civil_2
         return incorporar_custas_despesas(executar_civil_2(calculo), calculo)
     if calculo.perfil == "selic_cjf_v1":
@@ -440,6 +476,11 @@ def executar_calculo(calculo: CalculoSimplificado) -> ResultadoCalculo:
     if calculo.perfil == IPCAE_1AM_SIMPLES:
         from .motor_ipcae_1am import executar_ipcae_1am
         return incorporar_custas_despesas(executar_ipcae_1am(calculo), calculo)
+    return incorporar_custas_despesas(_executar_fazenda(calculo), calculo)
+
+
+@parcelas_em_reais
+def _executar_fazenda(calculo):
     dados = carregar_base_ec136_completa() if calculo.perfil == FAZENDA_4 else carregar_base()
     fazenda_1 = calculo.perfil == FAZENDA_1
     fazenda_2 = calculo.perfil == FAZENDA_2
@@ -476,7 +517,7 @@ def executar_calculo(calculo: CalculoSimplificado) -> ResultadoCalculo:
                 valor_base=moeda(anterior), fator_aplicado=fator,
                 valor_corrigido=moeda(saldo), total=moeda(saldo),
                 observacao=(
-                    f"{ini} a {ate}; taxa IPCA-15 {taxa}%; (1 + taxa / 100) ^ {fracao}; "
+                    f"{ini} a {ate}; taxa mensal IPCA-E {taxa}%; (1 + taxa / 100) ^ {fracao}; "
                     + ("Fazenda Pública 1, sem incorporar juros ao principal."
                        if fazenda_1 else "Tema 905 até 08/12/2021, sem incorporar juros ao principal.")
                 ),
@@ -510,7 +551,7 @@ def executar_calculo(calculo: CalculoSimplificado) -> ResultadoCalculo:
                 parcela=p.numero, competencia=comp, indice_aplicado="IPCA-E IBGE (IPCA-15)",
                 valor_base=moeda(anterior), fator_aplicado=fator,
                 valor_corrigido=moeda(saldo), total=moeda(saldo),
-                observacao=f"{ini} a {ate}; taxa IPCA-15 {taxa}%; (1 + taxa / 100) ^ {fracao}; saldo consolidado na transição {moeda(saldo_transicao)}.",
+                observacao=f"{ini} a {ate}; taxa mensal IPCA-E {taxa}%; (1 + taxa / 100) ^ {fracao}; saldo consolidado na transição {moeda(saldo_transicao)}.",
             ))
         # Juros simples sobre o saldo corrigido final, sem juros sobre juros da poupança.
         juros = D(0)
@@ -633,7 +674,7 @@ def executar_calculo(calculo: CalculoSimplificado) -> ResultadoCalculo:
                 "ipcae_pos": componente(max(p.data_vencimento, TRANSICAO), fim,
                                          saldo_transicao, moeda(saldo) - moeda(saldo_transicao), fator=fator_pos),
                 "juros_2aa": componente(max(inicio_juros, TRANSICAO), fim, saldo,
-                                          moeda(juros_pos), taxa=taxa_2aa),
+                                          moeda(juros) - moeda(juros_pre), taxa=taxa_2aa),
                 "limite_selic": componente(max(p.data_vencimento, TRANSICAO), fim,
                                              saldo_transicao, ajuste, taxa=taxa_limite),
             }
@@ -668,7 +709,7 @@ def executar_calculo(calculo: CalculoSimplificado) -> ResultadoCalculo:
             "metodologia": [
                 "Tema 905: IPCA-E até 08/12/2021. O principal corrigido nesse período constitui a base da SELIC a partir de 09/12/2021. Os juros da poupança permanecem separados e não integram essa base.",
                 "SELIC: soma das taxas mensais BCB SGS 4390, ponderadas pelos dias corridos de cada mês, sobre o principal corrigido até 08/12/2021 ou sobre o principal apurado para vencimentos posteriores.",
-                "IPCA-E: produto das variações mensais do IPCA-15 produzidas pelo IBGE e distribuídas na série SGS 7478. Em meses parciais, o fator (1 + taxa/100) é elevado à fração dos dias; deflações são preservadas.",
+                "IPCA-E: produto das variações mensais do IPCA-15 produzidas pelo IBGE e distribuídas nas séries SGS 10764 (histórico desde 1992) e 7478 (IPCA-15). Em meses parciais, o fator (1 + taxa/100) é elevado à fração dos dias; deflações são preservadas.",
                 "Poupança: remuneração total publicada pelo Banco Central (SGS 25 até 03/05/2012 e SGS 195 desde 04/05/2012), considerada integralmente. Juros simples nos períodos anterior e posterior à SELIC, sobre o saldo corrigido final, conforme a convenção do motor existente; sem juros sobre juros da poupança.",
                 "As taxas das séries SGS 25 e 195 são percentuais mensais por data inicial do período, não taxas diárias. Cada dia recebe a taxa mensal da referência dividida pelos dias do mês. Referências dos dias 29, 30 e 31 usam o dia 1 do mês seguinte, conforme a convenção de aniversário da poupança. Referência ausente impede o cálculo; não se repete o último índice.",
                 "A data de início dos juros limita a poupança nos dois períodos. Na faixa de 09/12/2021 a 09/09/2025 a SELIC é indivisível e começa no maior entre vencimento e 09/12/2021.",
@@ -683,7 +724,7 @@ def executar_calculo(calculo: CalculoSimplificado) -> ResultadoCalculo:
             "A partir de 01/07/2009: IPCA-E oficial do IBGE, formado pelo IPCA-15, e juros simples pela remuneração total da poupança.",
         ]
         resultado.premissas["metodologia"] = [
-            "IPCA-E: produto das variações mensais do IPCA-15 produzidas pelo IBGE e distribuídas na série SGS 7478. Em meses parciais, o fator é elevado à fração dos dias; deflações são preservadas.",
+            "IPCA-E: produto das variações mensais do IPCA-15 produzidas pelo IBGE e distribuídas nas séries SGS 10764 (histórico desde 1992) e 7478 (IPCA-15). Em meses parciais, o fator é elevado à fração dos dias; deflações são preservadas.",
             "Poupança: remuneração total publicada pelo Banco Central (SGS 25 até 03/05/2012 e SGS 195 desde 04/05/2012), em juros simples sobre o saldo corrigido final, sem juros sobre juros.",
             "A data de início dos juros limita somente a poupança e respeita o vencimento. IPCA-E e poupança seguem até a data-base, sem troca de regime.",
             "Dias inicial e final incluídos. Arredondamento HALF_UP por parcela ao final, sem arredondar fatores intermediários.",
@@ -710,9 +751,13 @@ def executar_calculo(calculo: CalculoSimplificado) -> ResultadoCalculo:
         resultado.premissas["metodologia"] = [
             "Até 08/12/2021, o principal recebe IPCA-E e os juros da poupança permanecem separados. O principal corrigido constitui a base da SELIC a partir de 09/12/2021.",
             "De 09/12/2021 a 09/09/2025: somam-se as taxas mensais BCB SGS 4390, sem capitalização, como índice único de atualização e mora.",
-            "Após 10/09/2025: o saldo consolidado recebe IPCA-E pelo produto das variações mensais do IPCA-15 (IBGE, série SGS 7478). Meses parciais usam o fator elevado à fração dos dias do mês; deflações são preservadas.",
+            "Após 10/09/2025: o saldo consolidado recebe IPCA-E pelo produto das variações mensais do IPCA-15 (IBGE, séries SGS 10764 e 7478). Meses parciais usam o fator elevado à fração dos dias do mês; deflações são preservadas.",
             "Os juros simples de 2% ao ano usam 2% / 12 por mês, proporcionais aos dias de cada mês, sobre o saldo final corrigido pelo IPCA-E. Começam no maior entre vencimento, início dos juros informado e 10/09/2025. Não há capitalização desses juros.",
             "Limite: compara-se, por parcela, o saldo com IPCA-E mais os juros de 2% com o saldo consolidado acrescido da soma simples das taxas SELIC do mesmo período pós EC 136. Aplica-se o menor valor ao final do período, sem escolher índices mês a mês. A coluna Ajuste ao limite SELIC desconta eventual excesso; a taxa exibida nessa coluna é a SELIC de comparação, e zero significa que não houve redução. Juros anteriores à EC 113 ficam fora dessa comparação.",
             "Dias inicial e final incluídos. Índices e bases exibidos com quatro casas; valores em reais com duas. O cálculo conserva a precisão completa. Diferenças entre saldos arredondados conciliam os centavos. O total soma o principal e todas as colunas, inclusive o ajuste negativo ao limite, quando houver.",
         ]
-    return incorporar_custas_despesas(resultado, calculo)
+    if any(p.data_vencimento < INICIO_TEMA_905 for p in calculo.parcelas):
+        resultado.premissas["criterios"].insert(0, "Antes de 01/07/2009: somente correção pelo IPCA-E desde a data informada, sem juros nesse período. Os marcos dos juros permanecem preservados.")
+    if dados.get("fontes", {}).get("ipcae_historico"):
+        resultado.premissas.setdefault("fontes", {})["ipcae_historico"] = dados["fontes"]["ipcae_historico"]
+    return resultado

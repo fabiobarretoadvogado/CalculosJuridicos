@@ -5,6 +5,7 @@ from decimal import Decimal, ROUND_HALF_UP
 
 from .models import ComponenteCalculo, DadosGerais, MemoriaMensal, Parcela, ResultadoCalculo, ResultadoParcela, ResumoGeral
 from .motor_simplificado import carregar_base, fator_ipcae
+from .moedas_historicas import conversao_monetaria, registrar_conversoes, validar_origem, validar_data_base_real
 
 
 def proximo_mes(dia):
@@ -15,12 +16,14 @@ def calcular_ipcae_mensal(geral: DadosGerais, parcelas: list[Parcela], dados=Non
     """Exclui a competência de origem e inclui o mês da data-base; sem juros."""
     dados = carregar_base() if dados is None else dados
     fim = geral.data_base
+    validar_data_base_real(fim)
     if fim.day != calendar.monthrange(fim.year, fim.month)[1]:
         raise ValueError("Este cálculo mensal requer data-base no último dia do mês.")
     taxas = dados["ipcae_taxas"]
     centavos = lambda v: v.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     resultado = ResultadoCalculo(dados_gerais=geral)
     numeros = set()
+    conversoes = []
     for parcela in parcelas:
         venc = parcela.data_vencimento
         if venc is None or venc > fim:
@@ -28,11 +31,15 @@ def calcular_ipcae_mensal(geral: DadosGerais, parcelas: list[Parcela], dados=Non
         if parcela.numero in numeros:
             raise ValueError("Numeração de parcelas duplicada.")
         numeros.add(parcela.numero)
+        validar_origem(venc, "ipcae")
         if (parcela.periodos_juros or parcela.juros_moratorios.value != "sem_juros"
                 or parcela.multa_moratoria or parcela.periodos_correcao
                 or parcela.correcao_monetaria.value not in ("sem_correcao", "ipcae")):
             raise ValueError("Este motor recebe somente IPCA-E mensal, sem outros critérios.")
-        principal = parcela.valor_bruto - parcela.valor_pago_na_data
+        bruto, conversao = conversao_monetaria(parcela.valor_bruto, venc, f"Parcela {parcela.numero}")
+        pago, conversao_pago = conversao_monetaria(parcela.valor_pago_na_data, venc, f"Pagamento da parcela {parcela.numero}")
+        conversoes.extend([conversao, conversao_pago if parcela.valor_pago_na_data else None])
+        principal = bruto - pago
         if principal < 0:
             raise ValueError("O pagamento não pode superar o valor bruto da parcela.")
         saldo = principal
@@ -58,11 +65,12 @@ def calcular_ipcae_mensal(geral: DadosGerais, parcelas: list[Parcela], dados=Non
             ))
             atual = seguinte
         total = centavos(saldo)
-        correcao = total - principal
+        base_financeira = centavos(bruto) - centavos(pago)
+        correcao = total - base_financeira
         resultado.parcelas.append(ResultadoParcela(
             numero=parcela.numero, historico=parcela.historico, data_vencimento=venc,
-            valor_bruto=parcela.valor_bruto, valor_pago_na_data=parcela.valor_pago_na_data,
-            valor_apurado=principal, correcao_monetaria=correcao, valor_corrigido=total,
+            valor_bruto=centavos(bruto), valor_pago_na_data=centavos(pago),
+            valor_apurado=base_financeira, correcao_monetaria=correcao, valor_corrigido=total,
             total_parcela=total, memoria_correcao=memoria,
             componentes={"correcao": ComponenteCalculo(
                 data_inicial=inicio, data_final=fim if inicio else None,
@@ -73,8 +81,8 @@ def calcular_ipcae_mensal(geral: DadosGerais, parcelas: list[Parcela], dados=Non
     principal = sum((p.valor_apurado for p in resultado.parcelas), Decimal(0))
     correcao = sum((p.correcao_monetaria for p in resultado.parcelas), Decimal(0))
     resultado.resumo = ResumoGeral(
-        principal_original=sum((p.valor_bruto for p in parcelas), Decimal(0)),
-        valor_pago_na_data_parcelas=sum((p.valor_pago_na_data for p in parcelas), Decimal(0)),
+        principal_original=sum((p.valor_bruto for p in resultado.parcelas), Decimal(0)),
+        valor_pago_na_data_parcelas=sum((p.valor_pago_na_data for p in resultado.parcelas), Decimal(0)),
         principal_apurado=principal, correcao_monetaria=correcao,
         total_atualizado=principal + correcao, totais_componentes={"correcao": correcao},
     )
@@ -94,4 +102,4 @@ def calcular_ipcae_mensal(geral: DadosGerais, parcelas: list[Parcela], dados=Non
             "O total é a soma das parcelas atualizadas e das parcelas adicionais expressamente informadas. Valores adicionais da competência final não recebem atualização nesta data-base.",
         ],
     }
-    return resultado
+    return registrar_conversoes(resultado, conversoes)

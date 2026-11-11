@@ -10,6 +10,9 @@ let server;
 let CalculoContext;
 let ResultadoPrincipal;
 let Processamento;
+let reordenarParcelas;
+let destinoDaInsercao;
+let calculoReducer;
 let Importacao;
 let Layout;
 let HonorariosPrincipaisForm;
@@ -28,6 +31,7 @@ let HonorariosValorCertoCampos;
 let HonorariosValorCertoResultado;
 let DescontosForm;
 let UpdateStatusView;
+let moedasHistoricas;
 
 before(async () => {
   server = await createServer({
@@ -45,6 +49,8 @@ before(async () => {
   ({ CalculoContext } = await server.ssrLoadModule('/src/contexts/CalculoContextBase.ts'));
   ({ ResultadoPrincipal } = await server.ssrLoadModule('/src/components/ResultadoPrincipal.tsx'));
   ({ Processamento } = await server.ssrLoadModule('/src/pages/Processamento.tsx'));
+  ({ reordenarParcelas, destinoDaInsercao } = await server.ssrLoadModule('/src/utils/reordenarParcelas.ts'));
+  ({ calculoReducer } = await server.ssrLoadModule('/src/contexts/calculoReducer.ts'));
   ({ Importacao } = await server.ssrLoadModule('/src/pages/Importacao.tsx'));
   ({ Layout } = await server.ssrLoadModule('/src/components/Layout.tsx'));
   ({ HonorariosPrincipaisForm, DestaquesForm } = await server.ssrLoadModule('/src/components/HonorariosPrincipaisForm.tsx'));
@@ -57,9 +63,33 @@ before(async () => {
   ({ HonorariosValorCertoCampos, HonorariosValorCertoResultado } = await server.ssrLoadModule('/src/components/HonorariosValorCerto.tsx'));
   ({ DescontosForm } = await server.ssrLoadModule('/src/components/DescontosForm.tsx'));
   ({ UpdateStatusView } = await server.ssrLoadModule('/src/components/UpdateStatus.tsx'));
+  moedasHistoricas = await server.ssrLoadModule('/src/utils/moedasHistoricas.ts');
 });
 
 after(async () => { await server?.close(); });
+
+test('paridades nominais respeitam as datas exatas de troca da moeda', () => {
+  for (const [data, simbolo, divisor] of [
+    ['1980-01-01', 'Cr$', 2750000000000], ['1986-02-27', 'Cr$', 2750000000000],
+    ['1986-02-28', 'Cz$', 2750000000], ['1989-01-15', 'Cz$', 2750000000],
+    ['1989-01-16', 'NCz$', 2750000], ['1990-03-16', 'Cr$', 2750000],
+    ['1993-08-01', 'CR$', 2750], ['1994-07-01', 'R$', 1],
+  ]) {
+    assert.equal(moedasHistoricas.simboloMoeda(data), simbolo);
+    assert.equal(moedasHistoricas.equivalenteNominalReais(divisor, data), 1);
+  }
+  assert.equal(moedasHistoricas.inicioIndice('ipca'), '1980-01-01');
+  assert.equal(moedasHistoricas.inicioIndice('ipcae'), '1992-01-01');
+});
+
+test('fixação histórica admite o índice antigo e conserva o marco dos juros', () => {
+  const html = renderToStaticMarkup(createElement(HonorariosValorCertoCampos, {
+    config: { data_fixacao: '1980-01-01', indice: 'ipca', juros: 'taxa_legal', data_inicio_juros: '2024-08-30' },
+    dataBase: '2026-09-30', onChange() {},
+  }));
+  assert.match(html, /id="valor-certo-data-fixacao"[^>]*min="1980-01-01"/);
+  assert.match(html, /id="valor-certo-data-juros"[^>]*min="2024-08-30"/);
+});
 
 test('atualizador mantém uma ação visível em todos os estados úteis', () => {
   const info = { nome: 'Cálculos Jurídicos', versao: '2026.9.20.6', edicao: '1.06', empacotado: true, atualizacoes_configuradas: true, repositorio: 'conta/projeto', acesso: 'public' };
@@ -180,7 +210,7 @@ test('aba Honorários permite três bases e não exige dívidas no valor certo o
     if (base === 'valor_causa') {
       assert.match(html, /Valor da causa no protocolo/);
       assert.match(html, /Data do protocolo/);
-  assert.match(html, /IPCA-E · IBGE \/ SGS 7478/);
+  assert.match(html, /IPCA-E · IBGE \/ Banco Central/);
       assert.match(html, /IPCA · IBGE/);
       assert.match(html, /id="honorarios-fixacao"/);
       assert.doesNotMatch(html, /id="honorarios-valor-certo"/);
@@ -350,7 +380,7 @@ test('Civil 1 oferece datas independentes sem limitar juros à correção', () =
   assert.match(html, />Civil 1</);
   assert.match(html, /Início da correção/);
   assert.match(html, /Pode ser anterior à correção/);
-  assert.match(html, /Taxa Legal: taxas oficiais do Banco Central/);
+  assert.match(html, /<strong>Taxa Legal<\/strong>: taxas oficiais do Banco Central/);
   assert.doesNotMatch(html, /respeitado o vencimento da parcela/);
 });
 
@@ -359,9 +389,34 @@ test('Civil 2 oferece IPCA e juros simples de 1% ao mês com datas independentes
   assert.match(html, />Civil 2</);
   assert.match(html, /Início da correção/);
   assert.match(html, /Pode ser anterior à correção/);
-  assert.match(html, /Juros de mora: 1% ao mês, de forma simples/);
+  assert.match(html, /<strong>Juros de mora de 1% ao mês<\/strong>, de forma simples/);
   assert.match(html, /os juros não são capitalizados/);
   assert.doesNotMatch(html, /respeitado o vencimento da parcela/);
+});
+
+test('Civil 6 oferece juros simples de 0,5% até o corte exato do CC/2002', () => {
+  const html = render(Processamento, null, { perfil: 'civil_6_v1', dadosGerais: { criterio_inicio_juros: 'por_parcela' } });
+  assert.match(html, />Civil 6</);
+  assert.match(html, /Até 10\/01\/2003/);
+  assert.match(html, /<strong>juros simples de 0,5% ao mês<\/strong>/);
+  assert.match(html, /De 11\/01\/2003 a 29\/08\/2024/);
+  assert.match(html, /Início da correção/);
+  assert.match(html, /Pode ser anterior à correção/);
+});
+
+test('Civil 6 discrimina juros antigos no resultado e conserva os encargos posteriores', () => {
+  const r = structuredClone(resultado);
+  r.premissas.entrada.perfil = 'civil_6_v1';
+  r.custas_despesas = [];
+  for (const chave of ['ipca_pre', 'juros_05am', 'juros_selic_deduzida', 'ipca_pos', 'taxa_legal']) {
+    r.parcelas[0].componentes[chave] = { data_inicial: null, data_final: null, base_calculo: '100', fator_acumulado: null, taxa_acumulada_percentual: '0', valor: '0' };
+    r.resumo.totais_componentes[chave] = '0';
+  }
+  const html = render(ResultadoPrincipal, r);
+  assert.match(html, /Juros simples de 0,5% a.m./);
+  assert.match(html, /Até 10\/01\/2003/);
+  assert.match(html, /SELIC deduzida do IPCA/);
+  assert.match(html, /Taxa Legal/);
 });
 
 test('resultado SELIC distingue referência mensal e última competência aplicada', () => {
@@ -407,10 +462,12 @@ test('resultado IPCA e Taxa Legal mostra períodos independentes e taxa de seis 
   assert.match(html, /sem SELIC integral adicional/);
 });
 
-test('menu contém somente as duas categorias renomeadas', () => {
+test('menu contém as duas categorias e a consulta de índices', () => {
   const html = render(() => createElement(Layout, null, 'Conteúdo'));
   const nav = html.match(/<nav\b[^>]*>([\s\S]*?)<\/nav>/)[1];
-  assert.equal((nav.match(/<a\b/g) || []).length, 2);
+  assert.equal((nav.match(/<a\b/g) || []).length, 3);
+  assert.match(nav, /href="\/indices"/);
+  assert.match(nav, />Índices</);
   assert.match(nav, /Principal e honorários/);
   assert.match(nav, />Honorários</);
   assert.doesNotMatch(nav, /Resultado e PDF|Dados do cálculo|Honorários sucumbenciais/);
@@ -476,7 +533,7 @@ test('resultado concilia descontos, preserva parcelas e mostra memória própria
   assert.match(html, /Crédito posterior/);
   assert.match(html, /Critérios e memória dos descontos/);
   assert.match(html, /Parcelas atualizadas/);
-  assert.match(html, /descontos abatidos/);
+  assert.match(html, /descontos R\$[^\d]*22,40 = crédito líquido R\$[^\d]*89,60/);
   assert.match(html, /110,60/);
 });
 
@@ -568,7 +625,8 @@ test('critérios e explicações ficam no bloco Dados do cálculo, antes das par
     assert.match(detalhes, /Ver os critérios aplicados/);
     assert.match(detalhes, /id="indices-disponiveis">Consultando os índices…/);
     assert.doesNotMatch(dados.slice(0, dados.indexOf('<details')), /Consultando os índices|Índices completos/);
-    for (const texto of textos) assert.ok(detalhes.includes(texto), `Critérios de ${perfil}: ${texto}`);
+    const textoDetalhes = detalhes.replace(/<[^>]*>/g, '');
+    for (const texto of textos) assert.ok(textoDetalhes.includes(texto), `Critérios de ${perfil}: ${texto}`);
     assert.equal((html.match(/Ver os critérios aplicados/g) || []).length, 1);
     assert.ok(html.indexOf('Ver os critérios aplicados') < html.indexOf('id="parcelas-titulo"'));
     assert.doesNotMatch(html.slice(html.indexOf('</fieldset>')), /Ver os critérios aplicados/);
@@ -615,7 +673,7 @@ test('critérios usam fonte menor e períodos seguidos de dois-pontos na mesma l
 test('mover o aviso de índices não remove limites e erros do campo de data', async () => {
   const fonte = await readFile(new URL('../src/pages/Processamento.tsx', import.meta.url), 'utf8');
   const campoData = fonte.match(/<Input id="data-base"[^\n]+/)[0];
-  assert.match(campoData, /min=\{criterios\?\.inicio\} max=\{limiteDataBase\}/);
+  assert.match(campoData, /min=\{dataBaseMinima\} max=\{limiteDataBase\}/);
   assert.match(campoData, /disabled=\{!cobertura\} required/);
   assert.match(campoData, /error=\{limiteDataBase/);
   assert.doesNotMatch(campoData, /hint=/);
@@ -677,7 +735,7 @@ test('as três bases exibem os campos próprios sem exigir dados de outra base',
     assert.equal(html.includes('id="honorarios-protocolo"'), base === 'valor_causa');
     assert.equal(html.includes('id="honorarios-valor-certo"'), base === 'valor_certo');
     if (base === 'valor_causa') {
-  assert.match(html, /IPCA-E · IBGE \/ SGS 7478/);
+  assert.match(html, /IPCA-E · IBGE \/ Banco Central/);
       assert.match(html, /IPCA · IBGE \/ Banco Central/);
       assert.match(html, /sem juros/);
     }
@@ -792,4 +850,77 @@ test('resultado distingue honorários judiciais e destaque contratual do total',
   assert.doesNotMatch(resumo, /36,96|Honorários contratuais/);
   assert.match(html, /Base comum:[\s\S]*?112,00 · parcelas atualizadas após descontos, sem honorários da sentença, custas ou despesas/);
   assert.doesNotMatch(html, /\+ honorários da sentença/);
+});
+
+
+test('reordenação move nos dois sentidos e conserva identidade, campos e lista de origem', () => {
+  const parcelas = [
+    { numero: 8, historico: 'Primeira', data_vencimento: '2025-01-01', valor_bruto: '100', valor_pago_na_data: '20', multa_percentual: '2', data_inicial_juros: '2024-12-01' },
+    { numero: 3, historico: 'Segunda', data_vencimento: '2025-02-01', valor_bruto: '200', valor_pago_na_data: '0', multa_percentual: '5', data_inicial_juros: null },
+    { numero: 15, historico: 'Terceira', data_vencimento: '2025-03-01', valor_bruto: '300', valor_pago_na_data: '30', multa_percentual: '0', data_inicial_juros: '2025-03-02' },
+  ];
+  const copia = structuredClone(parcelas);
+  const fim = reordenarParcelas(parcelas, 0, 2);
+  assert.deepEqual(fim.map(p => p.numero), [3, 15, 8]);
+  assert.equal(fim[2], parcelas[0]);
+  assert.deepEqual(reordenarParcelas(fim, 2, 0), parcelas);
+  assert.deepEqual(reordenarParcelas(parcelas, 1, 0).map(p => p.numero), [3, 8, 15]);
+  assert.deepEqual(parcelas, copia);
+});
+
+test('movimento sem mudança e limites da lista conservam a referência', () => {
+  const parcelas = [{ numero: 1 }, { numero: 2 }];
+  for (const [origem, destino] of [[0, 0], [-1, 0], [0, -1], [2, 0], [0, 2], [0.5, 1], [0, NaN]]) {
+    assert.equal(reordenarParcelas(parcelas, origem, destino), parcelas);
+  }
+  const vazio = [];
+  assert.equal(reordenarParcelas(vazio, 0, 0), vazio);
+});
+
+test('inserção ajusta a posição ao retirar a origem, inclusive entre vizinhas', () => {
+  assert.equal(destinoDaInsercao(0, 3), 2);
+  assert.equal(destinoDaInsercao(2, 0), 0);
+  assert.equal(destinoDaInsercao(1, 1), 1);
+  assert.equal(destinoDaInsercao(1, 2), 1);
+  assert.equal(destinoDaInsercao(1, 3), 2);
+});
+
+test('nova ordem invalida o resultado e permanece na entrada recuperada', () => {
+  const parcelas = [{ numero: 3, historico: 'Terceira' }, { numero: 1, historico: 'Primeira' }, { numero: 2, historico: 'Segunda' }];
+  const anterior = { parcelas: [], resultado, dadosGerais: { processo: 'TESTE' } };
+  const atualizado = calculoReducer(anterior, { type: 'SET_PARCELAS', payload: parcelas });
+  assert.equal(atualizado.resultado, null);
+  assert.deepEqual(atualizado.parcelas.map(p => p.numero), [1, 2, 3]);
+  assert.deepEqual(atualizado.parcelas.map(p => p.historico), ['Terceira', 'Primeira', 'Segunda']);
+  assert.deepEqual(parcelas.map(p => p.numero), [3, 1, 2]);
+  assert.equal(atualizado.dadosGerais, anterior.dadosGerais);
+  assert.equal(anterior.resultado, resultado);
+  const recuperado = calculoReducer(atualizado, { type: 'LOAD_CALCULO', payload: {
+    perfil: 'selic_cjf_v1', dados_gerais: anterior.dadosGerais, parcelas,
+  } });
+  assert.deepEqual(recuperado.parcelas.map(p => p.numero), [1, 2, 3]);
+  assert.deepEqual(recuperado.parcelas.map(p => p.historico), ['Terceira', 'Primeira', 'Segunda']);
+});
+
+test('alças preservam a ordem exibida e oferecem instrução acessível somente com várias parcelas', () => {
+  const parcelas = [3, 1, 2].map(numero => ({ numero, historico: `Parcela ${numero}`, valor_bruto: '100', valor_pago_na_data: '0', data_vencimento: '2025-09-01' }));
+  const html = render(Processamento, null, { parcelas });
+  assert.ok(html.indexOf('data-parcela-numero="3"') < html.indexOf('data-parcela-numero="1"'));
+  assert.match(html, /aria-label="Reordenar parcela 3" aria-describedby="parcelas-ordem-ajuda"/);
+  assert.match(html, /setas para cima e para baixo/);
+  assert.match(html, /aria-live="polite"/);
+  const unica = render(Processamento);
+  assert.match(unica, /aria-label="Reordenar parcela 1"[^>]*disabled=""/);
+  assert.doesNotMatch(unica, /id="parcelas-ordem-ajuda"/);
+  assert.doesNotMatch(render(Processamento, null, { parcelas: [] }), /parcel-drag-handle/);
+});
+
+test('uma nova navegação pode restaurar a mesma chave nas duas telas', async () => {
+  for (const pagina of ['Processamento', 'HonorariosSucumbenciais']) {
+    const fonte = await readFile(new URL(`../src/pages/${pagina}.tsx`, import.meta.url), 'utf8');
+    assert.match(fonte, /ultimaNavegacaoRecuperada\.current === location\.key/);
+    assert.match(fonte, /ultimaNavegacaoRecuperada\.current = location\.key/);
+    assert.match(fonte, /\[.*location\.key, location\.state\]/);
+    assert.doesNotMatch(fonte, /=== recuperado\.chave_recuperacao/);
+  }
 });

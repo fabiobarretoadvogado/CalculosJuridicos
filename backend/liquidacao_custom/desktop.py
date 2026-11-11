@@ -126,6 +126,13 @@ def self_check() -> int:
         }.issubset(ferramentas)
     except Exception:
         mcp_ok = False
+    try:
+        from ssl import create_default_context
+
+        create_default_context()
+        https_ok = True
+    except Exception:
+        https_ok = False
     checks = {
         "interface": (package / "web/index.html").is_file(),
         "logos": (
@@ -135,6 +142,7 @@ def self_check() -> int:
         "api": "/api/v1/calculo" in api_paths,
         "recuperacao": "/api/v1/calculos/{chave}" in api_paths,
         "atualizacoes": "/api/v1/app/info" in api_paths,
+        "https": https_ok,
         "downloads": downloads_enabled,
         "mcp": mcp_ok,
     }
@@ -167,6 +175,16 @@ def run() -> int:
     thread.start()
     try:
         _wait_server(port)
+        from liquidacao_custom.index_data.routes import synchronize_and_record
+
+        def update_index_data():
+            try:
+                synchronize_and_record()
+            except Exception:
+                pass  # A consulta de índices mostra a falha e mantém a base anterior.
+
+        if getattr(sys, "frozen", False):
+            threading.Thread(target=update_index_data, name="indices-update", daemon=True).start()
         import webview
 
         _enable_webview_downloads(webview)

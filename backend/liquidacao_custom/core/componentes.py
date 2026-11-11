@@ -18,7 +18,7 @@ COLUNAS_COMPONENTES_EC136 = (
 )
 
 COLUNAS_FAZENDA_1 = (
-    ("ipcae_pre", "IPCA-E", "desde 01/07/2009"),
+    ("ipcae_pre", "IPCA-E", "desde o início da correção"),
     ("poupanca_pre", "Poupança", "desde 01/07/2009"),
 )
 
@@ -39,8 +39,18 @@ def colunas_componentes(resultado):
 def colunas_perfil(resultado):
     if resultado.premissas.get("perfil") == "poupanca_deposito_v1":
         return (("poupanca_deposito", "Poupança - remuneração da conta", "aniversários completos"),)
-    if resultado.premissas.get("perfil") == "ipca_taxa_legal_v1":
+    if resultado.premissas.get("perfil") in ("ipca_taxa_legal_v1", "civil_5_taxa_legal_reconstruida_v1"):
         return (("ipca", "IPCA", "desde o início da correção"), ("taxa_legal", "Taxa Legal", "desde o início dos juros"))
+    if resultado.premissas.get("perfil") in ("civil_4_temporario_v1", "civil_6_v1"):
+        anteriores = (("juros_05am", "Juros simples de 0,5% a.m.", "até 10/01/2003"),) if resultado.premissas.get("perfil") == "civil_6_v1" else ()
+        return (("ipca_pre", "IPCA anterior", "antes da SELIC, até 29/08/2024"),
+                *anteriores,
+                ("juros_selic_deduzida", "SELIC deduzida do IPCA", "somente juros, até 29/08/2024"),
+                ("selic", "SELIC única", "até 29/08/2024"),
+                ("ipca_pos", "IPCA posterior", "desde 30/08/2024"),
+                ("taxa_legal", "Taxa Legal", "desde 30/08/2024"))
+    if resultado.premissas.get("perfil") == "civil_3_v1":
+        return (("inpc", "INPC", "desde o início da correção"), ("juros_1am", "Juros simples de 1% a.m.", "desde o início dos juros"))
     if resultado.premissas.get("perfil") == "civil_2_v1":
         return (("ipca", "IPCA", "desde o início da correção"), ("juros_1am", "Juros simples de 1% a.m.", "desde o início dos juros"))
     if resultado.premissas.get("perfil") == "ipcae_1am_simples_v1":

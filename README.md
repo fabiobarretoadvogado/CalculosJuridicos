@@ -2,8 +2,6 @@
 
 **Baixar o instalador para Windows:** [abrir a página de Releases](https://github.com/fabiobarretoadvogado/CalculosJuridicos/releases/latest). Na versão desejada, expanda **Assets** e baixe o arquivo `CalculosJuridicos-Setup-...-x64.exe`.
 
-
-
 O aplicativo aplica exclusivamente os critérios definidos para este projeto:
 
 - **Fazenda Pública 1**: IPCA-E e poupança a partir de 01/07/2009.
@@ -12,9 +10,20 @@ O aplicativo aplica exclusivamente os critérios definidos para este projeto:
 - **Fazenda Pública 4**: IPCA-E e poupança até 08/12/2021; SELIC de 09/12/2021 a 09/09/2025; IPCA-E e juros simples de 2% ao ano, limitados à SELIC quando inferior, a partir de 10/09/2025.
 - Perfil **SELIC**: SELIC simples em todo o período informado.
 - **Civil 1**: correção pelo IPCA oficial e juros simples pela Taxa Legal oficial do BCB, com datas independentes.
+- **Civil 5**: IPCA e Taxa Legal com datas independentes; taxa reconstruída pela metodologia do Bacen antes de 30/08/2024 e oficial a partir dessa data, sem modificar o Civil 1.
+- **Civil 6**: igual ao Civil 4 desde 11/01/2003; antes disso, IPCA e juros simples de 0,5% ao mês, com datas independentes. Detalhes em [Civil 6](docs/civil_6.md).
 - **Civil 2**: correção pelo IPCA oficial e juros de mora simples de 1% ao mês, também com datas independentes.
+- **Civil 3**: as mesmas regras do Civil 2, com INPC SGS 188 em lugar de IPCA.
 
 Além da atualização ordinária de parcelas, a aba **Honorários** permite cálculo isolado por **proveito econômico (redução de dívida)**, **valor da causa atualizado** ou **equidade (valor certo)**.
+
+## Ordem das parcelas
+
+No relatório PDF da categoria principal, as parcelas são identificadas como **créditos**. Os pagamentos e descontos podem começar na mesma página, separados do bloco de créditos por 1,5 cm, com a tabela **DÉBITO - DECRÉSCIMO**, para distinguir os valores acrescidos dos valores abatidos. Pagamentos desmarcados continuam identificados como não abatidos. Se não houver espaço para o início do próximo bloco, ele passa para a página seguinte. A separação preserva valores, encargos e conciliação; as custas podem compartilhar a página com intervalo de 1,5 cm, se couber o início do bloco. Conferência: [Créditos e débitos no PDF](docs/qa_creditos_debitos_pdf.md).
+
+Na tela **Principal e honorários**, arraste a alça ao lado do número da parcela até a posição desejada. A linha azul indica onde ela será inserida. Pelo teclado, selecione a alça e use as setas para cima ou para baixo; Esc cancela um arraste em andamento.
+
+A reordenação conserva o número de identificação, a descrição, as datas, os valores, os pagamentos e a multa da parcela. Uma única parcela mantém a alça desativada. Soltar fora da lista ou manter a posição não altera o cálculo. Trocar a ordem invalida o resultado anterior; calcule novamente para que a sequência seja usada na tela, no PDF, no Excel, no CSV e na recuperação pela chave. Conferência: [Reordenação de parcelas](docs/qa_reordenacao_parcelas.md).
 
 ## Honorários isolados — valor da causa e equidade
 
@@ -24,7 +33,7 @@ Equidade / valor certo permite atualizar a quantia originalmente fixada: informe
 
 A alternativa expressa `Valor já na data-base` permanece sem nova incidência, evitando atualizar a quantia duas vezes; entradas antigas sem `encargos_valor_certo` conservam esse comportamento. A aplicação não arbitra honorários nem substitui o valor judicial ou os critérios dos §§ 8º e 8º-A do art. 85. O modo de valor certo da tela principal permanece como antes. Registro desta extensão: [Atualização do valor certo](docs/qa_honorarios_valor_certo_atualizado.md).
 
-As novas bases não exigem dívidas. Alternar preserva campos e invalida resultados, mas envia somente os dados aplicáveis. Custas continuam exclusivamente IPCA-E, fora da base e em página própria. `POST /api/v1/honorarios/isolados` calcula; `POST /api/v1/honorarios/isolados/exportar/pdf` gera o relatório. Exemplos hipotéticos: `backend/examples/honorarios_isolados_valor_causa.json` e `backend/examples/honorarios_isolados_equidade.json`. Regras e validações: [Honorários isolados](docs/qa_honorarios_isolados.md).
+As novas bases não exigem dívidas. Alternar preserva campos e invalida resultados, mas envia somente os dados aplicáveis. Custas continuam exclusivamente IPCA-E, fora da base e em bloco próprio com intervalo de 1,5 cm quando compartilhar a página. `POST /api/v1/honorarios/isolados` calcula; `POST /api/v1/honorarios/isolados/exportar/pdf` gera o relatório. Exemplos hipotéticos: `backend/examples/honorarios_isolados_valor_causa.json` e `backend/examples/honorarios_isolados_equidade.json`. Regras e validações: [Honorários isolados](docs/qa_honorarios_isolados.md).
 
 ## Honorários sucumbenciais sobre redução de dívida
 
@@ -89,9 +98,23 @@ Os campos de `Dados do cálculo` compartilham uma única grade: atualizar até, 
 
 Nos quatro perfis da Fazenda, o termo inicial dos juros respeita o vencimento. A poupança incide apenas nas faixas indicadas pelo perfil; a SELIC reúne atualização e mora; na Fazenda Pública 4, os juros simples de 2% ao ano incidem a partir de 10/09/2025. O pagamento opcional continua limitado ao próprio vencimento.
 
-O PDF é gerado pelo próprio backend, a partir do mesmo motor de cálculo, em A4 horizontal. Apresenta dados do processo, resumo financeiro, observações, valores por parcela, custas e despesas processuais, critérios e fontes consultáveis. Cada tabela possui um único cabeçalho, exibido somente no início, e as páginas de continuação preservam as mesmas larguras e alinhamentos das colunas. As páginas são numeradas. Pagamentos e datas de juros diferentes do vencimento são identificados por parcela. Quando houver custas e despesas, sua tabela ocupa página exclusiva e exibe nome, data, valor original, fator IPCA-E, correção e valor atualizado. A memória mensal completa permanece no Excel, CSV e arquivo de texto. O PDF das 36 parcelas do exemplo ocupa quatro páginas. O demonstrativo reúne bases, índices acumulados, acréscimos, períodos, critérios e fórmulas de conferência, sem remeter a planilhas para demonstrar os valores. As bases são exibidas com quatro casas decimais; o cálculo conserva a precisão integral.
+O PDF é gerado pelo próprio backend, a partir do mesmo motor de cálculo, em A4 horizontal. Todas as modalidades compartilham cabeçalho, identificação, estilos, observações, custas, fontes e rodapé. A ordem é comum: resumo financeiro, dados do processo e ressalvas; operações em blocos identificados; critérios e metodologia em uma seção única; memórias detalhadas em anexo, quando existentes; fontes reunidas no final, sem links repetidos. As fórmulas e as bases próprias de cada modalidade são preservadas. A quantidade de páginas acompanha o conteúdo, sem limite fixo por número de parcelas.
 
-O resultado e o PDF separam os componentes conforme o perfil escolhido. Na Fazenda Pública 4, são exibidos IPCA-E e poupança até 08/12/2021, SELIC de 09/12/2021 a 09/09/2025, IPCA-E e juros simples de 2% ao ano posteriores, além do eventual ajuste ao limite SELIC. Cada coluna mostra o índice acumulado e o acréscimo em reais por parcela. Período não incidente é identificado separadamente de uma taxa zero.
+Todos os blocos de tabelas seguem a mesma regra: intervalo de **1,5 cm** e aproveitamento da página quando couberem título, explicações, cabeçalho e primeira linha. A regra abrange multas, honorários, cumprimento, destaque contratual, custas, faixas, operações de dívida e memórias mensais. Quando não couber, o bloco começa na página seguinte sem intervalo adicional no topo. As tabelas longas continuam conforme a altura disponível, sem grupos fixos de itens. A síntese inicial e o anexo técnico conservam sua organização própria.
+
+As tabelas operacionais e memórias compartilham também fonte, margens internas, cabeçalhos sobre fundo claro, divisórias horizontais e fechamento azul-marinho. Descrições ficam à esquerda; valores, à direita. O cumprimento apresenta o total dos acréscimos de multa e honorários. As tabelas de uma única operação e as memórias conservam o fechamento mesmo quando não há coluna a totalizar. Essas regras são centralizadas em `tabela_operacional`, sem alterar valores ou fórmulas.
+
+Na categoria principal, **CRÉDITO - ACRÉSCIMO** e **DÉBITO - DECRÉSCIMO** podem compartilhar a página, com 1,5 cm de separação. Quando o início do próximo bloco não couber, ele passa para a página seguinte. Na redução de dívida, dívida original e dívida correta são separadas; nas bases isoladas, é demonstrada somente a base escolhida. Cada tabela possui um único cabeçalho, exibido somente no início, e as continuações preservam larguras e alinhamentos. Pagamentos e datas de juros diferentes do vencimento são identificados por parcela. Custas e despesas podem começar na página anterior com intervalo de 1,5 cm, quando houver espaço para título, explicação, cabeçalho e primeira linha, com nome, data, valor original, fator IPCA-E, correção e valor atualizado. O demonstrativo conserva bases, índices acumulados, acréscimos, períodos e fórmulas de conferência. As bases são exibidas com quatro casas decimais; taxas da Taxa Legal, com seis; o cálculo conserva a precisão integral. A memória mensal completa permanece também no Excel, CSV e arquivo de texto.
+
+Ressalvas de simulação, saldo zero e limite de abatimento aparecem junto ao resumo inicial. A padronização não transforma comparação em pagamento nem infere quitação. O contrato está em `AGENTS.md`; os exemplos, verificações e a pendência anterior de teste estão em [Padronização dos relatórios](docs/qa_padronizacao_relatorios.md).
+
+A seção técnica usa blocos de texto por operação, sem tabela, com corpo uniforme de 9 pontos. Cada título reúne padrão aplicado, início dos encargos, referência final e regras exclusivas. Regras compartilhadas aparecem uma única vez ao final, indicando as operações abrangidas. Padrões e termos diferentes permanecem identificados. A referência mensal SELIC e a última competência aplicada continuam visíveis; a cobertura máxima do programa permanece na interface e nas validações, sem ocupar o relatório.
+
+Todos os títulos de seção e subseção dos PDFs usam letras maiúsculas por meio dos estilos compartilhados, incluindo operações, dados do processo, observações, regras, memórias e fontes.
+
+Os resumos financeiros usam campos de mesma largura e valores alinhados. Ficam em uma linha quando as quantias couberem, com quebra dos rótulos dentro dos campos; nos demais casos, usam linhas equilibradas, preservando a fonte e o total à direita. Esse padrão também vale para os resumos das operações de dívida dos honorários. As tabelas de lançamentos usam o cabeçalho `Descrição`. A explicação genérica do sinal `-` e o complemento `até a data-base` foram retirados; períodos específicos e datas efetivamente aplicadas permanecem identificados.
+
+O resultado e o PDF separam os componentes conforme o perfil escolhido. Na Fazenda Pública 4, são exibidos IPCA-E e poupança até 08/12/2021, SELIC de 09/12/2021 a 09/09/2025, IPCA-E e juros simples de 2% ao ano posteriores. No PDF, os valores pós EC 136/2025 são apresentados líquidos do limite SELIC: a eventual redução já integra a correção monetária, sem campo ou coluna de ajuste separado, preservando os juros e o total apurados pelo motor. Essa apresentação abrange créditos, débitos, multas e operações de dívida dos honorários. Os fatores e taxas continuam identificando os índices aplicados antes da redução, e os componentes originais permanecem nos dados e memórias detalhadas. O resumo usa o rótulo `(-) Descontos`. Período não incidente é identificado separadamente de uma taxa zero.
 
 O resultado da API inclui `componentes` por parcela, com datas efetivas, base de cálculo, fator ou taxa acumulada e valor. O resumo inclui `totais_componentes`. As bases e índices mantêm sua precisão integral. Para conciliar centavos sem mudar o total calculado, os valores de atualização por componente são diferenças dos saldos arredondados; a poupança pós é a diferença entre o total de juros arredondado e a poupança pré arredondada. Excel e CSV incluem a memória desses componentes, além dos trechos mensais.
 
@@ -107,13 +130,13 @@ Não há seleção manual de índices para custas e despesas: essa rubrica usa o
 
 ## Critérios civis com datas independentes
 
-Na tela **Principal e honorários**, selecione **Civil 1** ou **Civil 2**. Informe o **Início da correção** na parcela e o termo inicial dos juros por data específica, citação ou individualmente. O termo inicial dos juros não é limitado pela data da correção nesses perfis. O mesmo padrão está disponível para descontos e para as operações de comparação de dívidas dos honorários.
+Na tela **Principal e honorários**, selecione **Civil 1**, **Civil 2**, **Civil 3**, **Civil 4 (temporário)**, **Civil 5** ou **Civil 6**. Informe o **Início da correção** na parcela e o termo inicial dos juros por data específica, citação ou individualmente. O termo inicial dos juros não é limitado pela data da correção nesses perfis. O mesmo padrão está disponível para descontos e para as operações de comparação de dívidas dos honorários.
 
-Ambos usam IPCA oficial **SGS 433**, distinto do IPCA-E. O **Civil 1** usa Taxa Legal mensal oficial **SGS 29543**, publicada segundo a [Resolução CMN 5.171/2024](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?numero=5171&tipo=resolu%C3%A7%C3%A3o+cmn). O **Civil 2** usa juros de mora simples de 1% ao mês, proporcionais aos dias corridos, sem capitalização.
+Civil 1 e Civil 2 usam IPCA oficial **SGS 433**, distinto do IPCA-E. O **Civil 1** usa Taxa Legal mensal oficial **SGS 29543**, publicada segundo a [Resolução CMN 5.171/2024](https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?numero=5171&tipo=resolu%C3%A7%C3%A3o+cmn). O **Civil 2** usa juros de mora simples de 1% ao mês, proporcionais aos dias corridos, sem capitalização.
 
 Neste perfil, incluem-se os termos iniciais e exclui-se a data-base, conforme a [Calculadora do Cidadão](https://www3.bcb.gov.br/CALCIDADAO/publico/metodologiaCorrigirPelaTaxaLegal.do?method=metodologiaCorrigirPelaTaxaLegal). O IPCA usa fatores geométricos proporcionais aos dias corridos; os juros usam a soma simples de taxa mensal × dias / dias do mês. A taxa acumulada aplicada conserva seis casas decimais e incide sobre o principal corrigido final, com precisão integral até o arredondamento financeiro HALF_UP. Deflações são mantidas.
 
-Os termos iniciais devem ser a partir de **30/08/2024**; períodos anteriores exigem outro critério expresso. O snapshot consultado em **17/09/2026** contém Taxa Legal até setembro/2026 e IPCA até agosto/2026; como a data-base é excluída, a data-base máxima comum é **01/09/2026**, utilizando os índices até 31/08/2026. Índices ausentes não são estimados. O cálculo não depende de consulta à internet.
+Os termos iniciais devem ser a partir de **30/08/2024**; períodos anteriores exigem outro critério expresso. O snapshot consultado em **01/10/2026** contém Taxa Legal até outubro/2026 e IPCA até agosto/2026; como a data-base é excluída, a data-base máxima comum permanece **01/09/2026**, utilizando os índices disponíveis até 31/08/2026. O IPCA de setembro ainda não foi divulgado; índices ausentes não são estimados. O cálculo não depende de consulta à internet.
 
 Tela, PDF, Excel e CSV discriminam IPCA e Taxa Legal por coluna, com bases, datas efetivas e encargos. O PDF inclui a memória mensal da Taxa Legal; Excel e CSV têm memória própria das taxas oficiais, frações e juros. As premissas guardam as entradas e hashes dos dois snapshots. O caso fornecido, a metodologia e a validação estão em [IPCA e Taxa Legal](docs/qa_ipca_taxa_legal.md); a entrada reproduzível está em `backend/examples/processo_3005719-41.2026.8.06.0297.json`.
 
@@ -127,7 +150,7 @@ Este perfil cobre a faixa de IPCA-E e poupança do [Tema 905/STJ](https://proces
 
 Convenções de contagem, preservada a divisão na transição de critérios:
 
-- Nos perfis da Fazenda, intervalos incluem o primeiro e o último dia. Em setembro/2025, os perfis 3 e 4 aplicam SELIC de 1 a 9 e o regime posterior de 10 a 30, sem sobreposição. Os perfis Civil 1 e Civil 2 incluem o início e excluem a data-base.
+- Nos perfis da Fazenda, intervalos incluem o primeiro e o último dia. Em setembro/2025, os perfis 3 e 4 aplicam SELIC de 1 a 9 e o regime posterior de 10 a 30, sem sobreposição. Os perfis Civil 1 a Civil 6 incluem o início e excluem a data-base.
 - Em dezembro/2021, o Tema 905 incide de 1 a 8 e a SELIC de 9 a 31. Juros de poupança não integram a base da SELIC. O principal corrigido pelo IPCA-E até 08/12/2021 passa a ser a base da SELIC simples.
 - Meses incompletos usam dias corridos divididos pelos dias reais do mês.
 - SELIC: acumulação **simples** das taxas mensais da série BCB SGS 4390, proporcionais aos dias, sobre o principal corrigido até 08/12/2021 ou o principal apurado para vencimentos posteriores. A data de juros opcional não separa nem posterga a SELIC única.
@@ -141,13 +164,14 @@ Essas convenções ficam visíveis na interface e são preservadas nos arquivos 
 
 ## Índices e cobertura
 
-Base consultada em **20/09/2026**, arquivada em `backend/data/indices_simplificados.json`, com fontes originais em `backend/data/fontes/`:
+Base consultada em **01/10/2026**, arquivada em `backend/data/indices_simplificados.json`, com fontes originais em `backend/data/fontes/`:
 
-- SELIC mensal: Banco Central, SGS 4390, com série histórica até dezembro/2020 e série corrente de dezembro/2021 a agosto/2026; a mesma fonte alimenta o período posterior à EC 136.
-- IPCA-15/IPCA-E produzido pelo IBGE e distribuído pelo Banco Central na série SGS 7478: variações mensais até agosto/2026.
-- Remuneração total da poupança: Banco Central, SGS 25 (01/07/2009 a 03/05/2012), SGS 195 (04/05/2012 a 08/12/2021, em dois arquivos) e SGS 195 (01/09/2025 a 06/09/2026). Os arquivos originais preservam taxa, data inicial e data final de cada período publicado. A antiga série de meta SELIC permanece apenas no arquivo histórico de fontes e não alimenta este cálculo.
+- SELIC mensal: Banco Central, SGS 4390, com série histórica até dezembro/2020 e série corrente de dezembro/2021 a setembro/2026. A competência de setembro foi fechada em 1,08%; a mesma fonte alimenta o período posterior à EC 136.
+- IPCA-15/IPCA-E produzido pelo IBGE e distribuído pelo Banco Central na série SGS 7478: variações mensais até setembro/2026.
+- Remuneração total da poupança: Banco Central, SGS 25 (01/07/2009 a 03/05/2012), SGS 195 (04/05/2012 a 08/12/2021, em dois arquivos) e SGS 195 (01/09/2025 a 28/09/2026). Os arquivos originais preservam taxa, data inicial e data final de cada período publicado. A antiga série de meta SELIC permanece apenas no arquivo histórico de fontes e não alimenta este cálculo.
+- IPCA oficial usado na Civil 1 e Civil 2: Banco Central, SGS 433, até agosto/2026. A Taxa Legal oficial do BCB está atualizada até outubro/2026. O IGP-M oficial da FGV está atualizado até setembro/2026; o INPC está atualizado até agosto/2026. A série legada de juros simples de 1% ao mês permanece separada e inalterada.
 
-O limite é específico de cada padrão. Os quatro perfis da Fazenda Pública aceitam data-base até **31/08/2026**; Fazenda Pública 2 agora usa a SELIC oficial até agosto/2026. Os perfis SELIC, Civil 1 e Civil 2 aceitam **01/09/2026**, pois nesses critérios a data-base é uma referência mensal ou é excluída, de modo que o último índice efetivamente usado é o de agosto/2026. Operações combinadas, como honorários, custas e descontos, adotam o menor limite aplicável e informam na tela qual critério o definiu.
+O limite é específico de cada padrão. Fazenda Pública 1 e 3 aceitam data-base até **31/08/2026**, pois ainda falta a série completa de poupança para setembro. Fazenda Pública 2 e 4 aceitam até **30/09/2026**, com a SELIC de setembro fechada. O perfil SELIC/CJF aceita **01/10/2026**, utilizando a competência de setembro. Civil 1 e Civil 2 aceitam **01/09/2026**, pois o IPCA oficial mais recente é o de agosto. As custas e despesas atualizadas por IPCA-E têm cobertura até **30/09/2026**. Operações combinadas, como honorários, custas e descontos, adotam o menor limite aplicável e informam na tela qual critério o definiu.
 
 O campo de data e o botão de cálculo bloqueiam datas posteriores; a API aplica o mesmo bloqueio ao cálculo e às exportações, inclusive em chamadas diretas. A interface e o PDF distinguem a data-base máxima do último dia ou competência efetivamente utilizados. O limite avança somente quando a base recebe todos os índices necessários, e essa consulta precisa terminar antes de habilitar o cálculo.
 
@@ -177,12 +201,13 @@ Abra http://127.0.0.1:5173. A API está em http://127.0.0.1:8000/docs.
 ## Validar
 
 ```powershell
-# backend
-.\.venv\Scripts\python.exe -m pytest -q
-# frontend
-npm.cmd run lint
-npm.cmd run build
+# na raiz do projeto: testes essenciais do backend e frontend
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test-suite.ps1 -Suite rapida
+# antes de uma entrega: todos os testes
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test-suite.ps1 -Suite completa
 ```
+
+As suítes por área (`motor`, `integracao`, `relatorios`, `indices` e `frontend`), a coleta e o isolamento dos dados estão descritos em [docs/suite_de_testes.md](docs/suite_de_testes.md). Para conferir a interface sem executar os testes, use `npm.cmd run lint` e `npm.cmd run build` na pasta `frontend`.
 
 Os testes cobrem a transição, dias-limite, ano bissexto, acumulação simples, variações mensais do IPCA-15/IPCA-E, deflação, início dos juros, índices ausentes, rejeição de critérios antigos, importação e consistência das exportações.
 
@@ -209,7 +234,7 @@ Exemplo:
 
 Com o snapshot atual, total de R$ 1.011,78: atualização de R$ 7,03 e juros da poupança (remuneração total) de R$ 4,75. Trata-se de um exemplo técnico das convenções acima.
 
-O uso permanece local e sem autenticação remota. A partir desta versão, cada cálculo concluído recebe uma chave `CJ1-...`, exibida na tela e impressa no PDF. A entrada e o resultado são guardados no perfil local do Windows, protegidos para a conta atual, e podem ser reabertos para edição pelo painel **Recuperar cálculo**. A chave não é um endereço público e só localiza registros criados nesta instalação; não há importação retroativa de cálculos anteriores.
+O uso permanece local e sem autenticação remota. A partir da edição 1.10, cada cálculo concluído recebe uma chave `CJ1-...`, exibida na tela e impressa no PDF. A entrada e o resultado são guardados em uma pasta compartilhada do perfil local do Windows, protegidos para a conta atual, e podem ser reabertos para edição pelo painel **Recuperar cálculo**, tanto quando foram gerados pela interface quanto pela integração com o Codex. A edição 1.11 importa automaticamente e sem apagar a origem os registros que a 1.10 possa ter separado entre esses dois contextos. A chave não é um endereço público e só localiza registros criados neste perfil do Windows; cálculos anteriores à criação das chaves continuam sem migração retroativa.
 
 ## Aplicativo para Windows
 
@@ -217,8 +242,48 @@ O projeto também pode ser distribuído como programa instalado, com interface p
 
 ### Integração com o Codex
 
-O instalador oferece, marcada por padrão, a opção **Integrar ao Codex**. Ela registra um plugin pessoal e um servidor MCP local que iniciam o próprio `CalculosJuridicos.exe` em modo silencioso. O Codex passa a consultar critérios, executar os três fluxos de cálculo e gerar os mesmos relatórios PDF da interface, sem precisar do código-fonte e sem controlar a tela do programa.
+O instalador oferece, marcada por padrão, a opção **Integrar ao Codex**. Ela registra um plugin pessoal e um único servidor MCP compartilhado por todos os chats, com conexão HTTP autenticada restrita a `127.0.0.1`. O ambiente necessário acompanha o instalador e não depende do Python ou do cache do Codex. O serviço inicia oculto no login e uma trava impede cópias duplicadas. O Codex consulta critérios, executa os três fluxos de cálculo e gera os mesmos relatórios PDF da interface, sem abrir uma cópia completa do aplicativo por conversa.
 
 Os PDFs são gravados, por padrão, em `Documentos\Cálculos Jurídicos\Relatórios`; uma pasta diferente pode ser informada em cada chamada. O resultado devolve ao Codex o caminho absoluto, o link local do arquivo, tamanho e hash SHA-256. Arquivos existentes não são sobrescritos.
 
-A integração acompanha o executável e é atualizada pelo mesmo instalador. Depois da primeira instalação ou de uma atualização do plugin, abra uma nova tarefa no Codex para carregar as ferramentas. A desinstalação do aplicativo remove somente os arquivos gerenciados por ele e preserva outros plugins e arquivos pessoais.
+A integração acompanha o executável e é atualizada pelo mesmo instalador. A atualização encerra o serviço anterior antes da troca de arquivos e reinicia a edição correspondente, preservando endereço e chave de conexão. Instalações antigas em STDIO são migradas automaticamente. Na primeira migração, reinicie o Codex para descarregar conexões antigas já abertas. A desinstalação remove a tarefa e as configurações gerenciadas, preservando outros plugins, arquivos pessoais e os cálculos salvos. Detalhes técnicos e verificação: [serviço compartilhado](docs/integracao_codex_compartilhada.md).
+
+
+### Civil 3 — inclusão de 06/10/2026
+
+Civil 3 aplica INPC SGS 188 com todas as demais regras do Civil 2: juros simples de 1% ao mês, datas independentes, proporcionalidade diária, inclusão do início e exclusão da data-base. Pode ser selecionado nas parcelas, descontos e comparação de dívidas. A série é lida de `inpc_oficial.json` da base vigente, sem substituição de competências ausentes; fonte e hash acompanham o resultado. Na base disponível nesta inclusão, o último INPC é agosto/2026 e a data-base máxima é 01/09/2026. Custas e índices próprios dos honorários conservam seus critérios específicos.
+
+A interface compilou e a conferência numérica pontual cobriu juros anteriores à correção, deflação, competência ausente, meses parciais, cobertura, descontos e compatibilidade do Civil 2. Não houve exame visual ou execução da suíte completa. A inclusão está no código-fonte; não foi gerado, instalado ou publicado outro instalador nesta tarefa.
+
+
+### Migração local para bases canônicas — 06/10/2026
+
+As cinco bases em `backend/data/indices/*.csv` foram retiradas da distribuição. IPCA e SELIC usam os JSONs oficiais existentes; INPC e IGP-M usam `inpc_oficial.json` e `igpm_oficial.json`, conferidos diretamente nas séries SGS 188 e 189. Todas as competências sobrepostas, percentuais e fatores anteriores coincidiram, inclusive deflações. O INPC passou de 2020-01 para a cobertura oficial desde 2009-07; a última competência continua 2026-08 e o limite do Civil 3 permanece 01/09/2026. Períodos históricos antes sem cobertura podem agora ser recalculados com taxas oficiais; registros e bancos de cálculos existentes não são alterados.
+
+A lista assinada canônica tem 23 arquivos e usa exclusivamente schema 2, com tags `indices-v2-<revisão>`. Por escolha expressa do usuário, o leitor usa somente as novas bases oficiais. Pacotes antigos ativos são ignorados com aviso e uso da base oficial incorporada, sem conversão, cópias derivadas ou alteração de `active.json` e dos arquivos anteriores. Versões antigas ignoram o canal v2. Publicar o novo aplicativo antes de disponibilizar esse formato de pacote. A migração foi incorporada à edição 1.17 (2026.9.20.17), instalada e publicada em 06/10/2026 após autorização expressa.
+
+O motor configurável antigo foi retirado, inclusive seus identificadores `taxa_legal` e o CSV local. A API e a interface usam o motor por perfis. Civil 2 e Civil 3 continuam oferecendo juros simples de 1% ao mês em rotinas próprias. A Taxa Legal oficial SGS 29543 permanece nos perfis e operações que a utilizam.
+
+Para conferir INPC/IGP-M sem gravação: `backend/.venv/Scripts/python.exe -X utf8 scripts/atualizar_indices_mensais.py --verificar`. Para atualizar somente esses JSONs oficiais, remover `--verificar`; a consulta valida continuidade e cobertura antes de gravar cada série atomicamente e não publica. A preparação e a transição dos pacotes estão em `docs/atualizacao_independente_indices.md`. Relatório auditável desta migração: `docs/migracao_bases_canonicas_20261006.md`.
+
+### Civil 4 temporário — inclusão de 06/10/2026
+
+Civil 4 (temporário) está disponível para parcelas, descontos e comparação de dívidas. Até 29/08/2024, usa IPCA antes dos juros, SELIC deduzida do IPCA quando somente juros e SELIC integral quando ambos. Desde 30/08/2024, IPCA e Taxa Legal oficial têm termos próprios, sobre a base consolidada na transição, com juros simples. Civil 1/2/3 e cálculos anteriores permanecem preservados. A descrição técnica e as fontes estão em [Civil 4 temporário](docs/civil_4_temporario.md).
+
+### Civil 5 — inclusão de 06/10/2026
+
+Civil 5 amplia somente a janela da Taxa Legal, mantendo IPCA separado e juros simples sobre o principal corrigido final. Juros desde 01/06/2000; correção desde 01/07/2009, conforme as bases disponíveis. Até 29/08/2024, a taxa é reconstruída a partir da SELIC diária anualizada e do IPCA-15 do mês anterior, com a fórmula e os arredondamentos do Bacen. Depois, usa exclusivamente a série oficial SGS 29543. A memória indica discretamente a reconstrução histórica; Civil 1 e cálculos anteriores permanecem preservados. Detalhes em [Civil 5](docs/civil_5_taxa_legal_reconstruida.md).
+
+Passaram 49 testes dirigidos e a compilação TypeScript/Vite. Na base atual, correção e juros podem começar em 01/07/2009; a data-base máxima é 01/09/2026, excluída dos encargos. PDF, Excel, CSV e JSON discriminam componentes, bases e memória. Sem suíte completa ou exame visual, conforme solicitado; sem instalação, publicação ou recálculo de casos reais.
+
+## Edição 1.17 — 06/10/2026
+
+Instalada e publicada com Civil 4 temporário, Civil 5 e bases oficiais canônicas. Civil 1 preservado. Executável empacotado e integração conferidos; versão instalada corresponde ao pacote e os hashes dos três arquivos publicados foram confirmados. Registro: `build/validacao-publicacao-1.17.json`.
+
+## Edição 1.18 — 06/10/2026
+
+Instalada e publicada com o link clicável da série oficial INPC SGS 188 no relatório principal. Executável empacotado e integração conferidos; versão instalada corresponde ao pacote e hashes dos três arquivos públicos confirmados. Registro: `build/validacao-publicacao-1.18.json`.
+
+## Edição 1.19 — 07/10/2026
+
+Instalada e publicada com a numeração sequencial das parcelas após alterações e recuperação, preservando os demais campos. Interface, executável empacotado e integração conferidos; versão instalada corresponde ao pacote e hashes dos três arquivos públicos confirmados. Registro: `build/validacao-publicacao-1.19.json`.

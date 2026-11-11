@@ -31,7 +31,7 @@ def test_deflacao_parcelas_adicionais_sem_nova_correcao_e_pdf():
     text = "\n".join(page.extract_text() for page in reader.pages)
     assert "318,00" in text and "VALOR DA CAUSA" in text
     assert "Repetição em dobro" in text and "12 parcelas vincendas" in text
-    assert "Dados do processo" not in text and "Início dos juros" not in text
+    assert "DADOS DO PROCESSO" not in text and "Início dos juros" not in text
     assert "SELIC" not in text and "Poupança" not in text
     assert len(reader.pages[0].images) == 1
 

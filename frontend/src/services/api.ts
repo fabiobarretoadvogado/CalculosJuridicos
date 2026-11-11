@@ -92,6 +92,7 @@ export interface ResultadoParcela {
 }
 
 export interface PremissasCalculo {
+  base_indices?: { versao: string; sha256: string; origem: string };
   selecao_descontos?: Desconto[];
   composicao_pagamentos?: Desconto[];
   data_referencia_selic?: string;
@@ -129,21 +130,21 @@ export const executarCalculo = async (calculo: CalculoSimplificado): Promise<Res
   return response.data;
 };
 
-export const exportarExcel = async (calculo: CalculoSimplificado): Promise<Blob> => {
+export const exportarExcel = async (calculo: CalculoSimplificado, baseIndices?: string): Promise<Blob> => {
   const response = await api.post('/calculo/exportar/excel', calculo, {
-    responseType: 'blob',
+    responseType: 'blob', headers: baseIndices ? { 'X-Indices-Base': baseIndices } : undefined,
   });
   return response.data;
 };
 
-export const exportarPdf = async (calculo: CalculoSimplificado): Promise<Blob> => {
-  const response = await api.post('/calculo/exportar/pdf', calculo, { responseType: 'blob' });
+export const exportarPdf = async (calculo: CalculoSimplificado, baseIndices?: string): Promise<Blob> => {
+  const response = await api.post('/calculo/exportar/pdf', calculo, { responseType: 'blob', headers: baseIndices ? { 'X-Indices-Base': baseIndices } : undefined });
   return response.data;
 };
 
-export const exportarCsv = async (calculo: CalculoSimplificado): Promise<Blob> => {
+export const exportarCsv = async (calculo: CalculoSimplificado, baseIndices?: string): Promise<Blob> => {
   const response = await api.post('/calculo/exportar/csv', calculo, {
-    responseType: 'blob',
+    responseType: 'blob', headers: baseIndices ? { 'X-Indices-Base': baseIndices } : undefined,
   });
   return response.data;
 };
@@ -218,7 +219,7 @@ export interface ParcelaSimplificada {
   valor_pago_na_data: string;
   data_inicial_juros: string | null;
 }
-export type PerfilCalculo = 'fazenda_publica_1_v1' | 'fazenda_publica_2_v1' | 'selic_ipcae_poupanca_v1' | 'selic_ipcae_2aa_v1' | 'selic_cjf_v1' | 'ipcae_1am_simples_v1' | 'ipca_taxa_legal_v1' | 'civil_2_v1';
+export type PerfilCalculo = 'fazenda_publica_1_v1' | 'fazenda_publica_2_v1' | 'selic_ipcae_poupanca_v1' | 'selic_ipcae_2aa_v1' | 'selic_cjf_v1' | 'ipcae_1am_simples_v1' | 'ipca_taxa_legal_v1' | 'civil_2_v1' | 'civil_3_v1' | 'civil_4_temporario_v1' | 'civil_5_taxa_legal_reconstruida_v1' | 'civil_6_v1';
 export type PerfilDescontos = PerfilCalculo | 'poupanca_deposito_v1';
 export type CriterioInicioJuros = 'vencimento' | 'citacao' | 'data_fixa' | 'por_parcela';
 export interface Desconto {
@@ -251,6 +252,9 @@ export interface CriteriosPublicos {
   perfis: { id: CalculoSimplificado['perfil']; nome: string }[];
   inicio: string;
   inicio_selic: string;
+  data_base_minima?: string;
+  inicio_correcao?: string;
+  inicio_juros?: string;
   transicao: string;
   data_base_maxima: string;
   data_base_maxima_ipcae: string;
@@ -303,8 +307,9 @@ export interface ResultadoDestaqueContratuais {
 }
 export interface CoberturaHonorarios {
   inicio: string;
-  ipcae: { data_base_maxima: string; fonte: string };
-  ipca: { data_base_maxima: string; fonte: string };
+  data_base_minima?: string;
+  ipcae: { inicio: string; data_base_maxima: string; fonte: string };
+  ipca: { inicio: string; data_base_maxima: string; fonte: string };
   taxa_legal?: { inicio: string; data_base_maxima: string; fonte: string };
 }
 export const obterCoberturaHonorarios = async (): Promise<CoberturaHonorarios> => (
@@ -389,6 +394,7 @@ export interface ResultadoParcelaDivida {
 }
 
 export interface ResultadoHonorariosProveito {
+  base_indices?: { versao: string; sha256: string; origem: string };
   chave_recuperacao?: string | null;
   categoria: CalculoHonorariosProveito['categoria'];
   dados_gerais: DadosHonorarios;
@@ -436,14 +442,14 @@ export interface ResultadoHonorariosIsolados extends Omit<ResultadoHonorariosPro
   base: 'valor_causa' | 'valor_certo';
   apuracao: ResultadoHonorariosPrincipais;
   atualizacao_valor_certo?: ResultadoParcela | null;
-  premissas: { criterios: string[]; metodologia: string[]; fontes: Record<string, string> };
+  premissas: { criterios: string[]; metodologia: string[]; fontes: Record<string, string>; base_indices?: { sha256: string; versao: string } };
 }
 
 export const executarHonorariosIsolados = async (calculo: CalculoHonorariosIsolados): Promise<ResultadoHonorariosIsolados> => (
   await api.post<ResultadoHonorariosIsolados>('/honorarios/isolados', calculo)
 ).data;
-export const exportarPdfHonorariosIsolados = async (calculo: CalculoHonorariosIsolados): Promise<Blob> => (
-  await api.post('/honorarios/isolados/exportar/pdf', calculo, { responseType: 'blob' })
+export const exportarPdfHonorariosIsolados = async (calculo: CalculoHonorariosIsolados, baseIndices?: string): Promise<Blob> => (
+  await api.post('/honorarios/isolados/exportar/pdf', calculo, { responseType: 'blob', headers: baseIndices ? { 'X-Indices-Base': baseIndices } : undefined })
 ).data;
 
 export interface CustaDespesaProcessual {
@@ -472,8 +478,9 @@ export const executarHonorariosProveito = async (
 
 export const exportarPdfHonorarios = async (
   calculo: CalculoHonorariosProveito,
+  baseIndices?: string,
 ): Promise<Blob> => (
-  await api.post('/honorarios/proveito-economico/exportar/pdf', calculo, { responseType: 'blob' })
+  await api.post('/honorarios/proveito-economico/exportar/pdf', calculo, { responseType: 'blob', headers: baseIndices ? { 'X-Indices-Base': baseIndices } : undefined })
 ).data;
 
 export interface CalculoRecuperado {

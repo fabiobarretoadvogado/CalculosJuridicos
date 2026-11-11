@@ -8,7 +8,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from liquidacao_custom.api.routes import router
@@ -33,6 +33,22 @@ app.add_middleware(
 
 app.include_router(router)
 app.include_router(app_router)
+
+from liquidacao_custom.index_data.routes import router as indices_router
+from liquidacao_custom.index_data.store import index_context
+
+app.include_router(indices_router)
+
+
+@app.middleware("http")
+async def pin_index_dataset(request: Request, call_next):
+    if request.url.path.startswith("/api/") and request.url.path != "/api/v1/indices/atualizar":
+        with index_context() as dataset:
+            expected = request.headers.get("X-Indices-Base")
+            if "/exportar/" in request.url.path and expected and expected != dataset.identity:
+                return JSONResponse(status_code=409, content={"detail": "Os índices foram atualizados após este resultado. Calcule novamente antes de exportar."})
+            return await call_next(request)
+    return await call_next(request)
 
 web_root = Path(__file__).resolve().parents[1] / "web"
 

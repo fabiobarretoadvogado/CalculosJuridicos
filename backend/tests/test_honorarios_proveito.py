@@ -1,4 +1,5 @@
 import io
+import warnings
 from decimal import Decimal as D
 
 from fastapi.testclient import TestClient
@@ -88,6 +89,18 @@ def test_atualiza_operacoes_com_encargos_independentes_e_aplica_percentual():
     assert resultado.alertas == []
 
 
+def test_metadados_da_base_preservam_formato_numerico_sem_aviso_de_serializacao():
+    resultado = executar_honorarios_proveito(CalculoHonorariosProveito.model_validate(entrada()))
+
+    with warnings.catch_warnings(record=True) as avisos:
+        warnings.simplefilter("always")
+        dados = resultado.model_dump(mode="json")
+
+    assert dados["base_indices"]["formato"] == 2
+    assert isinstance(dados["base_indices"]["sha256"], str)
+    assert not any("Pydantic serializer warnings" in str(aviso.message) for aviso in avisos)
+
+
 def test_sem_reducao_gera_alerta_e_nao_honorarios_negativos():
     resultado = executar_honorarios_proveito(
         CalculoHonorariosProveito.model_validate(entrada("500.00", "1000.00"))
@@ -153,14 +166,13 @@ def test_pdf_honorarios_discrimina_custas_e_total_geral():
     reader = PdfReader(io.BytesIO(response.content))
     conteudo = "\n".join(page.extract_text() for page in reader.pages)
     primeira_pagina = reader.pages[0].extract_text()
-    pagina_custas = reader.pages[1].extract_text()
-    assert "Custas e despesas processuais" not in primeira_pagina
+    pagina_custas = next(page.extract_text() for page in reader.pages if "CUSTAS E DESPESAS PROCESSUAIS" in page.extract_text())
+    assert "CUSTAS E DESPESAS PROCESSUAIS" not in primeira_pagina
     assert "Honorários periciais" not in primeira_pagina
-    assert "Custas e despesas processuais" in pagina_custas
+    assert "CUSTAS E DESPESAS PROCESSUAIS" in pagina_custas
     assert "Honorários periciais" in pagina_custas
     assert "Fator IPCA-E" in pagina_custas
     assert "Dívida originalmente exigida" not in pagina_custas
-    assert "Dívida correta" not in pagina_custas
     assert "Total geral" in primeira_pagina
     assert conteudo.count("Fator IPCA-E") == 1
 
@@ -198,12 +210,12 @@ def test_pdf_representa_operacao_extinta_sem_parcela_ficticia():
     assert resultado.honorarios_sucumbenciais == moeda(resultado.proveito_economico * D("0.10"))
 
     reader = PdfReader(io.BytesIO(exportar_pdf_honorarios(resultado)))
-    pagina_extincao = reader.pages[-1].extract_text()
-    assert "Execução integralmente extinta" in pagina_extincao
-    assert "Extinção integral informada pelo usuário" in pagina_extincao
+    pagina_extincao = next(page.extract_text() for page in reader.pages if "Saldo remanescente:" in page.extract_text())
+    assert correta.rotulo.upper() in pagina_extincao
+    assert "Extinção integral informada pelo usuário" in "\n".join(page.extract_text() for page in reader.pages)
     assert "R$ 0,00" in pagina_extincao
-    secao_extincao = pagina_extincao.split(correta.rotulo, 1)[-1]
-    assert "Parcelas ou itens" not in secao_extincao
+    secao_extincao = pagina_extincao.split(correta.rotulo.upper(), 1)[-1]
+    assert "PARCELAS OU ITENS" not in secao_extincao
 
 
 def test_rejeita_extincao_integral_na_divida_original():
@@ -273,8 +285,8 @@ def test_relatorio_pdf_honorarios_recalcula_e_documenta_as_duas_dividas():
         "Proveito econômico",
         "Honorários sucumbenciais",
         "20,00%",
-        "Parcelas ou itens",
-        "Critérios e metodologia",
+        "PARCELAS OU ITENS",
+        "CRITÉRIOS E METODOLOGIA",
         "Comparação com encargos independentes.",
     ):
         assert termo in content
@@ -349,6 +361,29 @@ def test_relatorio_pdf_usa_um_unico_cabecalho_por_tabela_de_parcelas():
     for numero in range(21, 25):
         assert f"divida_correta - item {numero:02d}" in pagina_final_correta
     assert "TOTAL" in pagina_final_correta
+
+
+def test_tabela_divida_ocupa_espaco_disponivel_sem_blocos_fixos_de_oito_itens():
+    dados = entrada()
+    for chave in ("divida_original", "divida_correta"):
+        dados[chave]["perfil"] = "selic_cjf_v1"
+        dados[chave]["parcelas"] = [{"numero": n, "historico": f"{chave} item {n:02d}",
+            "data_origem": "2025-09-10", "valor": "100"} for n in range(1, 37)]
+    from liquidacao_custom.core.relatorio_honorarios_pdf import exportar_pdf_honorarios
+    resultado = executar_honorarios_proveito(CalculoHonorariosProveito.model_validate(dados))
+    antes = resultado.model_dump(mode="json")
+    paginas = [p.extract_text() for p in PdfReader(io.BytesIO(exportar_pdf_honorarios(resultado))).pages]
+    assert resultado.model_dump(mode="json") == antes
+    for chave in ("divida_original", "divida_correta"):
+        inicial = next(t for t in paginas if f"{chave} item 01" in t)
+        assert "Descrição" in inicial
+        # A quebra depende da altura disponível, sem limitar a tabela a oito itens.
+        assert any(sum(f"{chave} item {n:02d}" in t for n in range(1, 37)) > 8 for t in paginas)
+        assert " ".join(paginas).count("Descrição") == 2
+        for n in range(1, 37):
+            assert sum(t.count(f"{chave} item {n:02d}") for t in paginas) == 1
+        final = next(t for t in paginas if f"{chave} item 36" in t)
+        assert "TOTAL" in final
 
 
 def test_rejeita_data_de_origem_posterior_a_data_base():
@@ -448,7 +483,7 @@ def test_perfil_ipcae_1am_avanca_ate_o_ultimo_mes_fechado():
         item for item in parcela.memoria_correcao if item.indice_aplicado == "IPCA-E mensal (IBGE)"
     ]
 
-    assert criterios_ipcae_1am()["data_base_maxima"] == "2026-08-31"
+    assert criterios_ipcae_1am()["data_base_maxima"] == "2026-10-31"
     assert registros_mensais[0].competencia == "2022-10"
     assert registros_mensais[-1].competencia == "2026-08"
     assert parcela.componentes["juros_1am"].taxa_acumulada_percentual == D("67")

@@ -2,12 +2,25 @@ import json
 from pathlib import Path
 from subprocess import CompletedProcess
 
+import pytest
+
 import liquidacao_custom.codex_integration as integracao
 from liquidacao_custom.codex_integration import (
     PLUGIN_NAME,
     install_codex_plugin,
     uninstall_codex_plugin,
 )
+
+
+@pytest.fixture(autouse=True)
+def servico_windows_isolado(monkeypatch):
+    original = integracao.prepare_shared_service
+
+    def preparar(executavel, *, home, install_runtime):
+        return original(executavel, home=home, install_runtime=False)
+
+    monkeypatch.setattr(integracao, "prepare_shared_service", preparar)
+    monkeypatch.setattr(integracao, "start_shared_service", lambda **kwargs: {"pid": 123})
 
 
 def test_instala_plugin_pessoal_sem_apagar_catalogo(tmp_path):
@@ -39,8 +52,12 @@ def test_instala_plugin_pessoal_sem_apagar_catalogo(tmp_path):
     assert resultado["sucesso"] is True
     destino = tmp_path / "plugins" / PLUGIN_NAME
     config = json.loads((destino / ".mcp.json").read_text(encoding="utf-8"))
-    assert config["mcpServers"][PLUGIN_NAME]["command"] == str(executavel.resolve())
-    assert config["mcpServers"][PLUGIN_NAME]["args"] == ["--mcp"]
+    servidor = config["mcpServers"][PLUGIN_NAME]
+    assert servidor["url"] == "http://127.0.0.1:49179/mcp"
+    assert servidor["headers"]["Authorization"].startswith("Bearer ")
+    assert "command" not in servidor
+    assert "args" not in servidor
+    assert resultado["servico_compartilhado"] is True
     dados = json.loads(catalogo.read_text(encoding="utf-8"))
     assert [item["name"] for item in dados["plugins"]] == ["outro-plugin", PLUGIN_NAME]
     assert (destino / "skills" / PLUGIN_NAME / "SKILL.md").is_file()

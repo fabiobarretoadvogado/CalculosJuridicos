@@ -28,7 +28,7 @@ try {
         $taskParent = Get-Process -Id $taskJob.ParentPID -ErrorAction SilentlyContinue
         if ($taskParent -and -not $taskParent.WaitForExit(120000)) { throw 'O aplicativo ainda está aberto. Atualização adiada.' }
     }
-    $taskOtherInstances = @(Get-CimInstance Win32_Process -Filter "Name='CalculosJuridicos.exe'" | Where-Object { $_.ExecutablePath -eq $taskExecutable })
+    $taskOtherInstances = @(Get-CimInstance Win32_Process -Filter "Name='CalculosJuridicos.exe'" | Where-Object { $_.ExecutablePath -eq $taskExecutable -and $_.CommandLine -notmatch '(?:^|\s)--mcp(?:\s|$)' })
     if ($taskOtherInstances.Count -gt 0) { throw 'Feche as outras janelas de Cálculos Jurídicos e tente atualizar novamente.' }
     if ((Get-Item -LiteralPath $taskInstaller).Length -ne $taskJob.Size -or (Get-FileHash -LiteralPath $taskInstaller -Algorithm SHA256).Hash.ToLowerInvariant() -ne $taskJob.SHA256) { throw 'O instalador não passou na verificação de integridade.' }
     $taskArguments = @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/NOCLOSEAPPLICATIONS','/NORESTARTAPPLICATIONS',('/DIR="' + $taskInstallDir + '"'),('/LOG="' + (Join-Path $taskDirectory 'instalacao.log') + '"'))
