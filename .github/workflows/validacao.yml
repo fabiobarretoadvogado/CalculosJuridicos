@@ -1,0 +1,76 @@
+name: Validar projeto e aplicativo empacotado
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13.13'
+          architecture: x64
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Preparar dependências fixadas
+        shell: pwsh
+        run: |
+          python -m venv backend/.venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & backend/.venv/Scripts/python.exe -m pip install -r backend/requirements-build-win-py313.lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & backend/.venv/Scripts/python.exe -m pip install --no-deps --no-build-isolation -e ./backend
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm ci --prefix frontend
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Conferir projeto e interface
+        shell: pwsh
+        run: |
+          & backend/.venv/Scripts/python.exe scripts/verificar_projeto.py --ambiente
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run lint --prefix frontend
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Executar suíte completa
+        shell: pwsh
+        run: ./scripts/test-suite.ps1 -Suite completa
+      - name: Compilar e testar aplicativo empacotado
+        shell: pwsh
+        run: ./build.ps1 -Python "$PWD/backend/.venv/Scripts/python.exe"
+
+  compatibilidade-python311:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.9'
+          architecture: x64
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Preparar ambiente de compatibilidade
+        shell: pwsh
+        run: |
+          python -m venv backend/.venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & backend/.venv/Scripts/python.exe -m pip install -e './backend[dev]'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm ci --prefix frontend
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run build --prefix frontend
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item -Path 'frontend/dist/*' -Destination 'backend/liquidacao_custom/web' -Recurse -Force
+      - name: Testar código com Python 3.11
+        shell: pwsh
+        run: ./scripts/test-suite.ps1 -Suite completa

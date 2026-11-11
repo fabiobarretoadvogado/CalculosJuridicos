@@ -154,17 +154,11 @@ def api_exportar_excel(calculo: CalculoSimplificado):
     try:
         resultado = executar_calculo_registrado(calculo)
         
-        # Cria arquivo temporário
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
-            tmp_path = tmp.name
-        
-        exportar_excel(resultado, tmp_path)
-        
-        # Lê o arquivo para retornar na resposta
-        with open(tmp_path, "rb") as f:
-            data = f.read()
-            
-        os.unlink(tmp_path)
+        with tempfile.TemporaryDirectory(prefix="calculos-excel-") as tmp_dir:
+            tmp_path = os.path.join(tmp_dir, "memoria_calculo.xlsx")
+            exportar_excel(resultado, tmp_path)
+            with open(tmp_path, "rb") as f:
+                data = f.read()
         
         return StreamingResponse(
             io.BytesIO(data),
@@ -184,19 +178,14 @@ def api_exportar_csv(calculo: CalculoSimplificado):
     try:
         resultado = executar_calculo_registrado(calculo)
         
-        # Cria diretório temporário para gerar os CSVs
-        tmp_dir = tempfile.mkdtemp()
-        exportar_csv(resultado, tmp_dir)
-        
-        # Zipa o conteúdo
         zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-            for root, _, files in os.walk(tmp_dir):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    zip_file.write(file_path, arcname=file)
-                    
-        shutil.rmtree(tmp_dir)
+        with tempfile.TemporaryDirectory(prefix="calculos-csv-") as tmp_dir:
+            exportar_csv(resultado, tmp_dir)
+            with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                for root, _, files in os.walk(tmp_dir):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        zip_file.write(file_path, arcname=file)
         zip_buffer.seek(0)
         
         return StreamingResponse(
@@ -266,15 +255,11 @@ def api_obter_modelo():
     com a estrutura e cabeçalhos corretos para importação do sistema.
     """
     try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
-            tmp_path = tmp.name
-        
-        gerar_template(tmp_path)
-        
-        with open(tmp_path, "rb") as f:
-            data = f.read()
-            
-        os.unlink(tmp_path)
+        with tempfile.TemporaryDirectory(prefix="calculos-modelo-") as tmp_dir:
+            tmp_path = os.path.join(tmp_dir, "modelo_importacao_parcelas.xlsx")
+            gerar_template(tmp_path)
+            with open(tmp_path, "rb") as f:
+                data = f.read()
         
         return StreamingResponse(
             io.BytesIO(data),

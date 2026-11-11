@@ -14,6 +14,9 @@ try {
     $env:PYTHONPATH = Join-Path $taskProject 'backend'
     Remove-Item Env:CALCULOS_BUILD_CONSOLE -ErrorAction SilentlyContinue
 
+    & $Python -B (Join-Path $taskProject 'scripts\verificar_projeto.py') --ambiente
+    if ($LASTEXITCODE -ne 0) { throw 'A documentação, as versões ou o ambiente de compilação não passaram na conferência.' }
+
     Push-Location -LiteralPath (Join-Path $taskProject 'frontend')
     try {
         & npm.cmd run build

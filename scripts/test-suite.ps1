@@ -2,6 +2,7 @@
 param(
     [ValidateSet('rapida', 'motor', 'integracao', 'relatorios', 'indices', 'frontend', 'completa')]
     [string]$Suite = 'rapida',
+    [string]$Python = '',
     [switch]$Listar,
     [switch]$Coletar
 )
@@ -12,7 +13,7 @@ $ErrorActionPreference = 'Stop'
 $projeto = Split-Path -Parent $PSScriptRoot
 $backend = Join-Path $projeto 'backend'
 $frontend = Join-Path $projeto 'frontend'
-$python = Join-Path $backend '.venv\Scripts\python.exe'
+if (-not $Python) { $Python = Join-Path $backend '.venv\Scripts\python.exe' }
 
 # Cada arquivo pertence a uma familia. A suite completa descobre todos os testes.
 # O inventario abaixo detecta arquivos novos ainda sem familia definida.
@@ -32,7 +33,7 @@ $familias = [ordered]@{
     integracao = @(
         'test_api.py', 'test_calculos_salvos.py', 'test_codex_integration.py',
         'test_codex_service.py', 'test_desktop.py', 'test_importador_excel.py',
-        'test_mcp_server.py', 'test_updates.py'
+        'test_mcp_server.py', 'test_updates.py', 'test_verificar_projeto.py'
     )
     relatorios = @(
         'test_custas_paginacao.py', 'test_gerador_honorarios_anexo.py',

@@ -42,6 +42,18 @@ try {
     & $Python -B $taskPublisher configure --repository $Repositorio --version $Versao --display-version $taskDisplayVersion --access public
     if ($LASTEXITCODE -ne 0) { throw 'A configuração da publicação foi interrompida.' }
 
+    & $Python -B (Join-Path $taskProject 'scripts\verificar_projeto.py') --ambiente
+    if ($LASTEXITCODE -ne 0) { throw 'A documentação, as versões ou as dependências não passaram na conferência.' }
+
+    Push-Location -LiteralPath (Join-Path $taskProject 'frontend')
+    try {
+        & npm.cmd run lint
+        if ($LASTEXITCODE -ne 0) { throw 'A verificação estática da interface falhou.' }
+        & npm.cmd test
+        if ($LASTEXITCODE -ne 0) { throw 'Os testes da interface falharam.' }
+    }
+    finally { Pop-Location }
+
     $taskPytestTemp = $null
     Push-Location -LiteralPath (Join-Path $taskProject 'backend')
     try {

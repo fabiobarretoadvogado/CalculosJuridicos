@@ -117,6 +117,32 @@ def release_version(requested: str) -> tuple[str, str]:
     return requested, APP_DISPLAY_VERSION
 
 
+def package_version_updates(project: Path, display_version: str) -> dict[Path, str]:
+    """Prepara as versões dos pacotes sem escrever arquivos parcialmente."""
+    import re
+
+    package_version = ".".join(str(int(part)) for part in display_version.split(".")) + ".0"
+    pyproject = project / "backend/pyproject.toml"
+    contents = pyproject.read_text(encoding="utf-8")
+    contents, count = re.subn(
+        r'(?ms)(^\[project\]\s*\n(?:(?!^\[).)*?^version\s*=\s*)"[^"]+"',
+        lambda match: match.group(1) + f'"{package_version}"',
+        contents,
+        count=1,
+    )
+    if count != 1:
+        raise ValueError("Não foi possível atualizar a versão do pacote Python.")
+    updates = {pyproject: contents}
+    for name in ("package.json", "package-lock.json"):
+        path = project / "frontend" / name
+        data = json.loads(path.read_text(encoding="utf-8"))
+        data["version"] = package_version
+        if name == "package-lock.json":
+            data["packages"][""]["version"] = package_version
+        updates[path] = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
+    return updates
+
+
 def configure(repository: str, version: str, access: str, display_version: str) -> None:
     import re
 
@@ -136,6 +162,7 @@ def configure(repository: str, version: str, access: str, display_version: str) 
     if REPOSITORY and REPOSITORY.casefold() != repository.casefold():
         raise ValueError("O repositório distribuído não pode ser trocado por este comando.")
 
+    package_updates = package_version_updates(PROJECT, display_version)
     settings = (
         "# Configuração pública. Chaves privadas e credenciais nunca são incluídas.\n"
         f"REPOSITORY = {repository!r}\n"
@@ -161,6 +188,8 @@ def configure(repository: str, version: str, access: str, display_version: str) 
     if version_count != 1 or display_count != 1:
         raise ValueError("Não foi possível atualizar a versão do projeto.")
     metadata_path.write_text(metadata, encoding="utf-8")
+    for path, contents in package_updates.items():
+        path.write_text(contents, encoding="utf-8", newline="\n")
     (PROJECT / "publisher.json").write_text(
         json.dumps(
             {"repository": repository, "access": access, "public_key": public_key},

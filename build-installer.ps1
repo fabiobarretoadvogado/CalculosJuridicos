@@ -72,26 +72,7 @@ try {
     Copy-Item -LiteralPath $taskInstaller -Destination $taskFriendly -Force
     ($taskHash + '  ' + (Split-Path -Leaf $taskFriendly)) | Set-Content -LiteralPath ($taskFriendly + '.sha256') -Encoding ASCII
 
-    # O instalador atual já foi compilado e conferido. Mantenha somente as duas
-    # pastas que representam esta edição: versão técnica e edição amigável.
-    $taskInstallerRoot = [IO.Path]::GetFullPath((Join-Path $taskProject 'instaladores'))
-    $taskKeepDirectories = @($taskIdentity.version, $taskIdentity.display_version)
-    foreach ($taskDirectory in @(Get-ChildItem -LiteralPath $taskInstallerRoot -Directory -Force)) {
-        if ($taskKeepDirectories -contains $taskDirectory.Name) { continue }
-        $taskOldResolved = [IO.Path]::GetFullPath($taskDirectory.FullName)
-        if (-not ($taskOldResolved + '\').StartsWith(($taskInstallerRoot.TrimEnd('\') + '\'), [StringComparison]::OrdinalIgnoreCase)) {
-            throw 'Pasta de instalador anterior fora da área de publicação.'
-        }
-        Remove-Item -LiteralPath $taskOldResolved -Recurse -Force
-    }
-    $taskArchiveRoot = [IO.Path]::GetFullPath((Join-Path $taskProject 'build\previous-packages'))
-    $taskProjectPrefix = [IO.Path]::GetFullPath($taskProject).TrimEnd('\') + '\'
-    if (Test-Path -LiteralPath $taskArchiveRoot) {
-        if (-not ($taskArchiveRoot + '\').StartsWith($taskProjectPrefix, [StringComparison]::OrdinalIgnoreCase)) {
-            throw 'Pasta de versões anteriores fora do projeto.'
-        }
-        Remove-Item -LiteralPath $taskArchiveRoot -Recurse -Force
-    }
+    # As edições anteriores e seus pacotes arquivados são preservados.
     Write-Host ('Instalador criado: ' + $taskFriendly)
 }
 finally {

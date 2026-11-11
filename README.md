@@ -23,7 +23,7 @@ No relatório PDF da categoria principal, as parcelas são identificadas como **
 
 Na tela **Principal e honorários**, arraste a alça ao lado do número da parcela até a posição desejada. A linha azul indica onde ela será inserida. Pelo teclado, selecione a alça e use as setas para cima ou para baixo; Esc cancela um arraste em andamento.
 
-A reordenação conserva o número de identificação, a descrição, as datas, os valores, os pagamentos e a multa da parcela. Uma única parcela mantém a alça desativada. Soltar fora da lista ou manter a posição não altera o cálculo. Trocar a ordem invalida o resultado anterior; calcule novamente para que a sequência seja usada na tela, no PDF, no Excel, no CSV e na recuperação pela chave. Conferência: [Reordenação de parcelas](docs/qa_reordenacao_parcelas.md).
+A reordenação preserva a descrição, as datas, os valores, os pagamentos e a multa de cada parcela. Os números são atualizados sequencialmente conforme a posição atual, inclusive após inclusão, exclusão, importação e recuperação. Uma única parcela mantém a alça desativada. Soltar fora da lista ou manter a posição não altera o cálculo. Trocar a ordem invalida o resultado anterior; calcule novamente para que a sequência seja usada na tela, no PDF, no Excel, no CSV e na recuperação pela chave. Conferência: [Reordenação de parcelas](docs/qa_reordenacao_parcelas.md).
 
 ## Honorários isolados — valor da causa e equidade
 
@@ -146,7 +146,7 @@ A **Fazenda Pública 4** aplica IPCA-E e poupança até 08/12/2021, passa à SEL
 
 Revisão `tema905_ipcae_ibge_poupanca_total_v4`: substitui os fatores do TJSP pelas variações mensais oficiais do IPCA-15 produzidas pelo IBGE e distribuídas na série SGS 7478. Mantém a faixa do Tema 905 desde julho/2009 e a remuneração total da poupança. Resultados de versões anteriores precisam ser recalculados porque a fonte e a precisão do IPCA-E foram alteradas.
 
-Este perfil cobre a faixa de IPCA-E e poupança do [Tema 905/STJ](https://processo.stj.jus.br/repetitivos/temas_repetitivos/pesquisa.jsp?cod_tema_final=905&cod_tema_inicial=905&novaConsulta=true&tipo_pesquisa=T), aplicável às condenações administrativas e de servidores nessa faixa temporal. Não implementa todos os ramos do Tema 905 nem as faixas anteriores a julho/2009.
+Este perfil cobre a faixa de IPCA-E e poupança do [Tema 905/STJ](https://processo.stj.jus.br/repetitivos/temas_repetitivos/pesquisa.jsp?cod_tema_final=905&cod_tema_inicial=905&novaConsulta=true&tipo_pesquisa=T), aplicável às condenações administrativas e de servidores nessa faixa temporal. Não implementa todos os ramos do Tema 905. A correção pelo IPCA-E pode começar antes de julho/2009 quando houver cobertura histórica; os juros deste perfil não começam antes de 01/07/2009.
 
 Convenções de contagem, preservada a divisão na transição de critérios:
 
@@ -158,41 +158,33 @@ Convenções de contagem, preservada a divisão na transição de critérios:
 - Poupança: juros **simples** pela **remuneração total publicada pelo Banco Central (SGS 25 até 03/05/2012 e SGS 195 desde 04/05/2012)**, sobre o saldo consolidado corrigido até a data-base, preservando a convenção do motor existente de juros sobre o valor corrigido final. A série já compõe a remuneração básica e adicional. O rateio diário previamente definido é preservado: taxa mensal da referência dividida pelos dias do mês. Para os dias 29, 30 e 31, usa-se a referência do dia 1 do mês seguinte, conforme a convenção de aniversário da poupança. As referências e os códigos SGS constam na memória; valores ausentes não são estimados.
 - A rubrica **Atualização** inclui SELIC única e IPCA-E; **Juros da poupança** contém os juros anteriores a 09/12/2021 e posteriores a 09/09/2025, sem juros sobre juros da poupança.
 - Valores são calculados com Decimal e arredondados por parcela, ao final, pelo critério HALF_UP. As memórias exibem centavos; fatores intermediários não são arredondados.
-- Vencimentos anteriores a 01/07/2009 estão fora do escopo deste perfil. A data-base não pode anteceder o vencimento. A falta de índice impede a conclusão; nenhuma taxa é substituída por zero.
+- Vencimentos anteriores a 01/07/2009 podem receber correção histórica, respeitados o início disponível do IPCA-E e o limite independente dos juros. A data-base não pode anteceder o vencimento. A falta de índice impede a conclusão; nenhuma taxa é substituída por zero.
 
 Essas convenções ficam visíveis na interface e são preservadas nos arquivos exportados. O rateio diário é uma premissa do aplicativo; não é apresentado como instrução de rateio publicada pelo IBGE. Deve ser conferido com o título judicial antes da adoção em um caso real.
 
 ## Índices e cobertura
 
-Base consultada em **01/10/2026**, arquivada em `backend/data/indices_simplificados.json`, com fontes originais em `backend/data/fontes/`:
+A base oficial incorpora o IPCA SGS 433 desde 01/1980 e o IPCA-E mensal SGS 10764 desde 01/1992, conciliado com o IPCA-15 SGS 7478. Também inclui SELIC, poupança, INPC, IGP-M e Taxa Legal, com suas respectivas fontes e limites. O início da correção histórica não altera o marco inicial dos juros de cada perfil.
 
-- SELIC mensal: Banco Central, SGS 4390, com série histórica até dezembro/2020 e série corrente de dezembro/2021 a setembro/2026. A competência de setembro foi fechada em 1,08%; a mesma fonte alimenta o período posterior à EC 136.
-- IPCA-15/IPCA-E produzido pelo IBGE e distribuído pelo Banco Central na série SGS 7478: variações mensais até setembro/2026.
-- Remuneração total da poupança: Banco Central, SGS 25 (01/07/2009 a 03/05/2012), SGS 195 (04/05/2012 a 08/12/2021, em dois arquivos) e SGS 195 (01/09/2025 a 28/09/2026). Os arquivos originais preservam taxa, data inicial e data final de cada período publicado. A antiga série de meta SELIC permanece apenas no arquivo histórico de fontes e não alimenta este cálculo.
-- IPCA oficial usado na Civil 1 e Civil 2: Banco Central, SGS 433, até agosto/2026. A Taxa Legal oficial do BCB está atualizada até outubro/2026. O IGP-M oficial da FGV está atualizado até setembro/2026; o INPC está atualizado até agosto/2026. A série legada de juros simples de 1% ao mês permanece separada e inalterada.
+A cobertura final varia conforme os índices publicados e a base ativa. Consulte **Índices** no aplicativo para ver os períodos de cada série e o limite de cada padrão. Custas, descontos e outras operações podem impor um limite diferente. O cálculo bloqueia competências necessárias ausentes; não projeta índices nem substitui lacunas por zero.
 
-O limite é específico de cada padrão. Fazenda Pública 1 e 3 aceitam data-base até **31/08/2026**, pois ainda falta a série completa de poupança para setembro. Fazenda Pública 2 e 4 aceitam até **30/09/2026**, com a SELIC de setembro fechada. O perfil SELIC/CJF aceita **01/10/2026**, utilizando a competência de setembro. Civil 1 e Civil 2 aceitam **01/09/2026**, pois o IPCA oficial mais recente é o de agosto. As custas e despesas atualizadas por IPCA-E têm cobertura até **30/09/2026**. Operações combinadas, como honorários, custas e descontos, adotam o menor limite aplicável e informam na tela qual critério o definiu.
-
-O campo de data e o botão de cálculo bloqueiam datas posteriores; a API aplica o mesmo bloqueio ao cálculo e às exportações, inclusive em chamadas diretas. A interface e o PDF distinguem a data-base máxima do último dia ou competência efetivamente utilizados. O limite avança somente quando a base recebe todos os índices necessários, e essa consulta precisa terminar antes de habilitar o cálculo.
-
-Datas posteriores aos limites atuais exigem os índices oficiais das competências seguintes, ainda ausentes no snapshot. O aplicativo não projeta índices nem usa rateio para estender a cobertura de um mês incompleto. O rateio nos períodos cobertos, inclusive a divisão de setembro/2025 entre os dias 9 e 10, permanece preservado conforme orientação do usuário.
-
-A fonte numérica da SELIC é a série mensal 4390 do Banco Central. Não confundir taxa mensal, taxa acumulada e meta anual.
-
-Para atualizar a base, obtenha os documentos oficiais, confira as competências e atualize o script `backend/data/fontes/gerar_snapshot.py` (requer pypdf). O script valida pontos de controle e registra hashes das fontes. Ajuste as datas e verificações à nova publicação; não altere índices isoladamente sem fonte. Não há consulta à internet durante o cálculo.
+O pacote canônico atual contém 26 arquivos, incluindo as fontes históricas. A atualização independente é assinada e validada antes da ativação. As bases anteriores e os cálculos registrados são preservados. Não há consulta à internet durante o cálculo.
 
 ## Executar localmente
 
-Backend, na pasta `backend`:
+O código requer Python 3.11 ou superior. Para reproduzir a compilação validada no Windows x64, use Python 3.13.13, Node.js 24.22.3 e o arquivo de dependências fixadas. Backend, na pasta `backend`:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-build-win-py313.lock
+.\.venv\Scripts\python.exe -m pip install --no-deps --no-build-isolation -e .
 .\.venv\Scripts\python.exe -m uvicorn liquidacao_custom.api.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Frontend, na pasta `frontend`:
 
 ```powershell
+npm.cmd ci
 npm.cmd run dev
 ```
 
@@ -201,13 +193,17 @@ Abra http://127.0.0.1:5173. A API está em http://127.0.0.1:8000/docs.
 ## Validar
 
 ```powershell
-# na raiz do projeto: testes essenciais do backend e frontend
+# na raiz do projeto: documentação, versões e ambiente de compilação
+.\backend\.venv\Scripts\python.exe .\scripts\verificar_projeto.py --ambiente
+# testes essenciais do backend e frontend
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test-suite.ps1 -Suite rapida
 # antes de uma entrega: todos os testes
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test-suite.ps1 -Suite completa
 ```
 
-As suítes por área (`motor`, `integracao`, `relatorios`, `indices` e `frontend`), a coleta e o isolamento dos dados estão descritos em [docs/suite_de_testes.md](docs/suite_de_testes.md). Para conferir a interface sem executar os testes, use `npm.cmd run lint` e `npm.cmd run build` na pasta `frontend`.
+As suítes por área (`motor`, `integracao`, `relatorios`, `indices` e `frontend`), a coleta e o isolamento dos dados estão descritos em [docs/suite_de_testes.md](docs/suite_de_testes.md). Para conferir a interface sem executar os testes, use `npm.cmd run lint` e `npm.cmd run build` na pasta `frontend`. A compilação por `build.ps1` também verifica o aplicativo empacotado e a integração MCP em dados isolados; ela não instala nem publica o programa.
+
+O arquivo de dependências fixa as versões usadas no ambiente Windows x64 indicado; não fixa hashes dos pacotes nem substitui a conferência da origem. A automação prevê um teste separado de compatibilidade com Python 3.11, enquanto a compilação reproduzível usa Python 3.13.13. Ao preparar outra edição, alinhe a identidade em `metadata.py`, a versão do pacote Python e as versões de `package.json` e `package-lock.json`; a conferência interrompe o processo se divergirem. Atualize o lock somente após testar o novo conjunto de dependências.
 
 Os testes cobrem a transição, dias-limite, ano bissexto, acumulação simples, variações mensais do IPCA-15/IPCA-E, deflação, início dos juros, índices ausentes, rejeição de critérios antigos, importação e consistência das exportações.
 
@@ -260,7 +256,7 @@ A interface compilou e a conferência numérica pontual cobriu juros anteriores 
 
 As cinco bases em `backend/data/indices/*.csv` foram retiradas da distribuição. IPCA e SELIC usam os JSONs oficiais existentes; INPC e IGP-M usam `inpc_oficial.json` e `igpm_oficial.json`, conferidos diretamente nas séries SGS 188 e 189. Todas as competências sobrepostas, percentuais e fatores anteriores coincidiram, inclusive deflações. O INPC passou de 2020-01 para a cobertura oficial desde 2009-07; a última competência continua 2026-08 e o limite do Civil 3 permanece 01/09/2026. Períodos históricos antes sem cobertura podem agora ser recalculados com taxas oficiais; registros e bancos de cálculos existentes não são alterados.
 
-A lista assinada canônica tem 23 arquivos e usa exclusivamente schema 2, com tags `indices-v2-<revisão>`. Por escolha expressa do usuário, o leitor usa somente as novas bases oficiais. Pacotes antigos ativos são ignorados com aviso e uso da base oficial incorporada, sem conversão, cópias derivadas ou alteração de `active.json` e dos arquivos anteriores. Versões antigas ignoram o canal v2. Publicar o novo aplicativo antes de disponibilizar esse formato de pacote. A migração foi incorporada à edição 1.17 (2026.9.20.17), instalada e publicada em 06/10/2026 após autorização expressa.
+O pacote canônico atual tem 26 arquivos e usa schema 2, com tags `indices-v2-<revisão>`; inclui três fontes históricas adicionadas aos 23 arquivos anteriores. Por escolha expressa do usuário, o leitor usa somente as novas bases oficiais. Pacotes antigos ativos são ignorados com aviso e uso da base oficial incorporada, sem conversão, cópias derivadas ou alteração de `active.json` e dos arquivos anteriores. A migração para o canal v2 foi incorporada à edição 1.17 (2026.9.20.17), e o conjunto histórico à edição 1.23.
 
 O motor configurável antigo foi retirado, inclusive seus identificadores `taxa_legal` e o CSV local. A API e a interface usam o motor por perfis. Civil 2 e Civil 3 continuam oferecendo juros simples de 1% ao mês em rotinas próprias. A Taxa Legal oficial SGS 29543 permanece nos perfis e operações que a utilizam.
 
