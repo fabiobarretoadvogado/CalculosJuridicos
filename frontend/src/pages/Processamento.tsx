@@ -113,8 +113,6 @@ export function Processamento() {
     }
     finally { setCarregando(false); }
   }
-  const principal = state.parcelas.reduce((s, p) => s + equivalenteNominalReais((Number(p.valor_bruto) || 0) - (Number(p.valor_pago_na_data) || 0), p.data_vencimento), 0);
-  const custasInformadas = state.custasDespesas.reduce((s, item) => s + equivalenteNominalReais(item.valor, item.data), 0);
   const descontosInformados = descontosAtivos.reduce((s, item) => s + equivalenteNominalReais(item.valor, item.data), 0);
   return <div className="processamento-page">
     <div className="page-intro"><p className="eyebrow">PRINCIPAL E HONORÁRIOS</p><h1>Atualize as parcelas.</h1><p>Informe a data final e os valores. Os critérios são aplicados automaticamente.</p></div>
@@ -213,7 +211,7 @@ export function Processamento() {
           onChange={itens => dispatch({ type: 'SET_CUSTAS_DESPESAS', payload: itens })}
         />
         {erro && <div role="alert" className="feedback-error">{erro}</div>}
-        <div className="calculation-actions"><div className="calculation-totals"><p>Principal após pagamentos<strong>{formatarMoeda(principal)}</strong></p>{state.descontos.itens.length > 0 && <p>Descontos informados<strong>− {formatarMoeda(descontosInformados)}</strong></p>}{state.custasDespesas.length > 0 && <p>Custas e despesas informadas<strong>{formatarMoeda(custasInformadas)}</strong></p>}</div><Button type="submit" disabled={carregando || !cobertura || !coberturaDescontos || !criterios || (causaAtiva && !coberturaHonorarios) || !state.parcelas.length || Boolean(limiteDataBase && state.dadosGerais.data_base > limiteDataBase)}>{carregando ? 'Calculando…' : 'Calcular atualização'}<ArrowRight size={17} /></Button></div>
+        <div className={`calculation-actions${state.descontos.itens.length ? '' : ' calculation-actions--simple'}`}>{state.descontos.itens.length > 0 && <div className="calculation-totals"><p>Descontos informados<strong>− {formatarMoeda(descontosInformados)}</strong></p></div>}<Button type="submit" disabled={carregando || !cobertura || !coberturaDescontos || !criterios || (causaAtiva && !coberturaHonorarios) || !state.parcelas.length || Boolean(limiteDataBase && state.dadosGerais.data_base > limiteDataBase)}>{carregando ? 'Calculando…' : 'Calcular atualização'}<ArrowRight size={17} /></Button></div>
       </fieldset>
     </form>
     <ResultadoPrincipal />

@@ -1,24 +1,24 @@
 import { useState } from 'react';
-import { Download } from 'lucide-react';
+import { Download, FileCode2, FileSpreadsheet, FileText } from 'lucide-react';
 import { Button } from '../components/ui';
 import { exportarExcel, exportarCsv, exportarPdf, mensagemErro } from '../services/api';
 import { useCalculo } from '../contexts/useCalculo';
 import { formatarMoeda, formatarData, downloadBlob } from '../utils/formatters';
 import { componentesResultado, indiceAcumulado, memoriaExibida } from '../utils/componentes';
-export function Exportacao({ pdfOnly = false }: { pdfOnly?: boolean }) {
+export function Exportacao() {
   const { state, buildCalculoJudicial } = useCalculo();
-  const [ocupado, setOcupado] = useState(false);
+  const [ocupado, setOcupado] = useState<'pdf' | 'excel' | 'csv' | null>(null);
   const [erro, setErro] = useState('');
   const r = state.resultado;
   if (!r) return null;
   const componentes = componentesResultado(r);
   async function baixar(tipo: 'pdf' | 'excel' | 'csv') {
-    setOcupado(true); setErro('');
+    setOcupado(tipo); setErro('');
     const formatos = { pdf: [exportarPdf, 'relatorio_calculo.pdf'], excel: [exportarExcel, 'memoria_calculo.xlsx'], csv: [exportarCsv, 'memoria_calculo.zip'] } as const;
     const [exportar, nome] = formatos[tipo];
     try { downloadBlob(await exportar(buildCalculoJudicial(), r?.premissas.base_indices?.sha256), nome); }
     catch (e) { setErro(await mensagemErro(e)); }
-    finally { setOcupado(false); }
+    finally { setOcupado(null); }
   }
   function relatorio() {
     if (!r) return;
@@ -30,10 +30,11 @@ export function Exportacao({ pdfOnly = false }: { pdfOnly?: boolean }) {
       ...r.memoria_mensal.map(m => `- Parcela ${m.parcela} — ${m.competencia} — ${m.indice_aplicado}: base ${formatarMoeda(m.valor_base)}; fator ${Number(m.fator_aplicado).toFixed(4)}; atualizado ${formatarMoeda(m.valor_corrigido)}; juros ${formatarMoeda(m.juros_periodo)}. ${memoriaExibida(m.observacao)}`), '', '## Premissas completas e entradas', '', '```json', JSON.stringify(r.premissas, null, 2), '```'];
     downloadBlob(new Blob([linhas.join('\n')], { type: 'text/markdown;charset=utf-8' }), 'memoria_calculo.md');
   }
-  if (pdfOnly) return <div><Button disabled={ocupado} onClick={() => baixar('pdf')}><Download size={16} />{ocupado ? 'Gerando PDF…' : 'Baixar PDF'}</Button>{ocupado && <span role="status" className="sr-only">Gerando PDF</span>}{erro && <p role="alert" className="feedback-error">{erro}</p>}</div>;
-  return <details className="audit-details"><summary>Planilhas e memória completa</summary><div className="audit-content">
-    <p className="mb-4">Use estes formatos para conferir os índices e cada trecho do cálculo.</p>
-    <div className="flex flex-wrap gap-3"><Button variant="outline" disabled={ocupado} onClick={() => baixar('excel')}>Baixar Excel</Button><Button variant="outline" disabled={ocupado} onClick={() => baixar('csv')}>Baixar CSV</Button><Button variant="ghost" disabled={ocupado} onClick={relatorio}>Memória em texto</Button></div>
-    {ocupado && <p role="status" className="mt-4">Gerando arquivo…</p>}{erro && <p role="alert" className="feedback-error">{erro}</p>}
-  </div></details>;
+  return <div className="export-actions" aria-label="Exportar cálculo">
+    <Button variant="outline" className="export-icon" aria-label="Baixar Excel" title="Baixar Excel" disabled={Boolean(ocupado)} onClick={() => baixar('excel')}><FileSpreadsheet size={17} aria-hidden="true" /></Button>
+    <Button variant="outline" className="export-icon" aria-label="Baixar CSV" title="Baixar CSV" disabled={Boolean(ocupado)} onClick={() => baixar('csv')}><FileCode2 size={17} aria-hidden="true" /></Button>
+    <Button variant="outline" className="export-icon" aria-label="Memória em texto" title="Memória em texto" disabled={Boolean(ocupado)} onClick={relatorio}><FileText size={17} aria-hidden="true" /></Button>
+    <Button disabled={Boolean(ocupado)} onClick={() => baixar('pdf')}><Download size={16} />{ocupado === 'pdf' ? 'Gerando PDF…' : 'Baixar PDF'}</Button>
+    {ocupado && <span role="status" className="sr-only">Gerando arquivo…</span>}{erro && <p role="alert" className="feedback-error">{erro}</p>}
+  </div>;
 }

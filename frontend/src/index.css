@@ -62,7 +62,7 @@ input:disabled { background: var(--paper); }
 .office-topbar { min-height: 65px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--line); padding: 0 40px; font-size: 12px; color: var(--muted); }
 .breadcrumb-divider { color: #b2aba0; margin: 0 10px; }
 .topbar-label { font-size: 9px; letter-spacing: .13em; }
-.office-content { max-width: 1130px; margin: 0 auto; padding: 40px 40px 60px; outline: none; }
+.office-content { max-width: 1360px; margin: 0 auto; padding: 40px 24px 60px; outline: none; }
 .page-intro { margin-bottom: 30px; }
 .eyebrow { font-size: 10px; letter-spacing: .12em; font-weight: 650; color: var(--navy); margin: 0 0 10px; }
 .page-intro h1 { font-size: clamp(25px, 3vw, 32px); letter-spacing: -.035em; line-height: 1.2; font-weight: 650; margin: 0 0 10px; }
@@ -108,10 +108,21 @@ details[open]>summary::after { content: '−'; }
 .result-head h2 { font-size: 13px; color: var(--muted); margin-bottom: 8px; font-weight: 400; }
 .result-total { font-size: clamp(28px, 3.5vw, 40px); line-height: 1.1; color: var(--navy); font-weight: 650; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
 .result-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.export-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; min-width: 0; max-width: 100%; }
+.export-actions .export-icon { width: 38px; min-width: 38px; padding: 0; }
+.export-actions .feedback-error { flex-basis: 100%; }
 .result-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; padding: 24px 0; }
 .result-metrics p { font-size: 12px; color: var(--muted); margin: 0 0 6px; }
 .result-metrics strong { font-size: 18px; font-weight: 550; font-variant-numeric: tabular-nums; }
 .result-explanation { font-size: 12px; color: var(--muted); line-height: 1.6; padding: 12px 0 24px; }
+.result-breakdown-title { margin: 24px 0 8px; color: var(--navy); font-size: 14px; font-weight: 600; }
+.result-breakdown { margin: 0 0 16px; max-width: 720px; font-size: 13px; }
+.result-breakdown > div { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.result-breakdown dt { min-width: 0; color: var(--ink); }
+.result-breakdown dt small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+.result-breakdown dd { margin: 0; text-align: right; white-space: nowrap; color: var(--navy); font-variant-numeric: tabular-nums; }
+.result-breakdown .result-subtotal, .result-breakdown .result-grand-total { font-weight: 600; }
+.result-breakdown .result-grand-total { border-bottom: 0; font-size: 15px; }
 .result-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
 .result-table { border-collapse: collapse; width: 100%; font-size: 13px; }
 .result-table th { background: var(--paper); font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); padding: 13px 14px; text-align: right; white-space: nowrap; }
@@ -162,7 +173,8 @@ details[open]>summary::after { content: '−'; }
 .audit-table td:nth-child(n+3) { text-align: right; }
 
 /* Honorários: formulário mais plano e compacto, sem perder a separação semântica. */
-.honorarios-page { width: min(100%, 980px); }
+.honorarios-page { width: 100%; }
+.honorarios-page .page-intro, .processamento-page .page-intro { min-height: 104px; }
 .honorarios-page .page-intro { margin-bottom: var(--calculation-block-gap); }
 .honorarios-page .page-intro h1 { font-size: clamp(22px, 2.4vw, 27px); margin-bottom: 7px; }
 .honorarios-page .page-intro p:last-child { max-width: 760px; font-size: 13px; line-height: 1.5; }
@@ -245,7 +257,7 @@ details[open]>summary::after { content: '−'; }
 .honorarios-page .audit-table td:nth-child(3) { text-align: left; }
 
 /* Cálculo principal: mesma linguagem plana e compacta dos honorários. */
-.processamento-page { width: min(100%, 980px); }
+.processamento-page { width: 100%; }
 .processamento-page .page-intro { margin-bottom: var(--calculation-block-gap); }
 .processamento-page .page-intro h1 { font-size: clamp(22px, 2.4vw, 27px); margin-bottom: 7px; }
 .processamento-page .page-intro p:last-child { max-width: 760px; font-size: 13px; line-height: 1.5; }
@@ -334,6 +346,7 @@ details[open]>summary::after { content: '−'; }
 .processamento-page .quiet-details[open]>summary { margin-bottom: 12px; }
 .processamento-page .criteria-note>summary { font-size: 11px; }
 .processamento-page .calculation-actions { border: 0; border-radius: 6px; padding: 20px 24px; background: var(--paper); flex-wrap: wrap; gap: 20px 24px; }
+.processamento-page .calculation-actions--simple { justify-content: flex-end; padding: 6px 0 0; background: transparent; }
 .processamento-page .calculation-actions .calculation-totals { flex: 1 1 340px; min-width: 0; flex-wrap: wrap; gap: 20px 32px; }
 .processamento-page .calculation-actions p { min-width: 0; max-width: 100%; font-size: 11px; font-weight: 500; line-height: 1.45; }
 .processamento-page .calculation-actions strong { margin-top: 7px; color: var(--navy); font-size: clamp(22px, 2.2vw, 26px); font-weight: 650; line-height: 1.15; letter-spacing: -.025em; overflow-wrap: anywhere; }
@@ -341,6 +354,7 @@ details[open]>summary::after { content: '−'; }
 .processamento-page button { min-height: 38px; font-size: 13px; }
 .principal-result { margin-top: var(--calculation-block-gap); padding-top: 26px; border-top: 2px solid var(--navy); scroll-margin-top: 24px; }
 .principal-result:focus { outline: none; }
+.result-recovery-key strong { color: var(--navy); font-weight: 650; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .processamento-page .costs-empty { min-height: 44px; padding: 8px 12px; }
 .principal-result .result-metrics { gap: 0 24px; padding: 12px 0 8px; }
 .principal-result .result-metrics > div { min-width: 0; padding: 12px 0; border-bottom: 1px solid var(--line); }
@@ -379,7 +393,7 @@ details[open]>summary::after { content: '−'; }
   .office-sidebar { width: 200px; padding-left: 12px; padding-right: 12px; }
   .office-brand img { width: 80px; height: 80px; }
   .office-workspace { margin-left: 200px; }
-  .office-content { padding: 30px 24px; }
+  .office-content { padding: 30px 20px; }
   .office-topbar { padding: 0 24px; }
   .topbar-label { display: none; }
   .honorarios-page .honorarios-partes-grid,
@@ -404,7 +418,7 @@ details[open]>summary::after { content: '−'; }
   .recovery-panel button { padding: 7px 12px; }
   .office-workspace { margin-left: 0; }
   .office-topbar { display: none; }
-  .office-content { padding: 28px 20px 36px; }
+  .office-content { padding: 28px 16px 36px; }
   .sheet-panel { padding: 18px; }
   .field-grid { grid-template-columns: 1fr; gap: 16px; }
   .parcel-main { grid-template-columns: 1fr 44px; gap: 10px; }
@@ -447,6 +461,7 @@ details[open]>summary::after { content: '−'; }
   .processamento-page select,
   .processamento-page textarea { min-height: 44px; font-size: 16px; }
   .processamento-page button { min-height: 44px; }
+  .processamento-page .export-actions .export-icon { width: 44px; min-width: 44px; }
   .parcel-import-actions input::file-selector-button { min-height: 44px; }
   .honorarios-page .debt-grid { gap: calc(var(--calculation-block-gap) / 2); }
   .honorarios-page .debt-operation + .debt-operation { border-left: 0; border-top: 1px solid #ece9e3; padding-left: 0; padding-top: calc(var(--calculation-block-gap) / 2); }
@@ -457,12 +472,16 @@ details[open]>summary::after { content: '−'; }
   .cost-line>.w-full { grid-column: 1 / -1; }
   .calculation-totals { width: 100%; justify-content: space-between; gap: 18px; }
   .processamento-page .calculation-actions { padding: 20px 16px; }
+  .processamento-page .calculation-actions--simple { padding: 6px 0 0; }
   .processamento-page .calculation-actions .calculation-totals { flex-basis: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 20px; }
   .costs-result-table td:nth-child(2) { grid-column: 1 / -1; }
   .honorarios-page input,
   .honorarios-page select,
   .honorarios-page textarea { min-height: 44px; font-size: 16px; }
   .honorarios-page button { min-height: 44px; }
+}
+@media(max-width: 500px) {
+  .honorarios-page .page-intro, .processamento-page .page-intro { min-height: 120px; }
 }
 @media(prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 
@@ -488,9 +507,10 @@ details[open]>summary::after { content: '−'; }
 .indices-filter { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 14px 0; color: var(--muted); font-size: 12px; }
 .indices-filter select { min-height: 38px; max-width: 100%; padding: 6px 30px 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: white; color: var(--navy); }
 .indices-criteria-table th:first-child, .indices-criteria-table td:first-child { width: 22%; }
-.indices-criteria-table th:nth-child(2), .indices-criteria-table td:nth-child(2) { width: 24%; }
 .indices-criteria-table th, .indices-criteria-table td { text-align: left; }
 .indices-criteria-table td strong { color: var(--navy); font-weight: 600; }
+.indices-criteria-periods { list-style: none; margin: 0; padding: 0; }
+.indices-criteria-periods li + li { margin-top: 5px; }
 .indices-spin { animation: update-spin .9s linear infinite; }
 @media (min-width: 701px) and (max-width: 960px) {
   .indices-table th:first-child, .indices-table td:first-child { width: 40%; }
@@ -500,7 +520,6 @@ details[open]>summary::after { content: '−'; }
 @media(max-width: 700px) {
   .office-nav { grid-template-columns: 1fr 1fr 1fr; }
     .indices-table th:first-child, .indices-table td:first-child { width: auto; }
-  .indices-criteria-table th:nth-child(2), .indices-criteria-table td:nth-child(2) { width: auto; }
   .indices-table tbody tr { border: 0; border-radius: 0; border-bottom: 1px solid var(--line); }
   .indices-table td:first-child { background: transparent; }
   .indices-actions button { min-height: 44px; }

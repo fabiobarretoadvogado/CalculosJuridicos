@@ -34,6 +34,8 @@ let UpdateStatusView;
 let moedasHistoricas;
 let guiaCriterios;
 let opcoesPerfisCalculo;
+let componentesResultado;
+let indiceAcumulado;
 
 before(async () => {
   server = await createServer({
@@ -68,6 +70,7 @@ before(async () => {
   moedasHistoricas = await server.ssrLoadModule('/src/utils/moedasHistoricas.ts');
   ({ guiaCriterios } = await server.ssrLoadModule('/src/utils/guiaCriterios.ts'));
   ({ opcoesPerfisCalculo } = await server.ssrLoadModule('/src/utils/perfisCalculo.ts'));
+  ({ componentesResultado, indiceAcumulado } = await server.ssrLoadModule('/src/utils/componentes.ts'));
 });
 
 after(async () => { await server?.close(); });
@@ -421,7 +424,7 @@ test('Civil 6 oferece juros simples de 0,5% até o corte exato do CC/2002', () =
   assert.match(html, /Pode ser anterior à correção/);
 });
 
-test('Civil 6 discrimina juros antigos no resultado e conserva os encargos posteriores', () => {
+test('Civil 6 mantém componentes antigos e posteriores para exportação', () => {
   const r = structuredClone(resultado);
   r.premissas.entrada.perfil = 'civil_6_v1';
   r.custas_despesas = [];
@@ -429,11 +432,8 @@ test('Civil 6 discrimina juros antigos no resultado e conserva os encargos poste
     r.parcelas[0].componentes[chave] = { data_inicial: null, data_final: null, base_calculo: '100', fator_acumulado: null, taxa_acumulada_percentual: '0', valor: '0' };
     r.resumo.totais_componentes[chave] = '0';
   }
-  const html = render(ResultadoPrincipal, r);
-  assert.match(html, /Juros simples de 0,5% a.m./);
-  assert.match(html, /Até 10\/01\/2003/);
-  assert.match(html, /SELIC deduzida do IPCA/);
-  assert.match(html, /Taxa Legal/);
+  const nomes = componentesResultado(r).map(c => c.nome);
+  for (const nome of ['Juros simples de 0,5% a.m.', 'SELIC deduzida do IPCA', 'Taxa Legal']) assert.ok(nomes.includes(nome));
 });
 
 test('resultado SELIC distingue referência mensal e última competência aplicada', () => {
@@ -444,7 +444,6 @@ test('resultado SELIC distingue referência mensal e última competência aplica
   const html = render(ResultadoPrincipal, r);
   assert.match(html, /Data-base SELIC 01\/08\/2026/);
   assert.match(html, /Último índice aplicado: 07\/2026/);
-  assert.match(html, /não representa atualização diária/);
   assert.doesNotMatch(html, /Data-base 31\/08\/2026|Data final das demais operações/);
   assert.equal(r.dados_gerais.data_base, '2026-08-31');
 });
@@ -456,14 +455,13 @@ test('SELIC preserva a data final das outras operações e não inventa último 
   const html = render(ResultadoPrincipal, r);
   assert.match(html, /Último índice aplicado: nenhum/);
   assert.match(html, /Data final das demais operações: 31\/08\/2026/);
-  assert.match(html, /Taxa de teste/);
   const form = render(Processamento);
   assert.match(form, /Data-base SELIC: 01\/08\/2026/);
   assert.match(form, /Custas e demais operações usam a data final informada/);
   assert.match(form, /id="data-base"[^>]*value="2026-08-31"/);
 });
 
-test('resultado IPCA e Taxa Legal mostra períodos independentes e taxa de seis casas', () => {
+test('IPCA e Taxa Legal mantêm períodos independentes e taxa de seis casas na exportação', () => {
   const r = structuredClone(resultado);
   r.premissas.entrada.perfil = 'ipca_taxa_legal_v1';
   r.resumo.totais_componentes = { ipca: '-1.55', taxa_legal: '216.19' };
@@ -471,12 +469,10 @@ test('resultado IPCA e Taxa Legal mostra períodos independentes e taxa de seis 
     ipca: { data_inicial: '2026-08-28', data_final: '2026-08-30', base_calculo: '5000', fator_acumulado: '0.999689874', taxa_acumulada_percentual: null, valor: '-1.55' },
     taxa_legal: { data_inicial: '2026-02-02', data_final: '2026-08-30', base_calculo: '4998.449370', fator_acumulado: null, taxa_acumulada_percentual: '4.325078', valor: '216.19' },
   };
-  const html = render(ResultadoPrincipal, r);
-  assert.match(html, /4,325078%/);
-  assert.match(html, /02\/02\/2026 a 30\/08\/2026/);
-  assert.match(html, /28\/08\/2026 a 30\/08\/2026/);
-  assert.match(html, /Correção desde/);
-  assert.match(html, /sem SELIC integral adicional/);
+  assert.equal(indiceAcumulado(r.parcelas[0].componentes.taxa_legal, 6), '4,325078%');
+  assert.equal(r.parcelas[0].componentes.taxa_legal.data_inicial, '2026-02-02');
+  assert.equal(r.parcelas[0].componentes.ipca.data_inicial, '2026-08-28');
+  assert.deepEqual(componentesResultado(r).map(c => c.chave), ['ipca', 'taxa_legal']);
 });
 
 test('menu contém as duas categorias e a consulta de índices', () => {
@@ -549,8 +545,6 @@ test('resultado concilia descontos, preserva parcelas e mostra memória própria
   assert.match(html, /Descontos atualizados/);
   assert.match(html, /Crédito posterior/);
   assert.match(html, /Critérios e memória dos descontos/);
-  assert.match(html, /Parcelas atualizadas/);
-  assert.match(html, /descontos R\$[^\d]*22,40 = crédito líquido R\$[^\d]*89,60/);
   assert.match(html, /110,60/);
 });
 
@@ -617,13 +611,14 @@ test('cada parcela permite multa percentual opcional sem alterar o saldo anterio
   assert.match(render(Processamento), /id="multa-1"[^>]*value="0"/);
 });
 
-test('resultado discrimina multa nominal, atualização e juros próprios', () => {
-  const html = render(ResultadoPrincipal, {
+test('multa da parcela permanece disponível para exportação', () => {
+  const r = {
     ...resultado,
     resumo: { ...resultado.resumo, totais_componentes: { selic: '12', multa_parcela: '2.24' } },
     parcelas: [{ ...resultado.parcelas[0], componentes: { ...resultado.parcelas[0].componentes, multa_parcela: { data_inicial: '2025-09-01', data_final: '2026-08-31', base_calculo: '100', fator_acumulado: null, taxa_acumulada_percentual: '2', valor: '2.24' } }, multa_detalhes: { valor_original: '2', correcao_monetaria: '0.24', juros_mora: '0' } }],
-  });
-  for (const texto of ['Multa e encargos', 'Nominal:', 'Atualização:', 'Juros:']) assert.match(html, new RegExp(texto));
+  };
+  assert.ok(componentesResultado(r).some(c => c.chave === 'multa_parcela'));
+  assert.deepEqual(r.parcelas[0].multa_detalhes, { valor_original: '2', correcao_monetaria: '0.24', juros_mora: '0' });
 });
 
 test('termo inicial individual dos juros permanece disponível quando selecionado', () => {
@@ -718,26 +713,27 @@ test('mover o aviso de índices não remove limites e erros do campo de data', a
   assert.match(mensagens, /Última competência SELIC disponível/);
 });
 
-test('resumo antes de calcular destaca valores sem contorno e preserva as rubricas separadas', async () => {
+test('área de cálculo mantém o botão sem mostrar os totais removidos', () => {
   const html = render(Processamento, null, { custasDespesas: [{ numero: 1, nome: 'Taxa de teste', data: '2025-09-01', valor: '20' }] });
-  const resumo = html.match(/<div class="calculation-actions">([\s\S]*?)<\/fieldset>/)[1];
-  for (const texto of ['Principal após pagamentos', 'Custas e despesas informadas', '100,00', '20,00', 'Calcular atualização']) {
-    assert.ok(resumo.includes(texto), `Resumo deve preservar ${texto}`);
-  }
-  const css = await readFile(new URL('../src/index.css', import.meta.url), 'utf8');
-  assert.match(css, /\.processamento-page \.calculation-actions \{ border: 0;[^}]*background: var\(--paper\)/);
-  assert.match(css, /\.processamento-page \.calculation-actions strong \{[^}]*color: var\(--navy\);[^}]*font-size: clamp\(22px, 2\.2vw, 26px\)/);
-  assert.match(css, /\.processamento-page \.calculation-actions \.calculation-totals \{[^}]*grid-template-columns: repeat\(auto-fit/);
+  const resumo = html.match(/<div class="calculation-actions[^"]*">([\s\S]*?)<\/fieldset>/)[1];
+  assert.match(resumo, /Calcular atualização/);
+  assert.doesNotMatch(resumo, /Principal após pagamentos|Custas e despesas informadas/);
 });
 
-test('resultado fica depois do formulário, com PDF, encargos, custas e memória preservados', () => {
+test('resultado fica depois do formulário, com total e formatos de exportação', () => {
   const html = render(Processamento, resultado);
   assert.ok(html.indexOf('class="principal-result"') > html.indexOf('</form>'));
   assert.equal((html.match(/<h1\b/g) || []).length, 1);
-  for (const texto of ['Resultado do cálculo', 'Baixar PDF', 'Valores por parcela', 'Taxa de teste', 'Critérios e fontes', 'Conferir a memória mensal', 'Planilhas e memória completa']) {
+  for (const texto of ['Resultado do cálculo', 'Baixar PDF', 'Baixar Excel', 'Baixar CSV', 'Memória em texto']) {
     assert.ok(html.includes(texto), `Deve preservar ${texto}`);
   }
-  assert.match(html, /12,0000%/);
+  assert.match(html, /133,00/);
+});
+
+test('resultado principal não exibe os blocos de detalhamento removidos', () => {
+  const html = render(ResultadoPrincipal, resultado);
+  for (const texto of ['Como chegamos ao total', 'Valores por parcela', 'Taxa de teste', 'Critérios e fontes', 'Conferir a memória mensal']) assert.ok(!html.includes(texto));
+  assert.match(html, /Total atualizado/);
   assert.match(html, /133,00/);
 });
 
@@ -879,7 +875,7 @@ test('resultado distingue honorários judiciais e destaque contratual do total',
     destaque_contratuais: { descricao_base: 'Crédito da parte', base_calculo: '123.20', percentual: '30', valor: '36.96', saldo_apos_destaque: '86.24' },
   });
   for (const texto of ['Honorários sucumbenciais', 'Cumprimento de sentença', 'Honorários contratuais destacados', 'não altera o total devido']) assert.ok(html.includes(texto));
-  const resumo = html.match(/<div class="result-metrics">([\s\S]*?)<p class="result-explanation"/)[1];
+  const resumo = html.match(/<section aria-label="Resumo do cálculo">([\s\S]*?)<\/section>/)[1];
   assert.doesNotMatch(resumo, /36,96|Honorários contratuais/);
   assert.match(html, /Base comum:[\s\S]*?112,00 · parcelas atualizadas após descontos, sem honorários da sentença, custas ou despesas/);
   assert.doesNotMatch(html, /\+ honorários da sentença/);

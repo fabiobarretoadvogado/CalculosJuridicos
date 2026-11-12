@@ -439,17 +439,25 @@ export function HonorariosSucumbenciais({ baseInicial = 'proveito_economico' }: 
       {resultado.chave_recuperacao && <p className="recovery-key"><span>Chave para reeditar este cálculo</span><strong>{resultado.chave_recuperacao}</strong></p>}
       <div className="result-head"><div><h2>{resultado.custas_despesas.length ? 'Total geral' : 'Honorários sucumbenciais'}</h2><p className="result-total">{formatarMoeda(resultado.total_geral)}</p></div><div className="result-actions"><Button variant="outline" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Editar dados</Button><Button disabled={gerandoRelatorio} onClick={baixarRelatorio}><Download size={16} />{gerandoRelatorio ? 'Gerando PDF…' : 'Baixar relatório PDF'}</Button></div></div>
       {erroRelatorio && <div role="alert" className="feedback-error">{erroRelatorio}</div>}
-      {resultado.categoria === 'honorarios_sucumbenciais_proveito_economico' ? <div className="result-metrics honorarios-metrics">
-        <div><p>Proveito econômico</p><strong>{formatarMoeda(resultado.proveito_economico)}</strong></div>
-        <div><p>{resultado.escalonamento_fazenda ? 'Forma de fixação' : 'Percentual da sentença'}</p><strong>{resultado.escalonamento_fazenda ? 'Faixas · art. 85' : formatarPercentual(resultado.percentual_sentenca)}</strong></div>
-        {resultado.custas_despesas.length ? <><div><p>Honorários sucumbenciais</p><strong>{formatarMoeda(resultado.honorarios_sucumbenciais)}</strong></div><div><p>Custas e despesas · IPCA-E</p><strong>{formatarMoeda(resultado.custas_despesas_valor_atualizado)}</strong></div></> : <div><p>Diferença apurada</p><strong>{formatarMoeda(resultado.diferenca_atualizada)}</strong></div>}
-      </div> : <>{resultado.atualizacao_valor_certo ? <HonorariosValorCertoResultado resultado={resultado} /> : <><HonorariosPrincipaisResultado resultado={{ honorarios_sucumbenciais: resultado.apuracao }} /><p className="fees-note">{resultado.premissas.criterios[0]}</p></>}{resultado.custas_despesas.length > 0 && <div className="result-metrics"><div><p>Custas e despesas · IPCA-E</p><strong>{formatarMoeda(resultado.custas_despesas_valor_atualizado)}</strong></div></div>}</>}
+      {resultado.categoria === 'honorarios_sucumbenciais_proveito_economico' ? <>
+        <h3 className="result-breakdown-title">Como chegamos aos honorários</h3>
+        <dl className="result-breakdown">
+          <div><dt>Dívida originalmente exigida atualizada</dt><dd>{formatarMoeda(resultado.divida_original.valor_atualizado)}</dd></div>
+          <div><dt>Dívida correta atualizada</dt><dd>− {formatarMoeda(resultado.divida_correta.valor_atualizado)}</dd></div>
+          {Number(resultado.diferenca_atualizada) < 0 && <div><dt>Diferença entre as dívidas</dt><dd>{formatarMoeda(resultado.diferenca_atualizada)}</dd></div>}
+          <div className="result-subtotal"><dt>Proveito econômico</dt><dd>{formatarMoeda(resultado.proveito_economico)}</dd></div>
+          <div><dt>{resultado.escalonamento_fazenda ? 'Forma de fixação' : 'Percentual da sentença'}</dt><dd>{resultado.escalonamento_fazenda ? 'Faixas · art. 85' : formatarPercentual(resultado.percentual_sentenca)}</dd></div>
+          <div className="result-subtotal"><dt>Honorários sucumbenciais</dt><dd>{formatarMoeda(resultado.honorarios_sucumbenciais)}</dd></div>
+          {resultado.custas_despesas.length > 0 && <><div><dt>Custas e despesas atualizadas</dt><dd>+ {formatarMoeda(resultado.custas_despesas_valor_atualizado)}</dd></div><div className="result-grand-total"><dt>Total geral</dt><dd>{formatarMoeda(resultado.total_geral)}</dd></div></>}
+        </dl>
+        {Number(resultado.diferenca_atualizada) < 0 && <p className="fees-note">Como a diferença é negativa, a base dos honorários é zero.</p>}
+      </> : <>{resultado.atualizacao_valor_certo ? <HonorariosValorCertoResultado resultado={resultado} /> : <><HonorariosPrincipaisResultado resultado={{ honorarios_sucumbenciais: resultado.apuracao }} /><p className="fees-note">{resultado.premissas.criterios[0]}</p></>}{resultado.custas_despesas.length > 0 && <dl className="result-breakdown"><div><dt>Honorários sucumbenciais</dt><dd>{formatarMoeda(resultado.honorarios_sucumbenciais)}</dd></div><div><dt>Custas e despesas atualizadas</dt><dd>+ {formatarMoeda(resultado.custas_despesas_valor_atualizado)}</dd></div><div className="result-grand-total"><dt>Total geral</dt><dd>{formatarMoeda(resultado.total_geral)}</dd></div></dl>}</>}
       {resultado.alertas.map(alerta => <div className="feedback-error" role="alert" key={alerta}>{alerta}</div>)}
-      <p className="result-explanation">{resultado.formula}</p>
+      <details className="audit-details"><summary>Entenda o cálculo</summary><p className="result-explanation">{resultado.formula}</p></details>
       {resultado.escalonamento_fazenda && <EscalonamentoFazendaResultado resultado={resultado.escalonamento_fazenda} />}
       <CustasDespesasResultado itens={resultado.custas_despesas} />
       {resultado.categoria === 'honorarios_sucumbenciais_proveito_economico' && <>
-        <div className="debt-result-grid"><ResultadoOperacao operacao={resultado.divida_original} /><ResultadoOperacao operacao={resultado.divida_correta} /></div>
+        <details className="audit-details"><summary>Ver detalhes das duas dívidas</summary><div className="debt-result-grid"><ResultadoOperacao operacao={resultado.divida_original} /><ResultadoOperacao operacao={resultado.divida_correta} /></div></details>
         <div className="mt-7"><AuditoriaOperacao operacao={resultado.divida_original} /><AuditoriaOperacao operacao={resultado.divida_correta} /></div>
       </>}
     </section>}

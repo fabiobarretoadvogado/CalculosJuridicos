@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Calculator, Database, KeyRound, Scale } from 'lucide-react';
 import { IndicesStatus } from './IndicesStatus';
@@ -13,7 +13,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const [recuperando, setRecuperando] = useState(false);
   const [erroRecuperacao, setErroRecuperacao] = useState('');
   const [statusRecuperacao, setStatusRecuperacao] = useState('');
-  useEffect(() => {
+  useLayoutEffect(() => {
     window.scrollTo(0, 0);
     main.current?.focus({ preventScroll: true });
   }, [location.pathname]);
