@@ -105,7 +105,7 @@ function OperacaoForm({
   const quantidade = extinta ? 0 : operacao.parcelas.length;
   const limiteData = dataBase || criterios?.data_base_maxima;
 
-  return <section className="sheet-panel debt-operation" aria-labelledby={`${prefixo}-titulo`}>
+  return <section className={`sheet-panel debt-operation debt-operation--${prefixo}`} aria-labelledby={`${prefixo}-titulo`}>
     <div className="section-heading">
       <div><h2 id={`${prefixo}-titulo`}>{titulo}</h2><p>{descricao}</p></div>
       <span className="count-label">{extinta ? 'Saldo zero' : `${quantidade} ${quantidade === 1 ? 'item' : 'itens'}`}</span>

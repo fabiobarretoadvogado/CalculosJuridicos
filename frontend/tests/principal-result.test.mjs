@@ -32,6 +32,8 @@ let HonorariosValorCertoResultado;
 let DescontosForm;
 let UpdateStatusView;
 let moedasHistoricas;
+let guiaCriterios;
+let opcoesPerfisCalculo;
 
 before(async () => {
   server = await createServer({
@@ -64,9 +66,24 @@ before(async () => {
   ({ DescontosForm } = await server.ssrLoadModule('/src/components/DescontosForm.tsx'));
   ({ UpdateStatusView } = await server.ssrLoadModule('/src/components/UpdateStatus.tsx'));
   moedasHistoricas = await server.ssrLoadModule('/src/utils/moedasHistoricas.ts');
+  ({ guiaCriterios } = await server.ssrLoadModule('/src/utils/guiaCriterios.ts'));
+  ({ opcoesPerfisCalculo } = await server.ssrLoadModule('/src/utils/perfisCalculo.ts'));
 });
 
 after(async () => { await server?.close(); });
+
+test('guia apresenta todos os padrões selecionáveis e os períodos decisivos', () => {
+  const ids = guiaCriterios.map(c => c.id);
+  assert.equal(new Set(ids).size, ids.length);
+  for (const opcao of opcoesPerfisCalculo()) assert.ok(ids.includes(opcao.value), `Falta ${opcao.label}`);
+  assert.ok(ids.includes('poupanca_deposito_v1'));
+  const regra = id => guiaCriterios.find(c => c.id === id).faixas;
+  assert.deepEqual(regra('selic_ipcae_2aa_v1').map(f => f.periodo), ['Antes de 01/07/2009', '01/07/2009 a 08/12/2021', '09/12/2021 a 09/09/2025', 'A partir de 10/09/2025']);
+  assert.match(regra('selic_ipcae_2aa_v1').at(-1).regra, /saldo.*SELIC.*menor/);
+  assert.match(regra('ipca_taxa_legal_v1')[1].periodo, /30\/08\/2024/);
+  assert.match(regra('civil_5_taxa_legal_reconstruida_v1')[0].regra, /reconstruída/);
+  assert.deepEqual(regra('civil_6_v1').map(f => f.periodo), ['Até 10/01/2003', '11/01/2003 a 29/08/2024', 'A partir de 30/08/2024']);
+});
 
 test('paridades nominais respeitam as datas exatas de troca da moeda', () => {
   for (const [data, simbolo, divisor] of [
@@ -565,6 +582,22 @@ test('parcela mantém descrição, vencimento, valor, pagamento e saldo nessa or
   assert.deepEqual(posicoes, [...posicoes].sort((a, b) => a - b));
   assert.doesNotMatch(html, /class="parcel-options"|Descrição, pagamento e juros/);
   assert.match(html, /id="saldo-1"[^>]*readonly=""[^>]*value="R\$ 100,00"/i);
+});
+
+test('cabeçalho compartilhado preserva rótulos e moeda próprios de cada parcela', () => {
+  const html = render(Processamento, null, { parcelas: [
+    { numero: 1, historico: 'Antiga', data_vencimento: '1993-08-01', valor_bruto: '100', valor_pago_na_data: '0' },
+    { numero: 2, historico: 'Atual', data_vencimento: '2025-09-01', valor_bruto: '100', valor_pago_na_data: '0' },
+  ] });
+  assert.equal((html.match(/class="parcel-column-headings"/g) || []).length, 1);
+  for (const [numero, moeda] of [[1, 'CR$'], [2, 'R$']]) {
+    const linha = html.match(new RegExp(`<div[^>]*data-parcela-numero="${numero}"[\\s\\S]*?(?=<div[^>]*data-parcela-numero=|<div class="parcel-toolbar")`))[0];
+    assert.ok(linha.includes(`class="parcel-row-currency" aria-hidden="true">${moeda}</span>`));
+    for (const [campo, rotulo] of [['valor', 'Valor original'], ['pago', 'Pago no vencimento'], ['saldo', 'Saldo']]) {
+      assert.ok(linha.includes(`for="${campo}-${numero}"`));
+      assert.ok(linha.includes(`${rotulo} (${moeda})`));
+    }
+  }
 });
 
 test('saldo da parcela desconta o pagamento, aceita quitação e fica vazio antes de informar valor', () => {

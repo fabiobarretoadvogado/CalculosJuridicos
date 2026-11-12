@@ -5,12 +5,13 @@ import { mensagemErro } from '../services/api';
 import { atualizarIndices, avisarIndicesAtualizados, nomeBaseIndices, obterCatalogoIndices, type CatalogoIndices, type SerieIndice } from '../services/indices';
 import { formatarCompetencia, formatarData } from '../utils/formatters';
 import { useIndicesVersion } from '../utils/useIndicesVersion';
+import { guiaCriterios } from '../utils/guiaCriterios';
 
 function Series({ series }: { series: SerieIndice[] }) {
-  return <div className="result-table-wrap"><table className="result-table indices-table">
+  return <div className="result-table-wrap"><table className="result-table indices-table indices-series-table">
     <thead><tr><th>Índice</th><th>Primeiro registro</th><th>Último registro</th><th>Consulta da fonte</th></tr></thead>
     <tbody>{series.map(serie => <tr key={serie.id}>
-      <td data-label="Índice"><strong>{serie.nome}</strong><p className="indices-note">{serie.observacao}</p>{serie.fonte && <a href={serie.fonte} target="_blank" rel="noreferrer">Consultar fonte oficial</a>}</td>
+      <td data-label="Índice"><div className="indices-series-title"><strong>{serie.nome}</strong>{serie.fonte && <a href={serie.fonte} target="_blank" rel="noreferrer" aria-label={`Consultar fonte oficial de ${serie.nome}`}>Fonte oficial</a>}</div><p className="indices-note">{serie.observacao}</p></td>
       <td data-label="Primeiro registro">{serie.unidade === 'competencia' ? formatarCompetencia(serie.inicio) : formatarData(serie.inicio)}</td>
       <td data-label="Último registro">{serie.unidade === 'competencia' ? formatarCompetencia(serie.fim) : formatarData(serie.fim)}</td>
       <td data-label="Consulta da fonte">{serie.consulta_em ? formatarData(serie.consulta_em) : 'Não registrada'}</td>
@@ -23,6 +24,7 @@ export function Indices() {
   const [erro, setErro] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [atualizando, setAtualizando] = useState(false);
+  const [criterioSelecionado, setCriterioSelecionado] = useState('todos');
   const version = useIndicesVersion();
   useEffect(() => {
     let active = true;
@@ -52,6 +54,14 @@ export function Indices() {
     {erro && <p className="feedback-error" role="alert">{erro}</p>}
     {catalogo?.aviso && <p className="feedback-error" role="alert">{catalogo.aviso}</p>}
     {catalogo?.erro_atualizacao && !erro && <p className="criteria-note">{catalogo.erro_atualizacao}</p>}
+    <section className="sheet-panel" aria-labelledby="guia-criterios-titulo">
+      <div className="section-heading"><div><h2 id="guia-criterios-titulo">Critérios por período</h2><p>Compare como o programa aplica cada padrão antes de escolhê-lo.</p></div></div>
+      <p className="indices-note">Confira o título judicial e as datas de início de cada encargo. Os períodos abaixo descrevem as regras do programa; a cobertura disponível pode limitar o cálculo. Nos padrões civis, correção e juros podem ter datas de início diferentes.</p>
+      <div className="indices-filter"><label htmlFor="filtro-criterios">Exibir critério</label><select id="filtro-criterios" value={criterioSelecionado} onChange={e => setCriterioSelecionado(e.target.value)}><option value="todos">Todos os critérios</option>{guiaCriterios.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}</select></div>
+      <div className="result-table-wrap" tabIndex={0} role="region" aria-label="Critérios de cálculo por período"><table className="result-table indices-table indices-criteria-table"><thead><tr><th scope="col">Critério</th><th scope="col">Período</th><th scope="col">O que o programa aplica</th></tr></thead><tbody>
+        {guiaCriterios.filter(c => criterioSelecionado === 'todos' || c.id === criterioSelecionado).flatMap(c => c.faixas.map(f => <tr key={`${c.id}-${f.periodo}`}><td data-label="Critério"><strong>{c.nome}</strong></td><td data-label="Período">{f.periodo}</td><td data-label="O que o programa aplica">{f.regra}</td></tr>))}
+      </tbody></table></div>
+    </section>
     {catalogo && <>
       <section className="sheet-panel"><div className="section-heading"><h2>Séries oficiais</h2></div><Series series={catalogo.series.filter(s => !s.legado)} /></section>
       <section className="sheet-panel"><div className="section-heading"><h2>Limites para calcular</h2></div><p className="indices-note">A cobertura depende das séries exigidas por cada padrão. Custas e descontos podem reduzir o limite do cálculo.</p>
